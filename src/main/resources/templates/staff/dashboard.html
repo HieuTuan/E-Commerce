@@ -174,15 +174,16 @@
                                     <tbody>
                                         <tr th:each="order : ${recentOrders}">
                                             <td th:text="${order.id}">#001</td>
-                                            <td th:text="${order.user.fullName}">Customer Name</td>
+                                            <td th:text="${order.user != null ? order.user.fullName : 'N/A'}">Customer Name</td>
                                             <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">100,000 VND</td>
                                             <td>
-                                                <span th:class="'badge ' + (${order.status.name()} == 'PENDING' ? 'bg-warning' : 
-                                                                           ${order.status.name()} == 'PROCESSING' ? 'bg-info' : 
-                                                                           ${order.status.name()} == 'DELIVERED' ? 'bg-success' : 'bg-secondary')"
-                                                      th:text="${order.status}">PENDING</span>
+                                                <span class="badge bg-warning" 
+                                                      th:classappend="${order.status != null and order.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                                                     (${order.status != null and order.status.name() == 'PROCESSING'} ? 'bg-info' : 
+                                                                     (${order.status != null and order.status.name() == 'DELIVERED'} ? 'bg-success' : 'bg-secondary'))"
+                                                      th:text="${order.status != null ? order.status : 'UNKNOWN'}">PENDING</span>
                                             </td>
-                                            <td th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                            <td th:text="${order.createdDate != null ? #temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2024 10:00</td>
                                             <td>
                                                 <a th:href="@{/staff/orders/{id}(id=${order.id})}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye"></i> Xem
