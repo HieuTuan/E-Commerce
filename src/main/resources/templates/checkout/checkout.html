@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - E-Commerce</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .checkout-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            height: 100%;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.2rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .form-label {
+            color: #495057;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 0.6rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .payment-option {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-option:hover {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+
+        .payment-option.active {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+
+        .payment-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #0d6efd;
+        }
+
+        .product-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-img {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .product-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0;
+            color: #212529;
+        }
+
+        .product-price {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .product-total {
+            color: #0d6efd;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .product-quantity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 4px 10px;
+        }
+
+        .btn-qty {
+            background: transparent;
+            border: none;
+            color: #0d6efd;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0 4px;
+            font-weight: 600;
+        }
+
+        .btn-qty:hover {
+            color: #0a58ca;
+        }
+
+        .qty-value {
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-order {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            border: none;
+            padding: 14px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-order:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .total-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0d6efd;
+            text-align: right;
+            margin: 15px 0;
+        }
+
+        .coupon-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-coupon {
+            background: #198754;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: white;
+        }
+
+        .btn-coupon:hover {
+            background: #146c43;
+        }
+
+        .navbar {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}"><i class="fas fa-shopping-bag"></i> E-Commerce</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" th:href="@{/}">
+                    <i class="fas fa-arrow-left"></i> Back to Store
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container checkout-container">
+        <div class="row g-3">
+            <!-- Left: Customer Info -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-user"></i> Customer Information
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/checkout/process}" method="post" id="checkoutForm">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="customerName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="customerEmail" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" name="customerPhone" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Shipping Address *</label>
+                                <textarea class="form-control" name="shippingAddress" rows="2" required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" rows="2" placeholder="Enter notes if any"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Shipping Method</label>
+                                <div class="text-muted small">
+                                    <i class="fas fa-shipping-fast text-primary"></i> Express - Free
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label mb-2">Payment Method *</label>
+
+                                <div class="payment-option active" onclick="selectPayment('VNPAY')">
+                                    <div class="d-flex align-items-center">
+                                        <input type="radio" name="paymentMethod" value="VNPAY" id="vnpay" checked>
+                                        <label class="ms-3 mb-0 flex-grow-1" for="vnpay">
+                                            <i class="fas fa-credit-card text-primary"></i>
+                                            <strong>VNPay</strong>
+                                            <small class="text-muted d-block">Pay via VNPay gateway</small>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="payment-option" onclick="selectPayment('MOMO')">
+                                    <div class="d-flex align-items-center">
+                                        <input type="radio" name="paymentMethod" value="MOMO" id="momo">
+                                        <label class="ms-3 mb-0 flex-grow-1" for="momo">
+                                            <i class="fas fa-mobile-alt" style="color: #d82d8b;"></i>
+                                            <strong>Momo</strong>
+                                            <small class="text-muted d-block">Pay via Momo wallet</small>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="payment-option" onclick="selectPayment('COD')">
+                                    <div class="d-flex align-items-center">
+                                        <input type="radio" name="paymentMethod" value="COD" id="cod">
+                                        <label class="ms-3 mb-0 flex-grow-1" for="cod">
+                                            <i class="fas fa-money-bill text-success"></i>
+                                            <strong>COD</strong>
+                                            <small class="text-muted d-block">Cash on delivery</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Products -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-shopping-cart"></i> Ordered Products
+                    </div>
+                    <div class="card-body">
+                        <!-- Display cart items from database -->
+                        <div th:if="${cart != null && !cart.items.isEmpty()}">
+                            <div class="product-item" th:each="item : ${cart.items}">
+                                <img th:src="${item.product.thumbnailUrl != null ? item.product.thumbnailUrl : 'https://via.placeholder.com/100'}"
+                                    class="product-img" th:alt="${item.product.name}">
+                                <div class="product-info">
+                                    <div class="product-name" th:text="${item.product.name}">Product Name</div>
+                                </div>
+                                <div class="product-quantity">
+                                    <button class="btn-qty" type="button" th:onclick="'updateQuantity(' + ${item.id} + ', ' + (${item.quantity} - 1) + ')'">−</button>
+                                    <span class="qty-value" th:text="${item.quantity}">1</span>
+                                    <button class="btn-qty" type="button" th:onclick="'updateQuantity(' + ${item.id} + ', ' + (${item.quantity} + 1) + ')'">+</button>
+                                </div>
+                                <div class="text-end" style="min-width: 110px;">
+                                    <div class="product-price">$<span th:text="${#numbers.formatDecimal(item.product.price, 1, 2)}">0.00</span></div>
+                                    <div class="product-total">$<span th:text="${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}">0.00</span></div>
+                                </div>
+                                <form th:action="@{/cart/remove}" method="post" style="display: inline;">
+                                    <input type="hidden" name="itemId" th:value="${item.id}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="padding: 4px 8px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty cart message -->
+                        <div th:if="${cart == null || cart.items.isEmpty()}" class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Your cart is empty</h5>
+                            <a th:href="@{/products}" class="btn btn-primary">Continue Shopping</a>
+                        </div>
+
+                        <hr class="my-3" th:if="${cart != null && !cart.items.isEmpty()}">
+
+                        <div class="total-price" th:if="${cart != null && !cart.items.isEmpty()}">
+                            Total: $<span th:text="${#numbers.formatDecimal(cartTotal, 1, 2)}">0.00</span>
+                        </div>
+
+                        <div class="mb-3" th:if="${cart != null && !cart.items.isEmpty()}">
+                            <label class="form-label">
+                                <i class="fas fa-tag text-success"></i> Discount Code
+                            </label>
+                            <div class="coupon-input">
+                                <input type="text" class="form-control" placeholder="Enter discount code">
+                                <button class="btn btn-coupon" type="button">Apply</button>
+                            </div>
+                        </div>
+
+                        <button type="submit" form="checkoutForm" class="btn btn-primary btn-order" th:if="${cart != null && !cart.items.isEmpty()}">
+                            <i class="fas fa-check-circle"></i> Place Order Now
+                        </button>
+
+                        <div class="text-center mt-3" th:if="${cart != null && !cart.items.isEmpty()}">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt"></i> Secure and safe payment
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function selectPayment(method) {
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
+            document.querySelector(`input[value="${method}"]`).closest('.payment-option').classList.add('active');
+            document.querySelector(`input[value="${method}"]`).checked = true;
+        }
+        
+        function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) {
+                if (confirm('Remove this item from cart?')) {
+                    removeItem(itemId);
+                }
+                return;
+            }
+            
+            // Create a form to submit the update
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/cart/update';
+            
+            const itemIdInput = document.createElement('input');
+            itemIdInput.type = 'hidden';
+            itemIdInput.name = 'itemId';
+            itemIdInput.value = itemId;
+            
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'hidden';
+            quantityInput.name = 'quantity';
+            quantityInput.value = newQuantity;
+            
+            form.appendChild(itemIdInput);
+            form.appendChild(quantityInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        function removeItem(itemId) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/cart/remove';
+            
+            const itemIdInput = document.createElement('input');
+            itemIdInput.type = 'hidden';
+            itemIdInput.name = 'itemId';
+            itemIdInput.value = itemId;
+            
+            form.appendChild(itemIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+
+</html>

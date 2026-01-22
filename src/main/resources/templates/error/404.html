@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page Not Found - Commerce Platform</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="/css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+          <div class="error-page">
+            <h1 class="display-1 text-primary">404</h1>
+            <h2 th:text="${title}">Page Not Found</h2>
+            <p class="lead" th:text="${description}">
+              The page you are looking for might have been removed, had its name
+              changed, or is temporarily unavailable.
+            </p>
+            <div class="mt-4">
+              <a href="/" class="btn btn-primary me-2">
+                <i class="fas fa-home"></i> Go Home
+              </a>
+              <a href="/products" class="btn btn-outline-primary me-2">
+                <i class="fas fa-shopping-bag"></i> Browse Products
+              </a>
+              <button
+                onclick="history.back()"
+                class="btn btn-outline-secondary"
+              >
+                <i class="fas fa-arrow-left"></i> Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
