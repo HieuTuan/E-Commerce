@@ -80,7 +80,8 @@ public class CheckoutController {
     }
 
     private User getCurrentUser(Authentication authentication) {
-        return userService.findByUsername(authentication.getName())
+        // authentication.getName() returns email (from CustomUserDetailsService)
+        return userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

@@ -1,15 +1,9 @@
 package com.mypkga.commerceplatformfull.controller;
 
-import com.mypkga.commerceplatformfull.entity.Category;
-import com.mypkga.commerceplatformfull.entity.Order;
-import com.mypkga.commerceplatformfull.entity.Product;
-import com.mypkga.commerceplatformfull.entity.ProductImage;
+import com.mypkga.commerceplatformfull.entity.*;
 import com.mypkga.commerceplatformfull.repository.CategoryRepository;
 import com.mypkga.commerceplatformfull.repository.ProductImageRepository;
-import com.mypkga.commerceplatformfull.service.FileUploadService;
-import com.mypkga.commerceplatformfull.service.OrderService;
-import com.mypkga.commerceplatformfull.service.ProductService;
-import com.mypkga.commerceplatformfull.service.UserService;
+import com.mypkga.commerceplatformfull.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -18,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -33,6 +26,7 @@ public class AdminController {
     private final UserService userService;
     private final FileUploadService fileUploadService;
     private final ProductImageRepository productImageRepository;
+    private final RoleService roleService;
 
     @GetMapping
     public String adminDashboard(Model model) {
@@ -237,5 +231,103 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Error updating primary image: " + e.getMessage());
         }
         return "redirect:/admin/products/edit/" + productId;
+    }
+
+    // ==================== User Management ====================
+
+    @GetMapping("/users")
+    public String manageUsers(Model model) {
+        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("roles", roleService.getAllRoles());
+        return "admin/users";
+    }
+
+    @PostMapping("/users/{id}/toggle-status")
+    public String toggleUserStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setEnabled(!user.getEnabled());
+            userService.updateUser(user);
+            redirectAttributes.addFlashAttribute("success",
+                "User status updated to " + (user.getEnabled() ? "Enabled" : "Disabled"));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error updating user status: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/change-role")
+    public String changeUserRole(@PathVariable Long id,
+                                @RequestParam Long roleId,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Role role = roleService.getRoleById(roleId)
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+            user.setRole(role);
+            userService.updateUser(user);
+            redirectAttributes.addFlashAttribute("success", "User role updated successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error updating user role: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    // ==================== Category Management ====================
+
+    @GetMapping("/categories")
+    public String manageCategories(Model model) {
+        model.addAttribute("categories", categoryRepository.findAll());
+        return "admin/categories";
+    }
+
+    @GetMapping("/categories/new")
+    public String newCategoryForm(Model model) {
+        model.addAttribute("category", new Category());
+        return "admin/category-form";
+    }
+
+    @PostMapping("/categories/save")
+    public String saveCategory(@ModelAttribute Category category, RedirectAttributes redirectAttributes) {
+        try {
+            categoryRepository.save(category);
+            redirectAttributes.addFlashAttribute("success",
+                category.getId() == null ? "Category created successfully!" : "Category updated successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error saving category: " + e.getMessage());
+        }
+        return "redirect:/admin/categories";
+    }
+
+    @GetMapping("/categories/edit/{id}")
+    public String editCategoryForm(@PathVariable Long id, Model model) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        model.addAttribute("category", category);
+        return "admin/category-form";
+    }
+
+    @PostMapping("/categories/delete/{id}")
+    public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            categoryRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("success", "Category deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error deleting category: " + e.getMessage());
+        }
+        return "redirect:/admin/categories";
+    }
+
+    // ==================== Reports ====================
+
+    @GetMapping("/reports")
+    public String viewReports(Model model) {
+        model.addAttribute("totalOrders", orderService.getAllOrders().size());
+        model.addAttribute("totalProducts", productService.getAllProducts().size());
+        model.addAttribute("totalUsers", userService.getAllUsers().size());
+        model.addAttribute("recentOrders", orderService.getRecentOrders(10));
+        return "admin/reports";
     }
 }

@@ -49,7 +49,9 @@ public class SecurityConfig {
                     .maxAgeInSeconds(31536000)
                     .includeSubDomains(true)
                 )
-                .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                .referrerPolicy(referrer -> referrer
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                )
             )
             
             // Session Management
@@ -66,13 +68,21 @@ public class SecurityConfig {
             
             // Authorization rules
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/home", "/products/**", "/api/chatbot/**").permitAll()
+                // Public resources
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/files/**", "/favicon.ico").permitAll()
                 .requestMatchers("/login", "/register", "/verify-email", "/api/resend-otp", "/api/otp-status", "/error/**").permitAll()
                 .requestMatchers("/payment/**").permitAll() // Payment callbacks
+                .requestMatchers("/products/**", "/api/chatbot/**").permitAll()
+                .requestMatchers("/", "/home").permitAll() // Cho phép tất cả, HomeController sẽ xử lý redirect
+
+                // Admin and Staff dashboards
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/staff/**").hasRole("STAFF")
-                .requestMatchers("/cart/**", "/checkout/**", "/orders/**").hasAnyRole("CUSTOMER", "ADMIN", "STAFF")
+
+
+                // Shopping features - Customer only
+                .requestMatchers("/cart/**", "/checkout/**", "/orders/**").hasRole("CUSTOMER")
+
                 .anyRequest().authenticated()
             )
             

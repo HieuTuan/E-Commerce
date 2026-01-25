@@ -1,20 +1,22 @@
 package com.mypkga.commerceplatformfull.controller;
 
-import com.mypkga.commerceplatformfull.entity.Order;
-import com.mypkga.commerceplatformfull.entity.Product;
-import com.mypkga.commerceplatformfull.entity.User;
-import com.mypkga.commerceplatformfull.service.OrderService;
-import com.mypkga.commerceplatformfull.service.ProductService;
-import com.mypkga.commerceplatformfull.service.UserService;
+import com.mypkga.commerceplatformfull.entity.*;
+import com.mypkga.commerceplatformfull.repository.CategoryRepository;
+import com.mypkga.commerceplatformfull.repository.ProductImageRepository;
+import com.mypkga.commerceplatformfull.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/staff")
@@ -25,6 +27,9 @@ public class StaffController {
     private final OrderService orderService;
     private final ProductService productService;
     private final UserService userService;
+    private final CategoryRepository categoryRepository;
+    private final FileUploadService fileUploadService;
+    private final ProductImageRepository productImageRepository;
 
     @GetMapping("")
     public String staffHome() {
@@ -73,7 +78,6 @@ public class StaffController {
                                    Authentication authentication,
                                    RedirectAttributes redirectAttributes) {
         try {
-            User staff = getCurrentUser(authentication);
             Order.OrderStatus newStatus = Order.OrderStatus.valueOf(status);
             
             orderService.updateOrderStatus(id, newStatus);
@@ -90,12 +94,9 @@ public class StaffController {
 
     @PostMapping("/orders/{id}/assign-delivery")
     public String assignDelivery(@PathVariable Long id,
-                                @RequestParam String deliveryInfo,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
         try {
-            User staff = getCurrentUser(authentication);
-            
             // Logic để assign delivery (có thể mở rộng sau)
             orderService.updateOrderStatus(id, Order.OrderStatus.PROCESSING);
             
@@ -119,17 +120,211 @@ public class StaffController {
     @GetMapping("/products")
     public String viewProducts(Model model,
                               @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "10") int size) {
-        
-        Page<Product> products = productService.getAllProducts(PageRequest.of(page, size));
-        
+                              @RequestParam(defaultValue = "10") int size,
+                              @RequestParam(required = false) String search,
+                              @RequestParam(required = false) Long categoryId) {
+
+        Page<Product> products;
+        Pageable pageable = PageRequest.of(page, size);
+
+        if (search != null && !search.isEmpty()) {
+            // Convert List to Page manually for search results
+            List<Product> searchResults = productService.searchProducts(search);
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), searchResults.size());
+            List<Product> pageContent = searchResults.subList(start, end);
+            products = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, searchResults.size());
+        } else if (categoryId != null) {
+            // Convert List to Page manually for category filter
+            List<Product> categoryResults = productService.getProductsByCategory(categoryId);
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), categoryResults.size());
+            List<Product> pageContent = categoryResults.subList(start, end);
+            products = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, categoryResults.size());
+        } else {
+            products = productService.getAllProducts(pageable);
+        }
+
         model.addAttribute("products", products);
-        
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("search", search);
+        model.addAttribute("categoryId", categoryId);
+
         return "staff/products";
     }
 
+    @GetMapping("/products/new")
+    public String newProductForm(Model model) {
+        model.addAttribute("product", new Product());
+        model.addAttribute("categories", categoryRepository.findAll());
+        return "staff/product-form";
+    }
+
+    @GetMapping("/products/edit/{id}")
+    public String editProductForm(@PathVariable Long id, Model model) {
+        Product product = productService.getProductById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        model.addAttribute("product", product);
+        model.addAttribute("categories", categoryRepository.findAll());
+        return "staff/product-form";
+    }
+
+    @PostMapping("/products/save")
+    public String saveProduct(@ModelAttribute Product product,
+                             @RequestParam Long categoryId,
+                             @RequestParam(value = "imageFiles", required = false) MultipartFile[] imageFiles,
+                             @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            product.setCategory(category);
+
+            // Save product first
+            Product savedProduct;
+            if (product.getId() == null) {
+                savedProduct = productService.createProduct(product);
+            } else {
+                savedProduct = productService.updateProduct(product);
+            }
+
+            // Handle multiple image uploads
+            if (imageFiles != null && imageFiles.length > 0) {
+                int displayOrder = 0;
+                for (MultipartFile imageFile : imageFiles) {
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        try {
+                            FileUploadService.ImageUploadResult imageResult = fileUploadService.uploadImage(imageFile);
+
+                            ProductImage productImage = new ProductImage();
+                            productImage.setProduct(savedProduct);
+                            productImage.setImageOriginal(imageResult.getOriginalFileName());
+                            productImage.setImageThumbnail(imageResult.getThumbnailFileName());
+                            productImage.setImageMedium(imageResult.getMediumFileName());
+                            productImage.setImageLarge(imageResult.getLargeFileName());
+                            productImage.setDisplayOrder(displayOrder++);
+                            productImage.setIsPrimary(displayOrder == 1);
+
+                            productImageRepository.save(productImage);
+                        } catch (Exception e) {
+                            redirectAttributes.addFlashAttribute("error", "Lỗi khi tải ảnh lên: " + e.getMessage());
+                            return "redirect:/staff/products";
+                        }
+                    }
+                }
+            }
+
+            // Handle video upload
+            if (videoFile != null && !videoFile.isEmpty()) {
+                try {
+                    FileUploadService.VideoUploadResult videoResult = fileUploadService.uploadVideo(videoFile);
+
+                    ProductImage videoImage = new ProductImage();
+                    videoImage.setProduct(savedProduct);
+                    videoImage.setVideoFilename(videoResult.getFileName());
+                    videoImage.setDisplayOrder(999);
+                    videoImage.setIsPrimary(false);
+
+                    productImageRepository.save(videoImage);
+                } catch (Exception e) {
+                    redirectAttributes.addFlashAttribute("error", "Lỗi khi tải video lên: " + e.getMessage());
+                    return "redirect:/staff/products";
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("success",
+                product.getId() == null ? "Tạo sản phẩm thành công!" : "Cập nhật sản phẩm thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi lưu sản phẩm: " + e.getMessage());
+        }
+        return "redirect:/staff/products";
+    }
+
+    @PostMapping("/products/delete/{id}")
+    public String deleteProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            Product product = productService.getProductById(id).orElse(null);
+            if (product != null) {
+                List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+                for (ProductImage productImage : productImages) {
+                    if (productImage.getImageOriginal() != null) {
+                        fileUploadService.deleteImageFiles(
+                            productImage.getImageOriginal(),
+                            productImage.getImageThumbnail(),
+                            productImage.getImageMedium(),
+                            productImage.getImageLarge()
+                        );
+                    }
+                    if (productImage.getVideoFilename() != null) {
+                        fileUploadService.deleteVideoFile(productImage.getVideoFilename());
+                    }
+                }
+            }
+
+            productService.deleteProduct(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa sản phẩm: " + e.getMessage());
+        }
+        return "redirect:/staff/products";
+    }
+
+    @PostMapping("/products/{productId}/images/{imageId}/delete")
+    public String deleteProductImage(@PathVariable Long productId,
+                                   @PathVariable Long imageId,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            ProductImage productImage = productImageRepository.findById(imageId)
+                    .orElseThrow(() -> new RuntimeException("Image not found"));
+
+            if (productImage.getImageOriginal() != null) {
+                fileUploadService.deleteImageFiles(
+                    productImage.getImageOriginal(),
+                    productImage.getImageThumbnail(),
+                    productImage.getImageMedium(),
+                    productImage.getImageLarge()
+                );
+            }
+
+            productImageRepository.delete(productImage);
+            redirectAttributes.addFlashAttribute("success", "Xóa ảnh thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa ảnh: " + e.getMessage());
+        }
+        return "redirect:/staff/products/edit/" + productId;
+    }
+
+    @PostMapping("/products/{productId}/images/{imageId}/set-primary")
+    public String setPrimaryImage(@PathVariable Long productId,
+                                @PathVariable Long imageId,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
+            productImages.forEach(img -> img.setIsPrimary(false));
+            productImageRepository.saveAll(productImages);
+
+            ProductImage primaryImage = productImageRepository.findById(imageId)
+                    .orElseThrow(() -> new RuntimeException("Image not found"));
+            primaryImage.setIsPrimary(true);
+            productImageRepository.save(primaryImage);
+
+            redirectAttributes.addFlashAttribute("success", "Đặt ảnh chính thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi đặt ảnh chính: " + e.getMessage());
+        }
+        return "redirect:/staff/products/edit/" + productId;
+    }
+
+    @GetMapping("/categories")
+    public String manageCategories(Model model) {
+        model.addAttribute("categories", categoryRepository.findAll());
+        return "staff/categories";
+    }
+
+
     private User getCurrentUser(Authentication authentication) {
-        return userService.findByUsername(authentication.getName())
+        // authentication.getName() returns email (from CustomUserDetailsService)
+        return userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

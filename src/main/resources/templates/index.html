@@ -97,15 +97,24 @@
                                 </div>
                                 <div class="btn-group w-100">
                                     <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-outline-primary flex-fill me-2">
-                                        <i class="fas fa-eye"></i> View Details
+                                        <i class="fas fa-eye"></i> Xem Chi Tiết
                                     </a>
-                                    <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="flex-fill">
+                                    <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="flex-fill"
+                                          th:if="${product.stockQuantity > 0}">
                                         <input type="hidden" name="productId" th:value="${product.id}">
                                         <input type="hidden" name="quantity" value="1">
+                                        <input type="hidden" name="returnUrl" value="/">
                                         <button type="submit" class="btn btn-primary w-100">
-                                            <i class="fas fa-cart-plus"></i> Add to Cart
+                                            <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ
                                         </button>
                                     </form>
+                                    <button class="btn btn-secondary w-100 flex-fill" disabled
+                                            th:if="${product.stockQuantity <= 0}" sec:authorize="isAuthenticated()">
+                                        <i class="fas fa-times-circle"></i> Hết Hàng
+                                    </button>
+                                    <a th:href="@{/login}" class="btn btn-info w-100 flex-fill" sec:authorize="!isAuthenticated()">
+                                        <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+                                    </a>
                                 </div>
                             </div>
                         </div>

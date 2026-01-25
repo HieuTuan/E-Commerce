@@ -42,25 +42,45 @@
                                     <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/100'}"
                                         alt="Product" style="width: 60px; height: 60px; object-fit: cover;"
                                         class="me-3">
-                                    <span th:text="${item.product.name}">Product Name</span>
+                                    <div>
+                                        <div th:text="${item.product.name}">Product Name</div>
+                                        <small class="text-muted" th:if="${item.product.stockQuantity > 0}">
+                                            <i class="fas fa-boxes"></i>
+                                            <span th:text="${'Còn ' + item.product.stockQuantity + ' sản phẩm'}">Stock: 10</span>
+                                        </small>
+                                        <small class="text-danger" th:if="${item.product.stockQuantity == 0}">
+                                            <i class="fas fa-exclamation-triangle"></i> Hết hàng
+                                        </small>
+                                        <small class="text-warning" th:if="${item.product.stockQuantity > 0 && item.product.stockQuantity < 5}">
+                                            <i class="fas fa-exclamation-circle"></i> Sắp hết hàng
+                                        </small>
+                                    </div>
                                 </div>
                             </td>
                             <td><span th:text="${#numbers.formatInteger(item.price, 3, 'POINT')}"></span>đ</td>
                             <td>
                                 <form th:action="@{/cart/update/{id}(id=${item.id})}" method="post"
-                                    class="d-flex align-items-center" style="width: 150px;">
+                                    class="d-flex align-items-center" style="width: 200px;">
                                     <input type="number" name="quantity" class="form-control form-control-sm me-2"
-                                        th:value="${item.quantity}" min="1" max="99" style="width: 70px;">
-                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        th:value="${item.quantity}" min="1"
+                                        th:max="${item.product.stockQuantity}"
+                                        th:disabled="${item.product.stockQuantity == 0}"
+                                        style="width: 70px;">
+                                    <button type="submit" class="btn btn-sm btn-primary"
+                                        th:disabled="${item.product.stockQuantity == 0}">
                                         <i class="fas fa-sync"></i>
                                     </button>
                                 </form>
+                                <small class="text-danger" th:if="${item.quantity > item.product.stockQuantity}">
+                                    <i class="fas fa-exclamation-triangle"></i> Vượt quá số lượng tồn kho!
+                                </small>
                             </td>
                             <td class="fw-bold"><span th:text="${#numbers.formatInteger(item.subtotal, 3, 'POINT')}"></span>đ</td>
                             <td>
-                                <form th:action="@{/cart/remove/{id}(id=${item.id})}" method="post">
+                                <form th:action="@{/cart/remove/{id}(id=${item.id})}" method="post"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
                                     <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i> Remove
+                                        <i class="fas fa-trash"></i> Xóa
                                     </button>
                                 </form>
                             </td>

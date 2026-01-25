@@ -271,20 +271,26 @@
                     <input type="hidden" name="productId" th:value="${product.id}">
                     <div class="row g-3 mb-3">
                         <div class="col-auto">
-                            <label for="quantity" class="form-label">Quantity:</label>
+                            <label for="quantity" class="form-label">Số lượng:</label>
                         </div>
                         <div class="col-auto">
                             <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1"
-                                th:max="${product.stockQuantity}" style="width: 100px;">
+                                th:max="${product.stockQuantity}" style="width: 100px;" required>
+                            <small class="text-muted">Tối đa: <span th:text="${product.stockQuantity}">0</span></small>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-cart-plus"></i> Add to Cart
+                        <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ Hàng
                     </button>
                 </form>
 
+                <!-- Out of Stock Message -->
+                <div th:if="${product.stockQuantity <= 0}" sec:authorize="isAuthenticated()" class="alert alert-danger">
+                    <i class="fas fa-times-circle"></i> Sản phẩm hiện đã hết hàng
+                </div>
+
                 <div sec:authorize="!isAuthenticated()" class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Please <a th:href="@{/login}">login</a> to add items to cart.
+                    <i class="fas fa-info-circle"></i> Vui lòng <a th:href="@{/login}" class="alert-link">đăng nhập</a> để thêm sản phẩm vào giỏ hàng.
                 </div>
 
                 <!-- Back to Products -->
