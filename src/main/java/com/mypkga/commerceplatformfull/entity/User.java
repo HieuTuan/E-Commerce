@@ -30,6 +30,14 @@ public class User {
     @Column(nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String fullName;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
+
+    private LocalDateTime emailVerificationDate;
+
     @Column(length = 20)
     private String phone;
 
@@ -90,5 +98,11 @@ public class User {
     @Transient
     public boolean isCustomer() {
         return hasRole("CUSTOMER");
+    }
+
+    // Helper method to check if email is verified
+    @Transient
+    public boolean isEmailVerified() {
+        return emailVerified != null && emailVerified;
     }
 }

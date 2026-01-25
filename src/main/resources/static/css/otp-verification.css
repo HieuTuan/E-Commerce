@@ -1,0 +1,345 @@
+/**
+ * OTP Verification Styles
+ * Enhanced styling for OTP input forms and verification components
+ */
+
+/* OTP Input Field Styling */
+.otp-input {
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 0.3em;
+    padding: 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.otp-input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background: white;
+    outline: none;
+}
+
+.otp-input.is-valid {
+    border-color: #198754;
+    background: #f8fff9;
+}
+
+.otp-input.is-invalid {
+    border-color: #dc3545;
+    background: #fff8f8;
+}
+
+/* Timer Display */
+.otp-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1976d2;
+    margin-top: 15px;
+}
+
+.otp-timer i {
+    font-size: 1rem;
+}
+
+.countdown-number {
+    font-weight: bold;
+    color: #d32f2f;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Resend Button States */
+.resend-btn {
+    transition: all 0.3s ease;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.resend-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.resend-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Status Messages */
+.status-message {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInDown 0.3s ease-out;
+}
+
+.status-message i {
+    font-size: 1.1rem;
+}
+
+.status-message.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 1px solid #b8dacc;
+    color: #155724;
+}
+
+.status-message.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+    border: 1px solid #f1b0b7;
+    color: #721c24;
+}
+
+.status-message.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.status-message.alert-info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* Verification Form */
+.verification-form {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.verification-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.verification-header h3 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.verification-header .phone-display {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0d6efd;
+    background: #f8f9ff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+/* Loading States */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Progress Indicator */
+.verification-progress {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.progress-step.active {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.progress-step.completed {
+    color: #198754;
+}
+
+.progress-step i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Attempt Counter */
+.attempt-counter {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff3cd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+.attempt-counter.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Security Notice */
+.security-notice {
+    background: #e7f3ff;
+    border: 1px solid #b8daff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: #004085;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.security-notice i {
+    color: #0d6efd;
+    margin-top: 2px;
+}
+
+/* Animations */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .verification-form {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .otp-input {
+        font-size: 1.3rem;
+        padding: 12px;
+    }
+    
+    .verification-header .phone-display {
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+    
+    .verification-progress {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .progress-step {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .otp-input {
+        font-size: 1.2rem;
+        letter-spacing: 0.2em;
+    }
+    
+    .resend-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .verification-header h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .otp-input {
+        border-width: 3px;
+    }
+    
+    .status-message {
+        border-width: 2px;
+    }
+    
+    .verification-form {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .otp-input,
+    .resend-btn,
+    .status-message {
+        transition: none;
+    }
+    
+    .btn-loading::after {
+        animation: none;
+    }
+    
+    .pulse-animation {
+        animation: none;
+    }
+}

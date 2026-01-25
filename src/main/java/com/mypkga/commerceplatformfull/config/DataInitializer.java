@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -51,54 +52,46 @@ public class DataInitializer implements CommandLineRunner {
                         Role staffRole = roleService.getRoleByName("STAFF").orElseThrow();
 
                         // Admin user
-                        User admin = new User();
-                        admin.setUsername("admin");
-                        admin.setPassword(passwordEncoder.encode("admin123"));
-                        admin.setFullName("Administrator");
-                        admin.setPhone("0123456789");
-                        admin.setAddress("123 Admin Street, Hanoi, Vietnam");
-                        admin.setRole(adminRole);
-                        admin.setEnabled(true);
+                    User admin = new User();
+                    admin.setUsername("admin");
+                    admin.setPassword(passwordEncoder.encode("admin123"));
+                    admin.setFullName("Administrator");
+                    admin.setEmail("admin@commerce.com");
+                    admin.setEmailVerified(true);
+                    admin.setEmailVerificationDate(LocalDateTime.now());
+                    admin.setPhone("0123456789");
+                    admin.setAddress("123 Admin Street, Hanoi, Vietnam");
+                    admin.setRole(adminRole);
+                    admin.setEnabled(true);
 
-                        // Customer users
-                        User customer1 = new User();
-                        customer1.setUsername("john_doe");
-                        customer1.setPassword(passwordEncoder.encode("password123"));
-                        customer1.setFullName("John Doe");
-                        customer1.setPhone("0987654321");
-                        customer1.setAddress("456 Customer Avenue, Ho Chi Minh, Vietnam");
-                        customer1.setRole(customerRole);
-                        customer1.setEnabled(true);
 
-                        User customer2 = new User();
-                        customer2.setUsername("jane_smith");
-                        customer2.setPassword(passwordEncoder.encode("password123"));
-                        customer2.setFullName("Jane Smith");
-                        customer2.setPhone("0912345678");
-                        customer2.setAddress("789 Buyer Street, Da Nang, Vietnam");
-                        customer2.setRole(customerRole);
-                        customer2.setEnabled(true);
+                    User customer1 = new User();
+                    customer1.setUsername("john_doe");
+                    customer1.setPassword(passwordEncoder.encode("password123"));
+                    customer1.setFullName("John Doe");
+                    customer1.setEmail("john.doe@gmail.com");
+                    customer1.setEmailVerified(true);
+                    customer1.setEmailVerificationDate(LocalDateTime.now());
+                    customer1.setPhone("0987654321");
+                    customer1.setAddress("456 Customer Avenue, Ho Chi Minh, Vietnam");
+                    customer1.setRole(customerRole);
+                    customer1.setEnabled(true);
 
-                        User customer3 = new User();
-                        customer3.setUsername("mike_wilson");
-                        customer3.setPassword(passwordEncoder.encode("password123"));
-                        customer3.setFullName("Mike Wilson");
-                        customer3.setPhone("0901234567");
-                        customer3.setAddress("321 Shopping Road, Hai Phong, Vietnam");
-                        customer3.setRole(customerRole);
-                        customer3.setEnabled(true);
 
-                        // Staff user
-                        User staff = new User();
-                        staff.setUsername("staff");
-                        staff.setPassword(passwordEncoder.encode("staff123"));
-                        staff.setFullName("Staff Member");
-                        staff.setPhone("0123456788");
-                        staff.setAddress("456 Staff Street, Hanoi, Vietnam");
-                        staff.setRole(staffRole);
-                        staff.setEnabled(true);
+                    User staff = new User();
+                    staff.setUsername("staff");
+                    staff.setPassword(passwordEncoder.encode("staff123"));
+                    staff.setFullName("Staff Member");
+                    staff.setEmail("staff@commerce.com");
+                    staff.setEmailVerified(true);
+                    staff.setEmailVerificationDate(LocalDateTime.now());
+                    staff.setPhone("0123456788");
+                    staff.setAddress("456 Staff Street, Hanoi, Vietnam");
+                    staff.setRole(staffRole);
+                    staff.setEnabled(true);
 
-                        userRepository.saveAll(Arrays.asList(admin, customer1, customer2, customer3, staff));
+
+                    userRepository.saveAll(Arrays.asList(admin, customer1, staff));
                         log.info("Successfully initialized {} users with roles", 5);
                 } else {
                         log.info("Users already exist, skipping initialization");

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,6 +72,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
@@ -107,6 +113,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
     
     // Role-specific methods (updated to work with Role entity)
@@ -158,5 +169,48 @@ public class UserServiceImpl implements UserService {
         User updatedUser = userRepository.save(user);
         log.info("Assigned role '{}' to user '{}'", roleName, user.getUsername());
         return updatedUser;
+    }
+    
+
+
+    // Email verification methods
+    @Override
+    @Transactional
+    public User markEmailAsVerified(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        user.setEmailVerified(true);
+        user.setEmailVerificationDate(java.time.LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+        log.info("Marked email as verified for user: {}", user.getUsername());
+        return updatedUser;
+    }
+    
+    @Override
+    @Transactional
+    public User markEmailAsVerified(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        user.setEmailVerified(true);
+        user.setEmailVerificationDate(java.time.LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+        log.info("Marked email as verified for user: {}", user.getUsername());
+        return updatedUser;
+    }
+    
+    @Override
+    public boolean isEmailVerified(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        return user.getEmailVerified() != null && user.getEmailVerified();
+    }
+    
+    @Override
+    public boolean isEmailVerified(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return user.getEmailVerified() != null && user.getEmailVerified();
     }
 }

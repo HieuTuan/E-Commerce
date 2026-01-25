@@ -13,6 +13,8 @@ public interface UserService {
 
     Optional<User> findByUsername(String username);
 
+    Optional<User> findByEmail(String email);
+
     Optional<User> findById(Long id);
 
     List<User> getAllUsers();
@@ -26,6 +28,8 @@ public interface UserService {
     void deleteUser(Long id);
 
     boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
 
     User createAdminUser(User user);
     
@@ -42,4 +46,14 @@ public interface UserService {
     User assignRole(Long userId, Long roleId);
     
     User assignRole(Long userId, String roleName);
+
+
+    // Email verification methods
+    User markEmailAsVerified(Long userId);
+    
+    User markEmailAsVerified(String email);
+    
+    boolean isEmailVerified(Long userId);
+    
+    boolean isEmailVerified(String email);
 }
