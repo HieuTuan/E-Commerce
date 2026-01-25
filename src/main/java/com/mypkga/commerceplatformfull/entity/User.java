@@ -24,9 +24,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
-
     @Column(nullable = false)
     private String password;
 
@@ -39,9 +36,9 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private UserRole role = UserRole.CUSTOMER;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @Column(nullable = false)
     private Boolean enabled = true;
@@ -59,7 +56,39 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
 
-    public enum UserRole {
-        GUEST, CUSTOMER, STAFF, ADMIN
+    // Helper method to get role name
+    @Transient
+    public String getRoleName() {
+        return role != null ? role.getName() : null;
+    }
+
+    // Helper method to check if user has specific permission
+    @Transient
+    public boolean hasPermission(String permission) {
+        return role != null && role.hasPermission(permission);
+    }
+
+    // Helper method to check if user has specific role
+    @Transient
+    public boolean hasRole(String roleName) {
+        return role != null && roleName.equals(role.getName());
+    }
+
+    // Helper method to check if user is admin
+    @Transient
+    public boolean isAdmin() {
+        return hasRole("ADMIN");
+    }
+
+    // Helper method to check if user is staff
+    @Transient
+    public boolean isStaff() {
+        return hasRole("STAFF");
+    }
+
+    // Helper method to check if user is customer
+    @Transient
+    public boolean isCustomer() {
+        return hasRole("CUSTOMER");
     }
 }

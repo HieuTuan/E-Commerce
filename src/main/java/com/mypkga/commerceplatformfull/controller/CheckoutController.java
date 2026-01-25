@@ -7,7 +7,6 @@ import com.mypkga.commerceplatformfull.service.CartService;
 import com.mypkga.commerceplatformfull.service.OrderService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import com.mypkga.commerceplatformfull.service.VNPayService;
-import com.mypkga.commerceplatformfull.service.MomoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -24,7 +23,6 @@ public class CheckoutController {
     private final UserService userService;
     private final CartService cartService;
     private final VNPayService vnPayService;
-    private final MomoService momoService;
 
     @GetMapping
     public String checkoutPage(Authentication authentication, Model model) {
@@ -46,21 +44,17 @@ public class CheckoutController {
     public String processCheckout(@RequestParam String shippingAddress,
             @RequestParam String customerName,
             @RequestParam String customerPhone,
-            @RequestParam String customerEmail,
             @RequestParam String paymentMethod,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
             User user = getCurrentUser(authentication);
             Order order = orderService.createOrder(user, shippingAddress, customerName,
-                    customerPhone, customerEmail, paymentMethod);
+                    customerPhone, paymentMethod);
 
             // Handle payment method
             if ("VNPAY".equals(paymentMethod)) {
                 String paymentUrl = vnPayService.createPaymentUrl(order);
-                return "redirect:" + paymentUrl;
-            } else if ("MOMO".equals(paymentMethod)) {
-                String paymentUrl = momoService.createPaymentUrl(order);
                 return "redirect:" + paymentUrl;
             } else if ("COD".equals(paymentMethod)) {
                 redirectAttributes.addFlashAttribute("success", "Order placed successfully!");

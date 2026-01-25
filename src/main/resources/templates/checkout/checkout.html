@@ -222,7 +222,7 @@
     <div class="container checkout-container">
         <div class="row g-3">
             <!-- Left: Customer Info -->
-            <div class="col-lg-6">
+            <div class="col-lg-7">
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-user"></i> Customer Information
@@ -232,11 +232,6 @@
                             <div class="mb-3">
                                 <label class="form-label">Full Name *</label>
                                 <input type="text" class="form-control" name="customerName" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Email *</label>
-                                <input type="email" class="form-control" name="customerEmail" required>
                             </div>
 
                             <div class="mb-3">
@@ -275,17 +270,6 @@
                                     </div>
                                 </div>
 
-                                <div class="payment-option" onclick="selectPayment('MOMO')">
-                                    <div class="d-flex align-items-center">
-                                        <input type="radio" name="paymentMethod" value="MOMO" id="momo">
-                                        <label class="ms-3 mb-0 flex-grow-1" for="momo">
-                                            <i class="fas fa-mobile-alt" style="color: #d82d8b;"></i>
-                                            <strong>Momo</strong>
-                                            <small class="text-muted d-block">Pay via Momo wallet</small>
-                                        </label>
-                                    </div>
-                                </div>
-
                                 <div class="payment-option" onclick="selectPayment('COD')">
                                     <div class="d-flex align-items-center">
                                         <input type="radio" name="paymentMethod" value="COD" id="cod">
@@ -303,7 +287,7 @@
             </div>
 
             <!-- Right: Products -->
-            <div class="col-lg-6">
+            <div class="col-lg-5">
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-shopping-cart"></i> Ordered Products
@@ -312,7 +296,7 @@
                         <!-- Display cart items from database -->
                         <div th:if="${cart != null && !cart.items.isEmpty()}">
                             <div class="product-item" th:each="item : ${cart.items}">
-                                <img th:src="${item.product.thumbnailUrl != null ? item.product.thumbnailUrl : 'https://via.placeholder.com/100'}"
+                                <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/100'}"
                                     class="product-img" th:alt="${item.product.name}">
                                 <div class="product-info">
                                     <div class="product-name" th:text="${item.product.name}">Product Name</div>
@@ -323,8 +307,8 @@
                                     <button class="btn-qty" type="button" th:onclick="'updateQuantity(' + ${item.id} + ', ' + (${item.quantity} + 1) + ')'">+</button>
                                 </div>
                                 <div class="text-end" style="min-width: 110px;">
-                                    <div class="product-price">$<span th:text="${#numbers.formatDecimal(item.product.price, 1, 2)}">0.00</span></div>
-                                    <div class="product-total">$<span th:text="${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}">0.00</span></div>
+                                    <div class="product-price"><span th:text="${#numbers.formatInteger(item.product.price, 3, 'POINT')}"></span>đ</div>
+                                    <div class="product-total"><span th:text="${#numbers.formatInteger(item.product.price * item.quantity, 3, 'POINT')}"></span>đ</div>
                                 </div>
                                 <form th:action="@{/cart/remove}" method="post" style="display: inline;">
                                     <input type="hidden" name="itemId" th:value="${item.id}">
@@ -345,7 +329,7 @@
                         <hr class="my-3" th:if="${cart != null && !cart.items.isEmpty()}">
 
                         <div class="total-price" th:if="${cart != null && !cart.items.isEmpty()}">
-                            Total: $<span th:text="${#numbers.formatDecimal(cartTotal, 1, 2)}">0.00</span>
+                            Total: <span th:text="${#numbers.formatInteger(cartTotal, 3, 'POINT')}"></span>đ
                         </div>
 
                         <div class="mb-3" th:if="${cart != null && !cart.items.isEmpty()}">

@@ -46,11 +46,8 @@
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                         <a class="nav-link" th:href="@{/admin}">Admin</a>
                     </li>
-                    <li class="nav-item" sec:authorize="hasRole('VENDOR')">
-                        <a class="nav-link" th:href="@{/vendor/dashboard}">Vendor Dashboard</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('MODERATOR')">
-                        <a class="nav-link" th:href="@{/moderator/dashboard}">Moderator</a>
+                    <li class="nav-item" sec:authorize="hasRole('STAFF')">
+                        <a class="nav-link" th:href="@{/staff}">Staff Dashboard</a>
                     </li>
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <form th:action="@{/logout}" method="post" class="d-inline">
@@ -90,13 +87,13 @@
                 <div class="row">
                     <div class="col-lg-4 col-md-6 mb-4" th:each="product : ${featuredProducts}">
                         <div class="card featured-product-card h-100">
-                            <img th:src="${product.mediumUrl != null ? product.mediumUrl : 'https://via.placeholder.com/300x200'}"
+                            <img th:src="${product.primaryImage != null ? product.primaryImage.mediumUrl : 'https://via.placeholder.com/400x400?text=No+Image'}"
                                 class="card-img-top" alt="Product Image">
                             <div class="card-body">
                                 <div class="card-content">
                                     <h5 class="card-title" th:text="${product.name}">Product Name</h5>
                                     <p class="card-text" th:text="${#strings.abbreviate(product.description, 100)}">Description</p>
-                                    <p class="price">$<span th:text="${product.price}">0.00</span></p>
+                                    <p class="price"><span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ</p>
                                 </div>
                                 <div class="btn-group w-100">
                                     <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-outline-primary flex-fill me-2">
@@ -123,11 +120,11 @@
             <div class="row">
                 <div class="col-xl-3 col-lg-4 col-md-6 mb-4" th:each="product : ${latestProducts}">
                     <div class="card latest-product-card h-100">
-                        <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://via.placeholder.com/200'}"
+                        <img th:src="${product.primaryImage != null ? product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/200'}"
                             class="card-img-top" alt="Product Image">
                         <div class="card-body">
                             <h6 class="card-title" th:text="${product.name}">Product</h6>
-                            <p class="price">$<span th:text="${product.price}">0.00</span></p>
+                            <p class="price"><span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ</p>
                             <a th:href="@{/products/{id}(id=${product.id})}"
                                 class="btn btn-outline-primary w-100">
                                 <i class="fas fa-eye"></i> View Details

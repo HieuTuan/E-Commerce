@@ -35,22 +35,7 @@ public class Product {
     @Column(nullable = false)
     private Integer stockQuantity = 0;
 
-    // Image file names (instead of URLs)
-    @Column(name = "image_original", length = 255)
-    private String imageOriginal;
 
-    @Column(name = "image_thumbnail", length = 255)
-    private String imageThumbnail;
-
-    @Column(name = "image_medium", length = 255)
-    private String imageMedium;
-
-    @Column(name = "image_large", length = 255)
-    private String imageLarge;
-
-    // Video file name (instead of URL)
-    @Column(name = "video_filename", length = 255)
-    private String videoFilename;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -79,6 +64,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImage> productImages = new ArrayList<>();
+
     @Transient
     public Double getAverageRating() {
         if (reviews == null || reviews.isEmpty()) {
@@ -95,29 +83,37 @@ public class Product {
         return reviews != null ? reviews.size() : 0;
     }
 
-    // Helper methods to get image URLs
+
+
+
+    // Helper methods for product images
     @Transient
-    public String getThumbnailUrl() {
-        return imageThumbnail != null ? "/files/images/" + imageThumbnail : null;
+    public ProductImage getPrimaryImage() {
+        if (productImages == null || productImages.isEmpty()) {
+            return null;
+        }
+        return productImages.stream()
+                .filter(ProductImage::getIsPrimary)
+                .findFirst()
+                .orElse(productImages.get(0));
     }
 
     @Transient
-    public String getMediumUrl() {
-        return imageMedium != null ? "/files/images/" + imageMedium : null;
-    }
-
-    @Transient
-    public String getLargeUrl() {
-        return imageLarge != null ? "/files/images/" + imageLarge : null;
-    }
-
-    @Transient
-    public String getOriginalUrl() {
-        return imageOriginal != null ? "/files/images/" + imageOriginal : null;
-    }
-
-    @Transient
-    public String getVideoUrl() {
-        return videoFilename != null ? "/files/videos/" + videoFilename : null;
+    public List<ProductImage> getSortedImages() {
+        if (productImages == null) {
+            return new ArrayList<>();
+        }
+        return productImages.stream()
+                .sorted((a, b) -> {
+                    // Primary image first
+                    if (a.getIsPrimary() && !b.getIsPrimary()) return -1;
+                    if (!a.getIsPrimary() && b.getIsPrimary()) return 1;
+                    // Then by display order
+                    return Integer.compare(
+                        a.getDisplayOrder() != null ? a.getDisplayOrder() : 0,
+                        b.getDisplayOrder() != null ? b.getDisplayOrder() : 0
+                    );
+                })
+                .toList();
     }
 }

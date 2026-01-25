@@ -88,7 +88,7 @@
                                 <tbody>
                                     <tr th:each="product : ${products.content}">
                                         <td>
-                                            <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://via.placeholder.com/50x50'}" 
+                                            <img th:src="${product.primaryImage != null ? product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/50x50'}" 
                                                  alt="Product Image" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
                                         </td>
                                         <td>
@@ -168,7 +168,7 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <img th:src="${product.mediumUrl != null ? product.mediumUrl : 'https://via.placeholder.com/300x200'}" 
+                            <img th:src="${product.primaryImage != null ? product.primaryImage.mediumUrl : 'https://via.placeholder.com/300x200'}" 
                                  alt="Product Image" class="img-fluid rounded">
                         </div>
                         <div class="col-md-6">

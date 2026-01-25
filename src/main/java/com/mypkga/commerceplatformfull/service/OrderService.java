@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface OrderService {
 
     Order createOrder(User user, String shippingAddress, String customerName, String customerPhone,
-            String customerEmail, String paymentMethod);
+            String paymentMethod);
 
     Optional<Order> getOrderById(Long id);
 

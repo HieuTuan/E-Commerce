@@ -68,7 +68,7 @@
                                     </p>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <h5 class="text-primary">Total: $<span th:text="${order.totalAmount}">0.00</span>
+                                    <h5 class="text-primary">Total: <span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ
                                     </h5>
                                     <p class="text-muted mb-0">Payment: <span
                                             th:text="${order.paymentMethod}">COD</span></p>

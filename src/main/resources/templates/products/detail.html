@@ -120,6 +120,29 @@
             object-fit: cover;
         }
 
+        .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            position: relative;
+        }
+
+        .video-thumbnail::after {
+            content: 'VIDEO';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            background: rgba(0,0,0,0.7);
+            padding: 1px 3px;
+            border-radius: 2px;
+        }
+
         @media (max-width: 768px) {
             .main-image-container {
                 height: 300px;
@@ -165,7 +188,7 @@
                     <!-- Main Image -->
                     <div class="main-image-container">
                         <img id="mainImage"
-                            th:src="${product.largeUrl != null ? product.largeUrl : 'https://via.placeholder.com/500x500?text=' + product.name}"
+                            th:src="${!product.sortedImages.empty ? product.sortedImages[0].largeUrl : 'https://via.placeholder.com/500x500?text=' + product.name}"
                             alt="Product Image">
                     </div>
 
@@ -186,16 +209,6 @@
                         <!-- Right Arrow -->
                         <div class="nav-arrow" id="scrollRight" onclick="scrollThumbnails('right')">
                             <i class="fas fa-chevron-right"></i>
-                        </div>
-                    </div>
-
-                    <!-- Video Player (if video exists) -->
-                    <div th:if="${product.videoUrl != null && !product.videoUrl.isEmpty()}" class="mt-3">
-                        <div class="ratio ratio-16x9">
-                            <iframe th:src="${product.videoUrl}" allowfullscreen frameborder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                style="border-radius: 8px;">
-                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -231,7 +244,7 @@
 
                 <!-- Price -->
                 <h3 class="text-primary mb-4">
-                    $<span th:text="${product.price}">0.00</span>
+                    <span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ
                 </h3>
 
                 <!-- Stock -->
@@ -338,17 +351,34 @@
 
     <script th:inline="javascript">
         // Product Image Gallery JavaScript
-        const productImageUrl = /*[[${product.largeUrl}]]*/ 'https://via.placeholder.com/500x500?text=Product';
-
-        // Mock multiple images for demo (you can replace with actual product images from backend)
-        const productImages = [
-            productImageUrl,
-            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=500&h=500&fit=crop'
-        ];
+        /*<![CDATA[*/
+        const productImages = [];
+        const productVideos = [];
+        
+        /*[# th:each="image : ${product.sortedImages}"]*/
+        /*[# th:if="${image.imageOriginal != null}"]*/
+        productImages.push({
+            type: 'image',
+            largeUrl: /*[[${image.largeUrl}]]*/,
+            thumbnailUrl: /*[[${image.thumbnailUrl}]]*/
+        });
+        /*[/]*/
+        /*[# th:if="${image.videoFilename != null}"]*/
+        productImages.push({
+            type: 'video',
+            videoUrl: /*[[${image.videoUrl}]]*/,
+            thumbnailUrl: 'https://via.placeholder.com/80x80?text=VIDEO'
+        });
+        /*[/]*/
+        /*[/]*/
+        
+        /*[# th:if="${product.sortedImages.empty}"]*/
+        productImages.push({
+            type: 'image',
+            largeUrl: 'https://via.placeholder.com/500x500?text=' + /*[[${product.name}]]*/,
+            thumbnailUrl: 'https://via.placeholder.com/80x80?text=' + /*[[${product.name}]]*/
+        });
+        /*[/]*/
 
         let currentImageIndex = 0;
 
@@ -359,35 +389,74 @@
 
         function initializeGallery() {
             const thumbnailWrapper = document.getElementById('thumbnailWrapper');
+            const mainImage = document.getElementById('mainImage');
+
+            // Set initial main image/video
+            if (productImages.length > 0) {
+                changeImage(0);
+            }
 
             // Create thumbnail elements
-            productImages.forEach((imageUrl, index) => {
+            productImages.forEach((item, index) => {
                 const thumbnailItem = document.createElement('div');
                 thumbnailItem.className = 'thumbnail-item' + (index === 0 ? ' active' : '');
                 thumbnailItem.onclick = () => changeImage(index);
 
-                const img = document.createElement('img');
-                img.src = imageUrl;
-                img.alt = 'Product thumbnail ' + (index + 1);
+                if (item.type === 'video') {
+                    // Video thumbnail with play icon
+                    const videoThumb = document.createElement('div');
+                    videoThumb.className = 'video-thumbnail';
+                    videoThumb.style.cssText = 'width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;';
+                    videoThumb.innerHTML = '<i class="fas fa-play"></i>';
+                    thumbnailItem.appendChild(videoThumb);
+                } else {
+                    // Image thumbnail
+                    const img = document.createElement('img');
+                    img.src = item.thumbnailUrl;
+                    img.alt = 'Product thumbnail ' + (index + 1);
+                    thumbnailItem.appendChild(img);
+                }
 
-                thumbnailItem.appendChild(img);
                 thumbnailWrapper.appendChild(thumbnailItem);
             });
+
+            // Hide navigation if only one item
+            if (productImages.length <= 1) {
+                document.querySelector('.thumbnail-navigation').style.display = 'none';
+            }
 
             updateArrowStates();
         }
 
         function changeImage(index) {
             currentImageIndex = index;
+            const item = productImages[index];
+            const mainContainer = document.querySelector('.main-image-container');
 
-            // Update main image with fade effect
-            const mainImage = document.getElementById('mainImage');
-            mainImage.style.opacity = '0';
+            // Clear current content
+            mainContainer.innerHTML = '';
 
-            setTimeout(() => {
-                mainImage.src = productImages[index];
-                mainImage.style.opacity = '1';
-            }, 150);
+            if (item.type === 'video') {
+                // Show video
+                const video = document.createElement('video');
+                video.controls = true;
+                video.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
+                
+                const source = document.createElement('source');
+                source.src = item.videoUrl;
+                source.type = 'video/mp4';
+                
+                video.appendChild(source);
+                video.innerHTML += 'Your browser does not support the video tag.';
+                mainContainer.appendChild(video);
+            } else {
+                // Show image
+                const img = document.createElement('img');
+                img.src = item.largeUrl;
+                img.alt = 'Product Image';
+                img.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain; transition: opacity 0.3s ease;';
+                mainContainer.appendChild(img);
+            }
 
             // Update active thumbnail
             const thumbnails = document.querySelectorAll('.thumbnail-item');
@@ -401,6 +470,7 @@
 
             // Scroll thumbnail into view
             scrollThumbnailIntoView(index);
+            updateArrowStates();
         }
 
         function scrollThumbnails(direction) {
@@ -428,27 +498,23 @@
         }
 
         function updateArrowStates() {
-            const container = document.getElementById('thumbnailContainer');
             const leftArrow = document.getElementById('scrollLeft');
             const rightArrow = document.getElementById('scrollRight');
 
-            // Check if at start
-            if (container.scrollLeft <= 0) {
+            // Update arrow states based on current image index
+            if (currentImageIndex <= 0) {
                 leftArrow.classList.add('disabled');
             } else {
                 leftArrow.classList.remove('disabled');
             }
 
-            // Check if at end
-            if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 1) {
+            if (currentImageIndex >= productImages.length - 1) {
                 rightArrow.classList.add('disabled');
             } else {
                 rightArrow.classList.remove('disabled');
             }
         }
-
-        // Update arrow states on scroll
-        document.getElementById('thumbnailContainer')?.addEventListener('scroll', updateArrowStates);
+        /*]]>*/
     </script>
 </body>
 

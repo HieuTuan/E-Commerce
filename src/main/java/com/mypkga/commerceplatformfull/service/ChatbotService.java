@@ -79,7 +79,7 @@ public class ChatbotService {
         }
 
         if (msg.contains("payment") || msg.contains("pay")) {
-            return "We accept VNPay, Momo, and Cash on Delivery. All payment methods are secure and encrypted.";
+            return "We accept VNPay and Cash on Delivery. All payment methods are secure and encrypted.";
         }
 
         if (msg.contains("recommend") || msg.contains("suggestion")) {

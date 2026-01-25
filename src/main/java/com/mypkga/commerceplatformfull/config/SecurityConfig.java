@@ -67,7 +67,7 @@ public class SecurityConfig {
             // Authorization rules
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/home", "/products/**", "/api/chatbot/**").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/files/**", "/favicon.ico").permitAll()
                 .requestMatchers("/login", "/register", "/error/**").permitAll()
                 .requestMatchers("/payment/**").permitAll() // Payment callbacks
                 .requestMatchers("/admin/**").hasRole("ADMIN")

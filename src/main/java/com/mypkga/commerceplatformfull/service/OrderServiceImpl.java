@@ -4,6 +4,7 @@ import com.mypkga.commerceplatformfull.entity.*;
 import com.mypkga.commerceplatformfull.repository.CartRepository;
 import com.mypkga.commerceplatformfull.repository.OrderItemRepository;
 import com.mypkga.commerceplatformfull.repository.OrderRepository;
+import com.mypkga.commerceplatformfull.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,11 +26,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
     private final CartService cartService;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
     public Order createOrder(User user, String shippingAddress, String customerName,
-            String customerPhone, String customerEmail, String paymentMethod) {
+            String customerPhone, String paymentMethod) {
         // Get user's cart
         Cart cart = cartRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
@@ -49,7 +51,6 @@ public class OrderServiceImpl implements OrderService {
         order.setShippingAddress(shippingAddress);
         order.setCustomerName(customerName);
         order.setCustomerPhone(customerPhone);
-        order.setCustomerEmail(customerEmail);
 
         Order savedOrder = orderRepository.save(order);
 
@@ -104,11 +105,26 @@ public class OrderServiceImpl implements OrderService {
     public Order updatePaymentStatus(Long orderId, Order.PaymentStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        
+        Order.PaymentStatus oldStatus = order.getPaymentStatus();
         order.setPaymentStatus(status);
 
-        // If payment is successful, update order status
-        if (status == Order.PaymentStatus.PAID) {
+        // If payment is successful and was not paid before, reduce stock
+        if (status == Order.PaymentStatus.PAID && oldStatus != Order.PaymentStatus.PAID) {
             order.setStatus(Order.OrderStatus.PROCESSING);
+            
+            // Reduce stock for each order item
+            for (OrderItem orderItem : order.getItems()) {
+                Product product = orderItem.getProduct();
+                int newStock = product.getStockQuantity() - orderItem.getQuantity();
+                
+                if (newStock < 0) {
+                    throw new RuntimeException("Insufficient stock for product: " + product.getName());
+                }
+                
+                product.setStockQuantity(newStock);
+                productRepository.save(product);
+            }
         }
 
         return orderRepository.save(order);

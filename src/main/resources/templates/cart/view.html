@@ -39,13 +39,13 @@
                         <tr th:each="item : ${cart.items}">
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img th:src="${item.product.thumbnailUrl != null ? item.product.thumbnailUrl : 'https://via.placeholder.com/100'}"
+                                    <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/100'}"
                                         alt="Product" style="width: 60px; height: 60px; object-fit: cover;"
                                         class="me-3">
                                     <span th:text="${item.product.name}">Product Name</span>
                                 </div>
                             </td>
-                            <td>$<span th:text="${item.price}">0.00</span></td>
+                            <td><span th:text="${#numbers.formatInteger(item.price, 3, 'POINT')}"></span>đ</td>
                             <td>
                                 <form th:action="@{/cart/update/{id}(id=${item.id})}" method="post"
                                     class="d-flex align-items-center" style="width: 150px;">
@@ -56,7 +56,7 @@
                                     </button>
                                 </form>
                             </td>
-                            <td class="fw-bold">$<span th:text="${item.subtotal}">0.00</span></td>
+                            <td class="fw-bold"><span th:text="${#numbers.formatInteger(item.subtotal, 3, 'POINT')}"></span>đ</td>
                             <td>
                                 <form th:action="@{/cart/remove/{id}(id=${item.id})}" method="post">
                                     <button type="submit" class="btn btn-sm btn-danger">
@@ -82,7 +82,7 @@
                             </div>
                             <div class="d-flex justify-content-between mt-2">
                                 <strong>Total Amount:</strong>
-                                <strong class="text-primary">$<span th:text="${cart.totalAmount}">0.00</span></strong>
+                                <strong class="text-primary"><span th:text="${#numbers.formatInteger(cart.totalAmount, 3, 'POINT')}"></span>đ</strong>
                             </div>
                             <a href="/checkout" class="btn btn-success w-100 mt-3">
                                 <i class="fas fa-credit-card"></i> Proceed to Checkout

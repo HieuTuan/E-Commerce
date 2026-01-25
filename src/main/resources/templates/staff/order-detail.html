@@ -47,7 +47,6 @@
                             <div class="col-md-6">
                                 <p><strong>Mã Đơn Hàng:</strong> <span th:text="${order.orderNumber}"></span></p>
                                 <p><strong>Khách Hàng:</strong> <span th:text="${order.customerName}"></span></p>
-                                <p><strong>Email:</strong> <span th:text="${order.customerEmail}"></span></p>
                                 <p><strong>Điện Thoại:</strong> <span th:text="${order.customerPhone}"></span></p>
                             </div>
                             <div class="col-md-6">
@@ -93,7 +92,7 @@
                                     <tr th:each="item : ${order.items}">
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img th:src="${item.product.thumbnailUrl != null ? item.product.thumbnailUrl : 'https://via.placeholder.com/50x50'}" 
+                                                <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/50x50'}" 
                                                      alt="Product Image" class="me-3" style="width: 50px; height: 50px; object-fit: cover;">
                                                 <div>
                                                     <h6 class="mb-0" th:text="${item.productName}"></h6>

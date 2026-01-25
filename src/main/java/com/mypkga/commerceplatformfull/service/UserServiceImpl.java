@@ -1,10 +1,12 @@
 package com.mypkga.commerceplatformfull.service;
 
 import com.mypkga.commerceplatformfull.entity.Cart;
+import com.mypkga.commerceplatformfull.entity.Role;
 import com.mypkga.commerceplatformfull.entity.User;
 import com.mypkga.commerceplatformfull.repository.CartRepository;
 import com.mypkga.commerceplatformfull.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,22 +18,28 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleService roleService;
 
     @Override
     @Transactional
     public User registerUser(User user) {
         // Encrypt password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(User.UserRole.CUSTOMER);
+        
+        // Assign default customer role
+        Role defaultRole = roleService.getDefaultCustomerRole();
+        user.setRole(defaultRole);
         user.setEnabled(true);
 
         // Save user
         User savedUser = userRepository.save(user);
+        log.info("Registered new user: {} with role: {}", savedUser.getUsername(), defaultRole.getName());
 
         // Create cart for user
         Cart cart = new Cart();
@@ -45,19 +53,21 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User createAdminUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(User.UserRole.ADMIN);
+        
+        // Assign admin role
+        Role adminRole = roleService.getRoleByName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
+        user.setRole(adminRole);
         user.setEnabled(true);
-        return userRepository.save(user);
+        
+        User savedUser = userRepository.save(user);
+        log.info("Created admin user: {}", savedUser.getUsername());
+        return savedUser;
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
-    }
-
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
     }
 
     @Override
@@ -91,26 +101,62 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+        log.info("Deleted user with ID: {}", id);
     }
 
     @Override
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
-
-    @Override
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
-    }
     
-    // Role-specific methods
+    // Role-specific methods (updated to work with Role entity)
     @Override
-    public List<User> getUsersByRole(User.UserRole role) {
-        return userRepository.findByRole(role);
+    public List<User> getUsersByRoleName(String roleName) {
+        return userRepository.findByRoleName(roleName);
     }
     
     @Override
-    public Page<User> getUsersByRole(User.UserRole role, Pageable pageable) {
-        return userRepository.findByRole(role, pageable);
+    public Page<User> getUsersByRoleName(String roleName, Pageable pageable) {
+        return userRepository.findByRoleName(roleName, pageable);
+    }
+    
+    @Override
+    public List<User> getUsersByRoleId(Long roleId) {
+        return userRepository.findByRoleId(roleId);
+    }
+    
+    @Override
+    public Page<User> getUsersByRoleId(Long roleId, Pageable pageable) {
+        return userRepository.findByRoleId(roleId, pageable);
+    }
+    
+    @Override
+    @Transactional
+    public User assignRole(Long userId, Long roleId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        Role role = roleService.getRoleById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
+        
+        user.setRole(role);
+        User updatedUser = userRepository.save(user);
+        log.info("Assigned role '{}' to user '{}'", role.getName(), user.getUsername());
+        return updatedUser;
+    }
+    
+    @Override
+    @Transactional
+    public User assignRole(Long userId, String roleName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        Role role = roleService.getRoleByName(roleName)
+                .orElseThrow(() -> new RuntimeException("Role not found with name: " + roleName));
+        
+        user.setRole(role);
+        User updatedUser = userRepository.save(user);
+        log.info("Assigned role '{}' to user '{}'", roleName, user.getUsername());
+        return updatedUser;
     }
 }

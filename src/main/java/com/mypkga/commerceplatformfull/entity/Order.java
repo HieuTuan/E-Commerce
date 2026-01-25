@@ -53,9 +53,6 @@ public class Order {
     @Column(length = 20)
     private String customerPhone;
 
-    @Column(length = 100)
-    private String customerEmail;
-
     @Column(columnDefinition = "TEXT")
     private String notes;
 

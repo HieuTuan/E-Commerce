@@ -3,7 +3,9 @@ package com.mypkga.commerceplatformfull.controller;
 import com.mypkga.commerceplatformfull.entity.Category;
 import com.mypkga.commerceplatformfull.entity.Order;
 import com.mypkga.commerceplatformfull.entity.Product;
+import com.mypkga.commerceplatformfull.entity.ProductImage;
 import com.mypkga.commerceplatformfull.repository.CategoryRepository;
+import com.mypkga.commerceplatformfull.repository.ProductImageRepository;
 import com.mypkga.commerceplatformfull.service.FileUploadService;
 import com.mypkga.commerceplatformfull.service.OrderService;
 import com.mypkga.commerceplatformfull.service.ProductService;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
@@ -29,6 +32,7 @@ public class AdminController {
     private final OrderService orderService;
     private final UserService userService;
     private final FileUploadService fileUploadService;
+    private final ProductImageRepository productImageRepository;
 
     @GetMapping
     public String adminDashboard(Model model) {
@@ -56,7 +60,7 @@ public class AdminController {
     @PostMapping("/products/save")
     public String saveProduct(@ModelAttribute Product product,
             @RequestParam Long categoryId,
-            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            @RequestParam(value = "imageFiles", required = false) MultipartFile[] imageFiles,
             @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
             RedirectAttributes redirectAttributes) {
         try {
@@ -64,38 +68,61 @@ public class AdminController {
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
 
-            // Handle image upload
-            if (imageFile != null && !imageFile.isEmpty()) {
-                try {
-                    FileUploadService.ImageUploadResult imageResult = fileUploadService.uploadImage(imageFile);
-                    product.setImageOriginal(imageResult.getOriginalFileName());
-                    product.setImageThumbnail(imageResult.getThumbnailFileName());
-                    product.setImageMedium(imageResult.getMediumFileName());
-                    product.setImageLarge(imageResult.getLargeFileName());
-                } catch (Exception e) {
-                    redirectAttributes.addFlashAttribute("error", "Error uploading image: " + e.getMessage());
-                    return "redirect:/admin/products";
+            // Save product first
+            Product savedProduct;
+            if (product.getId() == null) {
+                savedProduct = productService.createProduct(product);
+            } else {
+                savedProduct = productService.updateProduct(product);
+            }
+
+            // Handle multiple image uploads
+            if (imageFiles != null && imageFiles.length > 0) {
+                int displayOrder = 0;
+                for (MultipartFile imageFile : imageFiles) {
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        try {
+                            FileUploadService.ImageUploadResult imageResult = fileUploadService.uploadImage(imageFile);
+                            
+                            ProductImage productImage = new ProductImage();
+                            productImage.setProduct(savedProduct);
+                            productImage.setImageOriginal(imageResult.getOriginalFileName());
+                            productImage.setImageThumbnail(imageResult.getThumbnailFileName());
+                            productImage.setImageMedium(imageResult.getMediumFileName());
+                            productImage.setImageLarge(imageResult.getLargeFileName());
+                            productImage.setDisplayOrder(displayOrder++);
+                            productImage.setIsPrimary(displayOrder == 1); // First image is primary
+                            
+                            productImageRepository.save(productImage);
+                        } catch (Exception e) {
+                            redirectAttributes.addFlashAttribute("error", "Error uploading image: " + e.getMessage());
+                            return "redirect:/admin/products";
+                        }
+                    }
                 }
             }
 
-            // Handle video upload
+            // Handle video upload - store in ProductImage
             if (videoFile != null && !videoFile.isEmpty()) {
                 try {
                     FileUploadService.VideoUploadResult videoResult = fileUploadService.uploadVideo(videoFile);
-                    product.setVideoFilename(videoResult.getFileName());
+                    
+                    // Create a ProductImage entry for video
+                    ProductImage videoImage = new ProductImage();
+                    videoImage.setProduct(savedProduct);
+                    videoImage.setVideoFilename(videoResult.getFileName());
+                    videoImage.setDisplayOrder(999); // Put video at the end
+                    videoImage.setIsPrimary(false);
+                    
+                    productImageRepository.save(videoImage);
                 } catch (Exception e) {
                     redirectAttributes.addFlashAttribute("error", "Error uploading video: " + e.getMessage());
                     return "redirect:/admin/products";
                 }
             }
 
-            if (product.getId() == null) {
-                productService.createProduct(product);
-                redirectAttributes.addFlashAttribute("success", "Product created successfully!");
-            } else {
-                productService.updateProduct(product);
-                redirectAttributes.addFlashAttribute("success", "Product updated successfully!");
-            }
+            redirectAttributes.addFlashAttribute("success", 
+                product.getId() == null ? "Product created successfully!" : "Product updated successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error saving product: " + e.getMessage());
         }
@@ -117,17 +144,22 @@ public class AdminController {
             // Get product to delete associated files
             Product product = productService.getProductById(id).orElse(null);
             if (product != null) {
-                // Delete associated files
-                if (product.getImageOriginal() != null) {
-                    fileUploadService.deleteImageFiles(
-                        product.getImageOriginal(),
-                        product.getImageThumbnail(),
-                        product.getImageMedium(),
-                        product.getImageLarge()
-                    );
-                }
-                if (product.getVideoFilename() != null) {
-                    fileUploadService.deleteVideoFile(product.getVideoFilename());
+                // Delete associated product images and their files
+                List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+                for (ProductImage productImage : productImages) {
+                    // Delete image files
+                    if (productImage.getImageOriginal() != null) {
+                        fileUploadService.deleteImageFiles(
+                            productImage.getImageOriginal(),
+                            productImage.getImageThumbnail(),
+                            productImage.getImageMedium(),
+                            productImage.getImageLarge()
+                        );
+                    }
+                    // Delete video files
+                    if (productImage.getVideoFilename() != null) {
+                        fileUploadService.deleteVideoFile(productImage.getVideoFilename());
+                    }
                 }
             }
             
@@ -156,5 +188,54 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Error updating order: " + e.getMessage());
         }
         return "redirect:/admin/orders";
+    }
+
+    @PostMapping("/products/{productId}/images/{imageId}/delete")
+    public String deleteProductImage(@PathVariable Long productId, 
+                                   @PathVariable Long imageId,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            ProductImage productImage = productImageRepository.findById(imageId)
+                    .orElseThrow(() -> new RuntimeException("Image not found"));
+            
+            // Delete physical files
+            if (productImage.getImageOriginal() != null) {
+                fileUploadService.deleteImageFiles(
+                    productImage.getImageOriginal(),
+                    productImage.getImageThumbnail(),
+                    productImage.getImageMedium(),
+                    productImage.getImageLarge()
+                );
+            }
+            
+            productImageRepository.delete(productImage);
+            redirectAttributes.addFlashAttribute("success", "Image deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error deleting image: " + e.getMessage());
+        }
+        return "redirect:/admin/products/edit/" + productId;
+    }
+
+    @PostMapping("/products/{productId}/images/{imageId}/set-primary")
+    public String setPrimaryImage(@PathVariable Long productId, 
+                                @PathVariable Long imageId,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            // Remove primary flag from all images of this product
+            List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
+            productImages.forEach(img -> img.setIsPrimary(false));
+            productImageRepository.saveAll(productImages);
+            
+            // Set new primary image
+            ProductImage primaryImage = productImageRepository.findById(imageId)
+                    .orElseThrow(() -> new RuntimeException("Image not found"));
+            primaryImage.setIsPrimary(true);
+            productImageRepository.save(primaryImage);
+            
+            redirectAttributes.addFlashAttribute("success", "Primary image updated successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error updating primary image: " + e.getMessage());
+        }
+        return "redirect:/admin/products/edit/" + productId;
     }
 }

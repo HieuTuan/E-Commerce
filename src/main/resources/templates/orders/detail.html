@@ -40,7 +40,7 @@
                     </div>
                     <div class="col-md-4">
                         <h6>Total Amount</h6>
-                        <h5 class="text-primary">$<span th:text="${order.totalAmount}">0.00</span></h5>
+                        <h5 class="text-primary"><span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</h5>
                     </div>
                 </div>
             </div>
@@ -65,9 +65,9 @@
                             <tbody>
                                 <tr th:each="item : ${order.items}">
                                     <td th:text="${item.product.name}">Product</td>
-                                    <td th:text="|${item.price}|">$0.00</td>
+                                    <td><span th:text="${#numbers.formatInteger(item.price, 3, 'POINT')}"></span>đ</td>
                                     <td th:text="${item.quantity}">1</td>
-                                    <td th:text="|${item.price * item.quantity}|">$0.00</td>
+                                    <td><span th:text="${#numbers.formatInteger(item.price * item.quantity, 3, 'POINT')}"></span>đ</td>
                                 </tr>
                             </tbody>
                         </table>

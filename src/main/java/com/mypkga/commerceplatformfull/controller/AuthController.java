@@ -36,14 +36,9 @@ public class AuthController {
             BindingResult result,
             Model model,
             RedirectAttributes redirectAttributes) {
-        // Validation
+        // Validation - only username and password required
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             model.addAttribute("error", "Username is required");
-            return "auth/register";
-        }
-
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            model.addAttribute("error", "Email is required");
             return "auth/register";
         }
 
@@ -52,23 +47,26 @@ public class AuthController {
             return "auth/register";
         }
 
+        if (user.getFullName() == null || user.getFullName().trim().isEmpty()) {
+            model.addAttribute("error", "Full name is required");
+            return "auth/register";
+        }
+
+        // Check if username already exists
         if (userService.existsByUsername(user.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "auth/register";
         }
 
-        if (userService.existsByEmail(user.getEmail())) {
-            model.addAttribute("error", "Email already registered");
-            return "auth/register";
-        }
-
         try {
             userService.registerUser(user);
-            log.info("User registered successfully: {}", user.getUsername());
-            redirectAttributes.addFlashAttribute("success", "Registration successful! Please login.");
+            log.info("User registered successfully: {} with role: {}", 
+                    user.getUsername(), user.getRoleName());
+            redirectAttributes.addFlashAttribute("success", 
+                    "Registration successful! Please login with your username and password.");
             return "redirect:/login";
         } catch (Exception e) {
-            log.error("Registration failed", e);
+            log.error("Registration failed for user: {}", user.getUsername(), e);
             model.addAttribute("error", "Registration failed. Please try again.");
             return "auth/register";
         }

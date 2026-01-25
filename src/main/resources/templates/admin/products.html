@@ -69,12 +69,22 @@
                         <tr th:each="product : ${products}">
                             <td th:text="${product.id}">1</td>
                             <td>
-                                <img th:src="${product.thumbnailUrl}" alt="Product"
-                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                <img th:if="${product.primaryImage != null}" 
+                                     th:src="${product.primaryImage.thumbnailUrl}" 
+                                     alt="Product"
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                <div th:if="${product.primaryImage == null}" 
+                                     class="bg-light d-flex align-items-center justify-content-center"
+                                     style="width: 50px; height: 50px; border-radius: 4px;">
+                                    <i class="fas fa-image text-muted"></i>
+                                </div>
                             </td>
                             <td th:text="${product.name}">Product Name</td>
                             <td th:text="${product.category != null ? product.category.name : 'N/A'}">Category</td>
-                            <td>$<span th:text="${product.price}">0.00</span></td>
+                            <td>
+                                <span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ
+                            </td>
+
                             <td th:text="${product.stockQuantity}">0</td>
                             <td>
                                 <a th:href="@{/admin/products/edit/{id}(id=${product.id})}"

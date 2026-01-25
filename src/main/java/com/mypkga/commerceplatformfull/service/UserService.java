@@ -13,8 +13,6 @@ public interface UserService {
 
     Optional<User> findByUsername(String username);
 
-    Optional<User> findByEmail(String email);
-
     Optional<User> findById(Long id);
 
     List<User> getAllUsers();
@@ -29,12 +27,19 @@ public interface UserService {
 
     boolean existsByUsername(String username);
 
-    boolean existsByEmail(String email);
-
     User createAdminUser(User user);
     
-    // Role-specific methods
-    List<User> getUsersByRole(User.UserRole role);
+    // Role-specific methods (updated to work with Role entity)
+    List<User> getUsersByRoleName(String roleName);
     
-    Page<User> getUsersByRole(User.UserRole role, Pageable pageable);
+    Page<User> getUsersByRoleName(String roleName, Pageable pageable);
+    
+    List<User> getUsersByRoleId(Long roleId);
+    
+    Page<User> getUsersByRoleId(Long roleId, Pageable pageable);
+    
+    // Helper methods for role management
+    User assignRole(Long userId, Long roleId);
+    
+    User assignRole(Long userId, String roleName);
 }

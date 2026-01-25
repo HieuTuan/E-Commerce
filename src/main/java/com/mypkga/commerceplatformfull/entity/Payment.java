@@ -25,7 +25,7 @@ public class Payment {
     private Order order;
 
     @Column(nullable = false, length = 50)
-    private String paymentMethod; // VNPAY, MOMO, COD
+    private String paymentMethod; // VNPAY, COD
 
     @Column(length = 200)
     private String transactionId;

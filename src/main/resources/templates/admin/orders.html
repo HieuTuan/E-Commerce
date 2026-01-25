@@ -52,7 +52,7 @@
                         <tr>
                             <th>Order #</th>
                             <th>Customer</th>
-                            <th>Email</th>
+                            <th>Phone</th>
                             <th>Total</th>
                             <th>Status</th>
                             <th>Payment</th>
@@ -64,8 +64,8 @@
                         <tr th:each="order : ${orders}">
                             <td th:text="${order.orderNumber}">ORD-001</td>
                             <td th:text="${order.customerName}">Customer</td>
-                            <td th:text="${order.customerEmail}">email@example.com</td>
-                            <td>$<span th:text="${order.totalAmount}">0.00</span></td>
+                            <td th:text="${order.customerPhone}">phone</td>
+                            <td><span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</td>
                             <td>
                                 <span class="badge"
                                     th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
