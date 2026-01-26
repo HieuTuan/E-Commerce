@@ -16758,3 +16758,8 @@ org.springframework.web.servlet.resource.NoResourceFoundException: No static res
 2026-01-25 17:26:30 [http-nio-8080-exec-2] INFO  c.m.c.controller.CartController - Product 1 added to cart for user dmhoang0000@gmail.com
 2026-01-25 17:26:35 [http-nio-8080-exec-10] INFO  c.m.c.service.CartServiceImpl - Added new item to cart - Product: Smart Fitness Tracker, Quantity: 1
 2026-01-25 17:26:35 [http-nio-8080-exec-10] INFO  c.m.c.controller.CartController - Product 2 added to cart for user dmhoang0000@gmail.com
+2026-01-25 17:31:25 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-01-25 17:31:25 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-01-25 17:31:25 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-01-25 17:31:25 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-01-25 17:31:25 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
