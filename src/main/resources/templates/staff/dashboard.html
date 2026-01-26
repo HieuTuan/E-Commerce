@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,7 +44,7 @@
                 <h1 class="mb-4">
                     <i class="fas fa-tachometer-alt"></i> Staff Dashboard
                 </h1>
-                <p class="text-muted">Quản lý đơn hàng và hỗ trợ khách hàng</p>
+                <p class="text-muted">Order management and customer support</p>
             </div>
         </div>
 
@@ -56,7 +56,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h4 th:text="${pendingOrders}">0</h4>
-                                <p class="mb-0">Đơn hàng chờ xử lý</p>
+                                <p class="mb-0">Pending Orders</p>
                             </div>
                             <div class="align-self-center">
                                 <i class="fas fa-clock fa-2x"></i>
@@ -72,7 +72,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h4 th:text="${processingOrders}">0</h4>
-                                <p class="mb-0">Đang xử lý</p>
+                                <p class="mb-0">Processing</p>
                             </div>
                             <div class="align-self-center">
                                 <i class="fas fa-cog fa-2x"></i>
@@ -88,7 +88,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h4 th:text="${totalProducts}">0</h4>
-                                <p class="mb-0">Tổng sản phẩm</p>
+                                <p class="mb-0">Total Products</p>
                             </div>
                             <div class="align-self-center">
                                 <i class="fas fa-box fa-2x"></i>
@@ -104,7 +104,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h4>0</h4>
-                                <p class="mb-0">Chat hỗ trợ</p>
+                                <p class="mb-0">Support Chats</p>
                             </div>
                             <div class="align-self-center">
                                 <i class="fas fa-comments fa-2x"></i>
@@ -120,23 +120,23 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
+                        <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3 mb-2">
                                 <a th:href="@{/staff/orders}" class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-shopping-cart"></i> Quản lý đơn hàng
+                                    <i class="fas fa-shopping-cart"></i> Manage Orders
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <a th:href="@{/staff/support}" class="btn btn-outline-success w-100">
-                                    <i class="fas fa-headset"></i> Hỗ trợ khách hàng
+                                    <i class="fas fa-headset"></i> Customer Support
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <a th:href="@{/staff/products}" class="btn btn-outline-info w-100">
-                                    <i class="fas fa-box-open"></i> Xem sản phẩm
+                                    <i class="fas fa-box-open"></i> View Products
                                 </a>
                             </div>
                         </div>
@@ -150,7 +150,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="fas fa-list"></i> Đơn hàng gần đây</h5>
+                        <h5><i class="fas fa-list"></i> Recent Orders</h5>
                     </div>
                     <div class="card-body">
                         <div th:if="${recentOrders != null and !recentOrders.empty}">
@@ -159,11 +159,11 @@
                                     <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>Khách hàng</th>
-                                            <th>Tổng tiền</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ngày tạo</th>
-                                            <th>Thao tác</th>
+                                            <th>Customer</th>
+                                            <th>Total Amount</th>
+                                            <th>Status</th>
+                                            <th>Created Date</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -181,7 +181,7 @@
                                             <td th:text="${order.createdDate != null ? #temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2024 10:00</td>
                                             <td>
                                                 <a th:href="@{/staff/orders/{id}(id=${order.id})}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i> Xem
+                                                    <i class="fas fa-eye"></i> View
                                                 </a>
                                             </td>
                                         </tr>
@@ -191,7 +191,7 @@
                         </div>
                         <div th:if="${recentOrders == null or recentOrders.empty}" class="text-center text-muted py-4">
                             <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <p>Chưa có đơn hàng nào</p>
+                            <p>No orders yet</p>
                         </div>
                     </div>
                 </div>

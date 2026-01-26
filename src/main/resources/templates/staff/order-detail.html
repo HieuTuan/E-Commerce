@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi Tiết Đơn Hàng - Staff Dashboard</title>
+    <title>Order Details - Staff Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
@@ -16,11 +16,11 @@
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" th:href="@{/staff}">Dashboard</a>
-                <a class="nav-link" th:href="@{/staff/orders}">Đơn Hàng</a>
-                <a class="nav-link" th:href="@{/staff/support}">Hỗ Trợ</a>
+                <a class="nav-link" th:href="@{/staff/orders}">Orders</a>
+                <a class="nav-link" th:href="@{/staff/support}">Support</a>
                 <form th:action="@{/logout}" method="post" class="d-inline">
                     <button type="submit" class="btn btn-link nav-link text-white">
-                        <i class="fas fa-sign-out-alt"></i> Đăng Xuất
+                        <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </form>
             </div>
@@ -31,31 +31,31 @@
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="fas fa-file-invoice me-2"></i>Chi Tiết Đơn Hàng</h2>
+                    <h2><i class="fas fa-file-invoice me-2"></i>Order Details</h2>
                     <a th:href="@{/staff/orders}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Quay Lại
+                        <i class="fas fa-arrow-left me-2"></i>Back
                     </a>
                 </div>
 
                 <!-- Order Information -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Thông Tin Đơn Hàng</h5>
+                        <h5 class="mb-0">Order Information</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Mã Đơn Hàng:</strong> <span th:text="${order.orderNumber}"></span></p>
-                                <p><strong>Khách Hàng:</strong> <span th:text="${order.customerName}"></span></p>
-                                <p><strong>Điện Thoại:</strong> <span th:text="${order.customerPhone}"></span></p>
+                                <p><strong>Order Number:</strong> <span th:text="${order.orderNumber}"></span></p>
+                                <p><strong>Customer:</strong> <span th:text="${order.customerName}"></span></p>
+                                <p><strong>Phone:</strong> <span th:text="${order.customerPhone}"></span></p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Ngày Đặt:</strong> <span th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}"></span></p>
-                                <p><strong>Tổng Tiền:</strong> <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span></p>
-                                <p><strong>Phương Thức Thanh Toán:</strong> <span th:text="${order.paymentMethod}"></span></p>
+                                <p><strong>Order Date:</strong> <span th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                                <p><strong>Total Amount:</strong> <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span></p>
+                                <p><strong>Payment Method:</strong> <span th:text="${order.paymentMethod}"></span></p>
                                 <p>
-                                    <strong>Trạng Thái:</strong>
-                                    <span class="badge" th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
+                                    <strong>Status:</strong>
+                                    <span class="badge" th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' :
                                                                       order.status.name() == 'PROCESSING' ? 'bg-info' : 
                                                                       order.status.name() == 'SHIPPED' ? 'bg-primary' : 
                                                                       order.status.name() == 'DELIVERED' ? 'bg-success' : 'bg-danger'}"
@@ -65,7 +65,7 @@
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <p><strong>Địa Chỉ Giao Hàng:</strong></p>
+                                <p><strong>Shipping Address:</strong></p>
                                 <p th:text="${order.shippingAddress}" class="text-muted"></p>
                             </div>
                         </div>
@@ -75,17 +75,17 @@
                 <!-- Order Items -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Sản Phẩm Đặt Hàng</h5>
+                        <h5 class="mb-0">Ordered Products</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Sản Phẩm</th>
-                                        <th>Số Lượng</th>
-                                        <th>Đơn Giá</th>
-                                        <th>Thành Tiền</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -100,8 +100,8 @@
                                             </div>
                                         </td>
                                         <td th:text="${item.quantity}"></td>
-                                        <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
-                                        <td th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
+                                        <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                        <td th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -112,24 +112,24 @@
                 <!-- Order Actions -->
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Thao Tác Đơn Hàng</h5>
+                        <h5 class="mb-0">Order Actions</h5>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/staff/orders/{id}/update-status(id=${order.id})}" method="post" class="d-inline">
                             <div class="row align-items-end">
                                 <div class="col-md-4">
-                                    <label for="status" class="form-label">Cập Nhật Trạng Thái:</label>
+                                    <label for="status" class="form-label">Update Status:</label>
                                     <select name="status" id="status" class="form-select">
-                                        <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ Xử Lý</option>
-                                        <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">Đang Xử Lý</option>
-                                        <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">Đã Giao Vận</option>
-                                        <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã Giao Hàng</option>
-                                        <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Đã Hủy</option>
+                                        <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Pending</option>
+                                        <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">Processing</option>
+                                        <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">Shipped</option>
+                                        <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Delivered</option>
+                                        <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Cancelled</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Cập Nhật
+                                        <i class="fas fa-save me-2"></i>Update
                                     </button>
                                 </div>
                             </div>
@@ -140,13 +140,13 @@
                         <form th:action="@{/staff/orders/{id}/assign-delivery(id=${order.id})}" method="post" class="mt-3">
                             <div class="row align-items-end">
                                 <div class="col-md-6">
-                                    <label for="deliveryInfo" class="form-label">Thông Tin Giao Hàng:</label>
-                                    <input type="text" name="deliveryInfo" id="deliveryInfo" class="form-control" 
-                                           placeholder="Nhập thông tin giao hàng...">
+                                    <label for="deliveryInfo" class="form-label">Delivery Information:</label>
+                                    <input type="text" name="deliveryInfo" id="deliveryInfo" class="form-control"
+                                           placeholder="Enter delivery information...">
                                 </div>
                                 <div class="col-md-3">
                                     <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-truck me-2"></i>Gán Giao Hàng
+                                        <i class="fas fa-truck me-2"></i>Assign Delivery
                                     </button>
                                 </div>
                             </div>
