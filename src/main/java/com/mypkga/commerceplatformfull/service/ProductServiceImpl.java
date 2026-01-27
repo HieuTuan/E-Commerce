@@ -34,7 +34,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findAllWithImages();
     }
     
     @Override
@@ -75,12 +75,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> searchProducts(String keyword) {
-        return productRepository.searchProducts(keyword);
+        return productRepository.searchProductsWithImages(keyword);
     }
 
     @Override
     public List<Product> getProductsByCategory(Long categoryId) {
-        return productRepository.findByCategoryId(categoryId);
+        return productRepository.findByCategoryIdWithImages(categoryId);
     }
 
     @Override

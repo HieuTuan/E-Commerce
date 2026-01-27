@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - Password Reset</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .verify-container {
+            max-width: 450px;
+            margin: 3rem auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        
+        .verify-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .verify-header h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .otp-input {
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .timer-display {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #1976d2;
+            font-weight: 500;
+        }
+        
+        .timer-expired {
+            background: #ffebee;
+            border-color: #ffcdd2;
+            color: #d32f2f;
+        }
+        
+        .resend-section {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .alert-custom {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-success {
+            background: #d1edff;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="verify-container">
+        <div class="verify-header">
+            <h3><i class="fas fa-shield-alt text-primary"></i> Verify OTP</h3>
+            <p class="text-muted">Enter the 6-digit code sent to</p>
+            <p class="fw-bold text-primary" th:text="${email}"></p>
+        </div>
+
+        <!-- Timer Display -->
+        <div id="timer-display" class="timer-display">
+            <i class="fas fa-clock me-2"></i>
+            <span id="timer-text">Code expires in: <span id="countdown">5:00</span></span>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${error}" class="alert-custom alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
+        
+        <div th:if="${success}" class="alert-custom alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+        </div>
+
+        <form th:action="@{/verify-reset-otp}" method="post" id="otpForm">
+            <div class="mb-3">
+                <label for="otp" class="form-label">Verification Code</label>
+                <input type="text" class="form-control otp-input" id="otp" name="otp" 
+                       placeholder="000000" maxlength="6" pattern="[0-9]{6}" 
+                       th:disabled="${isBlocked}" required autofocus>
+                <div class="form-text">
+                    Enter the 6-digit code from your email
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 mb-3" 
+                    th:disabled="${isBlocked}" id="verifyBtn">
+                <i class="fas fa-check me-2"></i>Verify Code
+            </button>
+        </form>
+
+        <div class="resend-section">
+            <p class="text-muted mb-2">Didn't receive the code?</p>
+            <button type="button" class="btn btn-outline-primary" id="resendBtn" 
+                    th:disabled="${isBlocked}">
+                <i class="fas fa-paper-plane me-2"></i>
+                <span id="resend-text">Resend Code</span>
+            </button>
+            <div id="resend-timer" class="text-muted mt-2" style="display: none;">
+                Please wait <span id="resend-countdown">60</span> seconds
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <a th:href="@{/forgot-password-otp}" class="text-muted text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i>Back to Email Entry
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let remainingSeconds = /*[[${remainingSeconds}]]*/ 300;
+        let resendCooldown = 0;
+        let isBlocked = /*[[${isBlocked}]]*/ false;
+        
+        const timerDisplay = document.getElementById('timer-display');
+        const countdownElement = document.getElementById('countdown');
+        const timerText = document.getElementById('timer-text');
+        const resendBtn = document.getElementById('resendBtn');
+        const resendTimer = document.getElementById('resend-timer');
+        const resendCountdown = document.getElementById('resend-countdown');
+        const otpForm = document.getElementById('otpForm');
+        const otpInput = document.getElementById('otp');
+        const verifyBtn = document.getElementById('verifyBtn');
+        
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimer() {
+            if (remainingSeconds > 0) {
+                countdownElement.textContent = formatTime(remainingSeconds);
+                remainingSeconds--;
+            } else {
+                timerDisplay.classList.add('timer-expired');
+                timerText.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Code has expired';
+                // Disable form when expired
+                otpInput.disabled = true;
+                verifyBtn.disabled = true;
+            }
+        }
+        
+        function updateResendTimer() {
+            if (resendCooldown > 0) {
+                resendCountdown.textContent = resendCooldown;
+                resendCooldown--;
+            } else {
+                resendTimer.style.display = 'none';
+                if (!isBlocked) {
+                    resendBtn.disabled = false;
+                }
+            }
+        }
+        
+        // Start timers
+        if (remainingSeconds > 0) {
+            setInterval(updateTimer, 1000);
+            updateTimer(); // Initial call
+        }
+        
+        // OTP input formatting
+        otpInput.addEventListener('input', function(e) {
+            // Only allow numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Auto-submit when 6 digits entered
+            if (this.value.length === 6 && !isBlocked && remainingSeconds > 0) {
+                otpForm.submit();
+            }
+        });
+        
+        // Resend OTP functionality
+        resendBtn.addEventListener('click', function() {
+            if (resendCooldown > 0 || isBlocked) return;
+            
+            this.disabled = true;
+            document.getElementById('resend-text').textContent = 'Sending...';
+            
+            fetch('/api/resend-reset-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset timer and enable form
+                    remainingSeconds = 300; // 5 minutes
+                    timerDisplay.classList.remove('timer-expired');
+                    timerText.innerHTML = '<i class="fas fa-clock me-2"></i>Code expires in: <span id="countdown">5:00</span>';
+                    otpInput.disabled = false;
+                    verifyBtn.disabled = false;
+                    otpInput.value = '';
+                    otpInput.focus();
+                    
+                    // Start resend cooldown
+                    resendCooldown = 60;
+                    resendTimer.style.display = 'block';
+                    setInterval(updateResendTimer, 1000);
+                    
+                    // Show success message
+                    showAlert('success', data.message);
+                } else {
+                    if (data.waitTime) {
+                        resendCooldown = data.waitTime;
+                        resendTimer.style.display = 'block';
+                        setInterval(updateResendTimer, 1000);
+                    }
+                    showAlert('danger', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('danger', 'Failed to resend code. Please try again.');
+            })
+            .finally(() => {
+                document.getElementById('resend-text').textContent = 'Resend Code';
+            });
+        });
+        
+        function showAlert(type, message) {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert-custom');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-custom alert-${type}`;
+            alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>${message}`;
+            
+            // Insert after timer display
+            timerDisplay.parentNode.insertBefore(alertDiv, timerDisplay.nextSibling);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+        
+        // Check status periodically
+        setInterval(function() {
+            fetch('/api/reset-otp-status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.isBlocked && !isBlocked) {
+                        isBlocked = true;
+                        otpInput.disabled = true;
+                        verifyBtn.disabled = true;
+                        resendBtn.disabled = true;
+                        showAlert('danger', 'Too many failed attempts. Please try again later.');
+                    }
+                    
+                    if (data.isExpired && remainingSeconds > 0) {
+                        remainingSeconds = 0;
+                        updateTimer();
+                    }
+                }
+            })
+            .catch(error => console.error('Status check error:', error));
+        }, 10000); // Check every 10 seconds
+        /*]]>*/
+    </script>
+</body>
+
+</html>

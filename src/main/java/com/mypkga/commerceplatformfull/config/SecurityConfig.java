@@ -71,6 +71,9 @@ public class SecurityConfig {
                 // Public resources
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/files/**", "/favicon.ico").permitAll()
                 .requestMatchers("/login", "/register", "/verify-email", "/api/resend-otp", "/api/otp-status", "/error/**").permitAll()
+                // Forgot password endpoints
+                .requestMatchers("/forgot-password", "/forgot-password-otp", "/verify-reset-otp", "/reset-password-otp", "/reset-password").permitAll()
+                .requestMatchers("/api/resend-reset-otp", "/api/reset-otp-status").permitAll()
                 .requestMatchers("/payment/**").permitAll() // Payment callbacks
                 .requestMatchers("/products/**", "/api/chatbot/**").permitAll()
                 .requestMatchers("/", "/home").permitAll() // Cho phép tất cả, HomeController sẽ xử lý redirect

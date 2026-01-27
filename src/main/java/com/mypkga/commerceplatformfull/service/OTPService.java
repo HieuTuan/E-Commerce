@@ -83,4 +83,11 @@ public interface OTPService {
      * @return seconds until next request allowed, 0 if allowed now
      */
     long getSecondsUntilNextRequest(String email);
+
+    /**
+     * Get remaining seconds until current OTP expires
+     * @param email The email address
+     * @return seconds until OTP expires, 0 if already expired
+     */
+    long getRemainingOTPSeconds(String email);
 }

@@ -39,7 +39,7 @@
                         <tr th:each="item : ${cart.items}">
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/100'}"
+                                    <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : '/images/no-image.svg'}"
                                         alt="Product" style="width: 60px; height: 60px; object-fit: cover;"
                                         class="me-3">
                                     <div>

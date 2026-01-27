@@ -56,4 +56,7 @@ public interface UserService {
     boolean isEmailVerified(Long userId);
     
     boolean isEmailVerified(String email);
+    
+    // Password management methods
+    boolean updatePassword(String email, String newPassword);
 }

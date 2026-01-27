@@ -4,6 +4,7 @@ import com.mypkga.commerceplatformfull.entity.User;
 import com.mypkga.commerceplatformfull.service.OTPService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import com.mypkga.commerceplatformfull.service.EmailService;
+import com.mypkga.commerceplatformfull.service.PasswordResetService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class AuthController {
     private final UserService userService;
     private final OTPService otpService;
     private final EmailService emailService;
+    private final PasswordResetService passwordResetService;
 
     @GetMapping("/login")
     public String loginPage() {
@@ -192,6 +194,14 @@ public class AuthController {
             return "redirect:/register";
         }
         
+        // Get remaining time for initial page load
+        try {
+            long remainingSeconds = otpService.getRemainingOTPSeconds(pendingUser.getEmail());
+            model.addAttribute("remainingSeconds", Math.max(0, remainingSeconds));
+        } catch (Exception e) {
+            model.addAttribute("remainingSeconds", 60); // Default fallback
+        }
+        
         model.addAttribute("email", maskEmail(pendingUser.getEmail()));
         model.addAttribute("fullEmail", pendingUser.getEmail());
         return "auth/verify-email";
@@ -230,9 +240,23 @@ public class AuthController {
                         "Registration successful! Your email has been verified. Please login.");
                 return "redirect:/login";
             } else {
+                // Get remaining attempts AFTER validation attempt (attempts already incremented)
                 int remainingAttempts = otpService.getRemainingAttempts(pendingUser.getEmail());
-                model.addAttribute("error", 
-                    String.format("Invalid verification code. %d attempts remaining.", remainingAttempts));
+                if (remainingAttempts > 0) {
+                    model.addAttribute("error", 
+                        String.format("Invalid verification code. %d attempts remaining.", remainingAttempts));
+                } else {
+                    // All attempts exhausted - show 5 minute wait message
+                    model.addAttribute("error", 
+                        "Maximum attempts exceeded. Please try again after 5 minutes.");
+                    // Disable form inputs when blocked
+                    model.addAttribute("isBlocked", true);
+                }
+                
+                // Add remaining time for timer
+                long remainingSeconds = otpService.getRemainingOTPSeconds(pendingUser.getEmail());
+                model.addAttribute("remainingSeconds", Math.max(0, remainingSeconds));
+                
                 model.addAttribute("email", maskEmail(pendingUser.getEmail()));
                 model.addAttribute("fullEmail", pendingUser.getEmail());
                 return "auth/verify-email";
@@ -240,6 +264,15 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Email verification failed for user: {}", pendingUser.getUsername(), e);
             model.addAttribute("error", "Verification failed. Please try again.");
+            
+            // Add remaining time for timer even on error
+            try {
+                long remainingSeconds = otpService.getRemainingOTPSeconds(pendingUser.getEmail());
+                model.addAttribute("remainingSeconds", Math.max(0, remainingSeconds));
+            } catch (Exception ex) {
+                model.addAttribute("remainingSeconds", 0);
+            }
+            
             model.addAttribute("email", maskEmail(pendingUser.getEmail()));
             model.addAttribute("fullEmail", pendingUser.getEmail());
             return "auth/verify-email";
@@ -259,6 +292,11 @@ public class AuthController {
         }
 
         try {
+            // Check if email is blocked
+            if (otpService.isBlocked(pendingUser.getEmail())) {
+                log.info("Email is blocked, but allowing resend to unblock: {}", pendingUser.getEmail());
+            }
+            
             boolean otpSent = otpService.resendOTP(pendingUser.getEmail());
             if (otpSent) {
                 response.put("success", true);
@@ -270,8 +308,10 @@ public class AuthController {
                 response.put("waitTime", secondsUntilNext);
             }
         } catch (IllegalStateException e) {
+            // This should not happen anymore since resendOTP bypasses block check
+            log.warn("Unexpected IllegalStateException in resend: {}", e.getMessage());
             response.put("success", false);
-            response.put("message", e.getMessage());
+            response.put("message", "Please try again in a few moments");
         } catch (Exception e) {
             log.error("Failed to resend OTP", e);
             response.put("success", false);
@@ -301,10 +341,15 @@ public class AuthController {
             long secondsUntilNext = otpService.getSecondsUntilNextRequest(email);
             boolean isBlocked = otpService.isBlocked(email);
             
+            // Get actual remaining time for OTP expiry
+            long remainingSeconds = otpService.getRemainingOTPSeconds(email);
+            
             response.put("success", true);
             response.put("remainingAttempts", remainingAttempts);
             response.put("secondsUntilNextRequest", secondsUntilNext);
             response.put("isBlocked", isBlocked);
+            response.put("remainingSeconds", remainingSeconds);
+            response.put("isExpired", remainingSeconds <= 0);
         } catch (Exception e) {
             log.error("Failed to get OTP status", e);
             response.put("success", false);
@@ -364,5 +409,453 @@ public class AuthController {
         }
         
         return cleanPhone.substring(0, 3) + "***" + cleanPhone.substring(cleanPhone.length() - 2);
+    }
+
+    // ===== FORGOT PASSWORD ENDPOINTS =====
+
+    @GetMapping("/forgot-password")
+    public String forgotPasswordPage() {
+        return "auth/forgot-password";
+    }
+
+    // ===== OTP-BASED FORGOT PASSWORD ENDPOINTS =====
+
+    @GetMapping("/forgot-password-otp")
+    public String forgotPasswordOtpPage() {
+        return "auth/forgot-password-otp";
+    }
+
+    @PostMapping("/forgot-password-otp")
+    public String forgotPasswordOtp(@RequestParam("email") String email,
+                                   Model model,
+                                   HttpSession session,
+                                   RedirectAttributes redirectAttributes) {
+        
+        if (email == null || email.trim().isEmpty()) {
+            model.addAttribute("error", "Email is required");
+            return "auth/forgot-password-otp";
+        }
+
+        if (!emailService.isValidEmail(email)) {
+            model.addAttribute("error", "Invalid email format");
+            return "auth/forgot-password-otp";
+        }
+
+        try {
+            // Store email in session for password reset flow
+            session.setAttribute("passwordResetEmail", email);
+            
+            // Always show success message for security (even if email doesn't exist)
+            boolean userExists = userService.existsByEmail(email);
+            
+            if (userExists) {
+                // Send OTP only if user exists
+                boolean otpSent = otpService.generateAndSendOTP(email);
+                if (!otpSent) {
+                    model.addAttribute("error", "Failed to send verification code. Please try again.");
+                    return "auth/forgot-password-otp";
+                }
+                log.info("OTP sent for password reset: {}", email);
+            } else {
+                log.info("Password reset requested for non-existent email: {}", email);
+            }
+            
+            // Redirect to OTP verification page regardless
+            model.addAttribute("email", maskEmail(email));
+            model.addAttribute("fullEmail", email);
+            return "auth/verify-reset-otp";
+            
+        } catch (IllegalStateException e) {
+            model.addAttribute("error", e.getMessage());
+            return "auth/forgot-password-otp";
+        } catch (Exception e) {
+            log.error("Failed to process OTP password reset request: {}", email, e);
+            model.addAttribute("error", "Failed to send verification code. Please try again.");
+            return "auth/forgot-password-otp";
+        }
+    }
+
+    @GetMapping("/verify-reset-otp")
+    public String verifyResetOtpPage(Model model, HttpSession session) {
+        String email = (String) session.getAttribute("passwordResetEmail");
+        if (email == null) {
+            return "redirect:/forgot-password-otp";
+        }
+        
+        // Get remaining time for initial page load
+        try {
+            long remainingSeconds = otpService.getRemainingOTPSeconds(email);
+            model.addAttribute("remainingSeconds", Math.max(0, remainingSeconds));
+        } catch (Exception e) {
+            model.addAttribute("remainingSeconds", 60); // Default fallback
+        }
+        
+        model.addAttribute("email", maskEmail(email));
+        model.addAttribute("fullEmail", email);
+        return "auth/verify-reset-otp";
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public String verifyResetOtp(@RequestParam("otp") String otp,
+                                HttpSession session,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+        
+        String email = (String) session.getAttribute("passwordResetEmail");
+        if (email == null) {
+            return "redirect:/forgot-password-otp";
+        }
+
+        if (otp == null || otp.trim().isEmpty()) {
+            model.addAttribute("error", "Verification code is required");
+            model.addAttribute("email", maskEmail(email));
+            model.addAttribute("fullEmail", email);
+            return "auth/verify-reset-otp";
+        }
+
+        // Check if user exists (security check)
+        if (!userService.existsByEmail(email)) {
+            // For non-existent emails, simulate validation failure
+            model.addAttribute("error", "Invalid verification code");
+            model.addAttribute("email", maskEmail(email));
+            model.addAttribute("fullEmail", email);
+            return "auth/verify-reset-otp";
+        }
+
+        try {
+            boolean isValid = otpService.validateOTP(email, otp);
+            if (isValid) {
+                // Mark OTP as verified in session
+                session.setAttribute("otpVerified", true);
+                
+                log.info("OTP verified successfully for password reset: {}", email);
+                return "redirect:/reset-password-otp";
+            } else {
+                // Get remaining attempts AFTER validation attempt
+                int remainingAttempts = otpService.getRemainingAttempts(email);
+                if (remainingAttempts > 0) {
+                    model.addAttribute("error", 
+                        String.format("Invalid verification code. %d attempts remaining.", remainingAttempts));
+                } else {
+                    // All attempts exhausted - show 5 minute wait message
+                    model.addAttribute("error", 
+                        "Maximum attempts exceeded. Please try again after 5 minutes.");
+                    // Disable form inputs when blocked
+                    model.addAttribute("isBlocked", true);
+                }
+                
+                // Add remaining time for timer
+                long remainingSeconds = otpService.getRemainingOTPSeconds(email);
+                model.addAttribute("remainingSeconds", Math.max(0, remainingSeconds));
+                
+                model.addAttribute("email", maskEmail(email));
+                model.addAttribute("fullEmail", email);
+                return "auth/verify-reset-otp";
+            }
+        } catch (Exception e) {
+            log.error("OTP verification failed for password reset: {}", email, e);
+            model.addAttribute("error", "Verification failed. Please try again.");
+            
+            // Add remaining time for timer even on error
+            try {
+                long remainingSeconds = otpService.getRemainingOTPSeconds(email);
+                model.addAttribute("remainingSeconds", Math.max(0, remainingSeconds));
+            } catch (Exception ex) {
+                model.addAttribute("remainingSeconds", 0);
+            }
+            
+            model.addAttribute("email", maskEmail(email));
+            model.addAttribute("fullEmail", email);
+            return "auth/verify-reset-otp";
+        }
+    }
+
+    @GetMapping("/reset-password-otp")
+    public String resetPasswordOtpPage(Model model, HttpSession session) {
+        String email = (String) session.getAttribute("passwordResetEmail");
+        Boolean otpVerified = (Boolean) session.getAttribute("otpVerified");
+        
+        if (email == null || otpVerified == null || !otpVerified) {
+            return "redirect:/forgot-password-otp";
+        }
+        
+        model.addAttribute("email", maskEmail(email));
+        return "auth/reset-password-otp";
+    }
+
+    @PostMapping("/reset-password-otp")
+    public String resetPasswordOtp(@RequestParam("password") String password,
+                                  @RequestParam("confirmPassword") String confirmPassword,
+                                  Model model,
+                                  HttpSession session,
+                                  RedirectAttributes redirectAttributes) {
+        
+        String email = (String) session.getAttribute("passwordResetEmail");
+        Boolean otpVerified = (Boolean) session.getAttribute("otpVerified");
+        
+        if (email == null || otpVerified == null || !otpVerified) {
+            return "redirect:/forgot-password-otp";
+        }
+
+        // Password validation
+        if (password == null || password.length() < 6) {
+            model.addAttribute("error", "Password must be at least 6 characters");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+        
+        if (!password.matches(".*[a-z].*")) {
+            model.addAttribute("error", "Password must contain at least one lowercase letter");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+        
+        if (!password.matches(".*[A-Z].*")) {
+            model.addAttribute("error", "Password must contain at least one uppercase letter");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+        
+        if (!password.matches(".*\\d.*")) {
+            model.addAttribute("error", "Password must contain at least one number");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+        
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+            model.addAttribute("error", "Password must contain at least one special character");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("error", "Passwords do not match");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+
+        try {
+            // Update user password
+            boolean success = userService.updatePassword(email, password);
+            if (success) {
+                // Clear session data
+                session.removeAttribute("passwordResetEmail");
+                session.removeAttribute("otpVerified");
+                
+                log.info("Password reset successfully via OTP for: {}", email);
+                redirectAttributes.addFlashAttribute("success", 
+                    "Password reset successfully! Please login with your new password.");
+                return "redirect:/login";
+            } else {
+                model.addAttribute("error", "Failed to update password. Please try again.");
+                model.addAttribute("email", maskEmail(email));
+                return "auth/reset-password-otp";
+            }
+        } catch (Exception e) {
+            log.error("Failed to reset password via OTP for: {}", email, e);
+            model.addAttribute("error", "An error occurred. Please try again.");
+            model.addAttribute("email", maskEmail(email));
+            return "auth/reset-password-otp";
+        }
+    }
+
+    @PostMapping("/api/resend-reset-otp")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> resendResetOTP(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        
+        String email = (String) session.getAttribute("passwordResetEmail");
+        if (email == null) {
+            response.put("success", false);
+            response.put("message", "Session expired. Please start password reset again.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Check if user exists (security check)
+        if (!userService.existsByEmail(email)) {
+            // For non-existent emails, simulate success but don't actually send
+            response.put("success", true);
+            response.put("message", "Verification code sent successfully");
+            return ResponseEntity.ok(response);
+        }
+
+        try {
+            // Check if email is blocked
+            if (otpService.isBlocked(email)) {
+                log.info("Email is blocked, but allowing resend to unblock: {}", email);
+            }
+            
+            boolean otpSent = otpService.resendOTP(email);
+            if (otpSent) {
+                response.put("success", true);
+                response.put("message", "Verification code sent successfully");
+            } else {
+                long secondsUntilNext = otpService.getSecondsUntilNextRequest(email);
+                response.put("success", false);
+                response.put("message", "Please wait " + secondsUntilNext + " seconds before requesting again");
+                response.put("waitTime", secondsUntilNext);
+            }
+        } catch (IllegalStateException e) {
+            log.warn("Unexpected IllegalStateException in resend reset OTP: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "Please try again in a few moments");
+        } catch (Exception e) {
+            log.error("Failed to resend reset OTP", e);
+            response.put("success", false);
+            response.put("message", "Failed to send verification code. Please try again.");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/reset-otp-status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getResetOTPStatus(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        
+        String email = (String) session.getAttribute("passwordResetEmail");
+        if (email == null) {
+            response.put("success", false);
+            response.put("message", "Session expired");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            int remainingAttempts = otpService.getRemainingAttempts(email);
+            long secondsUntilNext = otpService.getSecondsUntilNextRequest(email);
+            boolean isBlocked = otpService.isBlocked(email);
+            
+            // Get actual remaining time for OTP expiry
+            long remainingSeconds = otpService.getRemainingOTPSeconds(email);
+            
+            response.put("success", true);
+            response.put("remainingAttempts", remainingAttempts);
+            response.put("secondsUntilNextRequest", secondsUntilNext);
+            response.put("isBlocked", isBlocked);
+            response.put("remainingSeconds", remainingSeconds);
+            response.put("isExpired", remainingSeconds <= 0);
+        } catch (Exception e) {
+            log.error("Failed to get reset OTP status", e);
+            response.put("success", false);
+            response.put("message", "Failed to get status");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+    public String forgotPassword(@RequestParam("email") String email,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+        
+        if (email == null || email.trim().isEmpty()) {
+            model.addAttribute("error", "Email is required");
+            return "auth/forgot-password";
+        }
+
+        if (!emailService.isValidEmail(email)) {
+            model.addAttribute("error", "Invalid email format");
+            return "auth/forgot-password";
+        }
+
+        try {
+            boolean sent = passwordResetService.generateAndSendResetToken(email);
+            if (sent) {
+                redirectAttributes.addFlashAttribute("success", 
+                    "If an account with that email exists, we've sent you a password reset link.");
+                return "redirect:/forgot-password";
+            } else {
+                model.addAttribute("error", "Failed to send reset email. Please try again.");
+                return "auth/forgot-password";
+            }
+        } catch (Exception e) {
+            log.error("Failed to process forgot password request", e);
+            model.addAttribute("error", "An error occurred. Please try again.");
+            return "auth/forgot-password";
+        }
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPasswordPage(@RequestParam("token") String token, Model model) {
+        if (token == null || token.trim().isEmpty()) {
+            model.addAttribute("error", "Invalid reset link");
+            return "auth/reset-password";
+        }
+
+        boolean isValid = passwordResetService.validateResetToken(token);
+        if (!isValid) {
+            model.addAttribute("error", "Invalid or expired reset link");
+            return "auth/reset-password";
+        }
+
+        String email = passwordResetService.getEmailByToken(token);
+        model.addAttribute("token", token);
+        model.addAttribute("email", maskEmail(email));
+        return "auth/reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam("token") String token,
+                               @RequestParam("password") String password,
+                               @RequestParam("confirmPassword") String confirmPassword,
+                               Model model,
+                               RedirectAttributes redirectAttributes) {
+        
+        if (token == null || token.trim().isEmpty()) {
+            model.addAttribute("error", "Invalid reset link");
+            return "auth/reset-password";
+        }
+
+        // Password validation
+        if (password == null || password.length() < 6) {
+            model.addAttribute("error", "Password must be at least 6 characters");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+        
+        if (!password.matches(".*[a-z].*")) {
+            model.addAttribute("error", "Password must contain at least one lowercase letter");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+        
+        if (!password.matches(".*[A-Z].*")) {
+            model.addAttribute("error", "Password must contain at least one uppercase letter");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+        
+        if (!password.matches(".*\\d.*")) {
+            model.addAttribute("error", "Password must contain at least one number");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+        
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+            model.addAttribute("error", "Password must contain at least one special character");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("error", "Passwords do not match");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+
+        try {
+            boolean success = passwordResetService.resetPassword(token, password);
+            if (success) {
+                redirectAttributes.addFlashAttribute("success", 
+                    "Password reset successfully! Please login with your new password.");
+                return "redirect:/login";
+            } else {
+                model.addAttribute("error", "Invalid or expired reset link");
+                return "auth/reset-password";
+            }
+        } catch (Exception e) {
+            log.error("Failed to reset password", e);
+            model.addAttribute("error", "An error occurred. Please try again.");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
     }
 }

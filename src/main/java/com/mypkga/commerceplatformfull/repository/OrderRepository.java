@@ -33,4 +33,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countByStatus(Order.OrderStatus status);
     
     List<Order> findTop5ByOrderByCreatedDateDesc();
+
+    // Find COD orders with specific status
+    List<Order> findByPaymentMethodAndStatus(String paymentMethod, Order.OrderStatus status);
 }

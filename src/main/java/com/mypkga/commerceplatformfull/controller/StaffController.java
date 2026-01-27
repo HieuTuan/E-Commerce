@@ -202,11 +202,15 @@ public class StaffController {
                             productImage.setImageThumbnail(imageResult.getThumbnailFileName());
                             productImage.setImageMedium(imageResult.getMediumFileName());
                             productImage.setImageLarge(imageResult.getLargeFileName());
-                            productImage.setDisplayOrder(displayOrder++);
-                            productImage.setIsPrimary(displayOrder == 1);
+                            productImage.setDisplayOrder(displayOrder);
+                            productImage.setIsPrimary(displayOrder == 0); // First image is primary
+                            displayOrder++;
 
-                            productImageRepository.save(productImage);
+                            ProductImage savedImage = productImageRepository.save(productImage);
+                            System.out.println("Saved ProductImage with ID: " + savedImage.getId() + " for Product ID: " + savedProduct.getId());
                         } catch (Exception e) {
+                            System.err.println("Error saving ProductImage: " + e.getMessage());
+                            e.printStackTrace();
                             redirectAttributes.addFlashAttribute("error", "Lỗi khi tải ảnh lên: " + e.getMessage());
                             return "redirect:/staff/products";
                         }
@@ -226,6 +230,7 @@ public class StaffController {
                     videoImage.setIsPrimary(false);
 
                     productImageRepository.save(videoImage);
+                    System.out.println("Saved Video ProductImage with ID: " + videoImage.getId() + " for Product ID: " + savedProduct.getId());
                 } catch (Exception e) {
                     redirectAttributes.addFlashAttribute("error", "Lỗi khi tải video lên: " + e.getMessage());
                     return "redirect:/staff/products";

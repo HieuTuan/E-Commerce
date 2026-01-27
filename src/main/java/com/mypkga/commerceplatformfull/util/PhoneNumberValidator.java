@@ -2,9 +2,6 @@ package com.mypkga.commerceplatformfull.util;
 
 import java.util.regex.Pattern;
 
-/**
- * Utility class for phone number validation and formatting
- */
 public class PhoneNumberValidator {
 
     // Vietnamese phone number patterns

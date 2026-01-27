@@ -188,7 +188,7 @@
                     <!-- Main Image -->
                     <div class="main-image-container">
                         <img id="mainImage"
-                            th:src="${!product.sortedImages.empty ? product.sortedImages[0].largeUrl : 'https://via.placeholder.com/500x500?text=' + product.name}"
+                            th:src="${!product.sortedImages.empty ? product.sortedImages[0].largeUrl : '/images/no-image.svg'}"
                             alt="Product Image">
                     </div>
 
@@ -373,7 +373,7 @@
         productImages.push({
             type: 'video',
             videoUrl: /*[[${image.videoUrl}]]*/,
-            thumbnailUrl: 'https://via.placeholder.com/80x80?text=VIDEO'
+            thumbnailUrl: /*[[${image.videoThumbnailUrl}]]*/
         });
         /*[/]*/
         /*[/]*/
@@ -381,8 +381,8 @@
         /*[# th:if="${product.sortedImages.empty}"]*/
         productImages.push({
             type: 'image',
-            largeUrl: 'https://via.placeholder.com/500x500?text=' + /*[[${product.name}]]*/,
-            thumbnailUrl: 'https://via.placeholder.com/80x80?text=' + /*[[${product.name}]]*/
+            largeUrl: '/images/no-image.svg',
+            thumbnailUrl: '/images/no-image.svg'
         });
         /*[/]*/
 

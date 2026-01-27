@@ -116,12 +116,6 @@ public class OTPServiceImpl implements OTPService {
             return false;
         }
 
-        // Check if blocked
-        if (otpVerification.isBlocked()) {
-            log.warn("OTP verification blocked for email: {}", maskEmail(normalizedEmail));
-            return false;
-        }
-
         // Check if expired
         if (otpVerification.isExpired()) {
             log.warn("OTP expired for email: {}", maskEmail(normalizedEmail));
@@ -130,6 +124,7 @@ public class OTPServiceImpl implements OTPService {
 
         // Increment attempts
         otpVerification.incrementAttempts();
+        log.debug("Incremented attempts for email: {}, current attempts: {}", maskEmail(normalizedEmail), otpVerification.getAttempts());
 
         // Validate OTP
         boolean isValid = passwordEncoder.matches(otp, otpVerification.getOtpCode());
@@ -141,11 +136,7 @@ public class OTPServiceImpl implements OTPService {
             log.info("OTP verified successfully for email: {}", maskEmail(normalizedEmail));
             return true;
         } else {
-            // Check if max attempts reached
-            if (otpVerification.isMaxAttemptsReached()) {
-                otpVerification.block();
-                log.warn("Max attempts reached, blocking email: {}", maskEmail(normalizedEmail));
-            }
+            // Save the incremented attempts
             otpRepository.save(otpVerification);
             log.warn("Invalid OTP for email: {}", maskEmail(normalizedEmail));
             return false;
@@ -181,6 +172,17 @@ public class OTPServiceImpl implements OTPService {
     public boolean isBlocked(String email) {
         String normalizedEmail = email.toLowerCase().trim();
 
+        // Check if there's an active OTP with max attempts reached
+        Optional<OTPVerification> otpVerificationOpt = otpRepository.findActiveOTPByEmail(
+            normalizedEmail, LocalDateTime.now()
+        );
+
+        if (otpVerificationOpt.isPresent()) {
+            OTPVerification otpVerification = otpVerificationOpt.get();
+            return otpVerification.isMaxAttemptsReached(maxAttempts);
+        }
+
+        // Also check if there are recent failed attempts within block duration
         LocalDateTime since = LocalDateTime.now().minusMinutes(blockDurationMinutes);
         return otpRepository.isEmailBlocked(normalizedEmail, since);
     }
@@ -202,8 +204,7 @@ public class OTPServiceImpl implements OTPService {
 
     @Override
     public boolean resendOTP(String email) {
-        // For resend, we should allow generating new OTP even if current one is still valid
-        // This is because user explicitly requested a new code
+        // Simple resend - just generate new OTP
         String normalizedEmail = email.toLowerCase().trim();
         
         // Check rate limiting first
@@ -226,11 +227,15 @@ public class OTPServiceImpl implements OTPService {
         );
 
         if (otpVerificationOpt.isEmpty()) {
+            log.debug("No active OTP found for email: {}, returning max attempts: {}", maskEmail(normalizedEmail), maxAttempts);
             return maxAttempts;
         }
 
         OTPVerification otpVerification = otpVerificationOpt.get();
-        return Math.max(0, maxAttempts - otpVerification.getAttempts());
+        int remaining = Math.max(0, maxAttempts - otpVerification.getAttempts());
+        log.debug("Email: {}, Current attempts: {}, Max attempts: {}, Remaining: {}", 
+                 maskEmail(normalizedEmail), otpVerification.getAttempts(), maxAttempts, remaining);
+        return remaining;
     }
 
     @Override
@@ -251,6 +256,26 @@ public class OTPServiceImpl implements OTPService {
         
         if (now.isBefore(nextAllowedTime)) {
             return java.time.Duration.between(now, nextAllowedTime).getSeconds();
+        }
+        
+        return 0;
+    }
+
+    @Override
+    public long getRemainingOTPSeconds(String email) {
+        String normalizedEmail = email.toLowerCase().trim();
+
+        Optional<OTPVerification> latestOtp = otpRepository.findTopByEmailOrderByCreatedAtDesc(normalizedEmail);
+        if (latestOtp.isEmpty()) {
+            return 0;
+        }
+
+        OTPVerification otp = latestOtp.get();
+        LocalDateTime expiryTime = otp.getExpiresAt();
+        LocalDateTime now = LocalDateTime.now();
+        
+        if (now.isBefore(expiryTime)) {
+            return java.time.Duration.between(now, expiryTime).getSeconds();
         }
         
         return 0;

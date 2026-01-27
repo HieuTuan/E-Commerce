@@ -136,7 +136,7 @@
         <!-- Timer Display -->
         <div class="timer-display" id="timer-display">
             <i class="fas fa-clock me-2"></i>
-            Code expires in <span class="timer-number" id="countdown">60</span> seconds
+            Code expires in <span class="timer-number" id="countdown" th:text="${remainingSeconds ?: 60}">60</span> seconds
         </div>
 
         <form th:action="@{/verify-email}" method="post" id="verify-form">
@@ -144,22 +144,32 @@
                 <label for="otp" class="form-label">Verification Code</label>
                 <input type="text" class="form-control otp-input" id="otp" name="otp" 
                        maxlength="6" pattern="[0-9]{6}" required autofocus
-                       placeholder="000000" autocomplete="one-time-code">
+                       placeholder="000000" autocomplete="one-time-code"
+                       th:disabled="${isBlocked}">
                 <div class="form-text text-center">
                     Enter the 6-digit code sent to your email
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary w-100 mb-3">
+            <button type="submit" class="btn btn-primary w-100 mb-3" th:disabled="${isBlocked}">
                 <i class="fas fa-check me-2"></i>Verify Email Address
             </button>
         </form>
 
-        <div class="resend-section">
+        <!-- Resend Section - Only show when not blocked -->
+        <div class="resend-section" th:unless="${isBlocked}">
             <p class="text-muted mb-2">Didn't receive the code?</p>
             <button type="button" class="btn btn-resend" id="resend-btn" disabled>
-                <i class="fas fa-redo me-2"></i>Resend Code (<span id="resend-countdown">60</span>s)
+                <i class="fas fa-redo me-2"></i>Resend Code (Wait for expiry)
             </button>
+        </div>
+
+        <!-- Blocked Message -->
+        <div class="text-center mt-3" th:if="${isBlocked}">
+            <div class="alert-custom alert-danger">
+                <i class="fas fa-clock me-2"></i>
+                <span>Please wait 5 minutes before trying again with this email.</span>
+            </div>
         </div>
 
         <div class="text-center mt-3">
@@ -172,18 +182,29 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            let countdownTime = 60; // 1 minute
-            let resendCountdown = 60; // 1 minute wait for resend
-            let mainTimer, resendTimer;
+            // Get initial countdown time from server-rendered value
+            let countdownTime = parseInt(document.getElementById('countdown').textContent) || 60;
+            let otpExpired = countdownTime <= 0;
+            let mainTimer;
             
             const countdownElement = document.getElementById('countdown');
-            const resendCountdownElement = document.getElementById('resend-countdown');
             const resendBtn = document.getElementById('resend-btn');
             const timerDisplay = document.getElementById('timer-display');
             const successMessage = document.getElementById('success-message');
             
             function startMainTimer() {
                 if (mainTimer) clearInterval(mainTimer);
+                
+                if (countdownTime <= 0) {
+                    otpExpired = true;
+                    timerDisplay.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span style="color: #dc3545;">Code has expired</span>';
+                    document.getElementById('otp').disabled = true;
+                    document.querySelector('button[type="submit"]').disabled = true;
+                    resendBtn.disabled = false;
+                    resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code';
+                    return;
+                }
+                
                 mainTimer = setInterval(function() {
                     countdownTime--;
                     const currentCountdownElement = document.getElementById('countdown');
@@ -193,37 +214,48 @@
                     
                     if (countdownTime <= 0) {
                         clearInterval(mainTimer);
+                        otpExpired = true;
                         timerDisplay.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span style="color: #dc3545;">Code has expired</span>';
                         document.getElementById('otp').disabled = true;
                         document.querySelector('button[type="submit"]').disabled = true;
-                    }
-                }, 1000);
-            }
-            
-            function startResendTimer() {
-                if (resendTimer) clearInterval(resendTimer);
-                resendTimer = setInterval(function() {
-                    resendCountdown--;
-                    const currentResendCountdownElement = document.getElementById('resend-countdown');
-                    if (currentResendCountdownElement) {
-                        currentResendCountdownElement.textContent = resendCountdown;
-                    }
-                    
-                    if (resendCountdown <= 0) {
-                        clearInterval(resendTimer);
+                        
+                        // Enable resend button when OTP expires
                         resendBtn.disabled = false;
                         resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code';
                     }
                 }, 1000);
             }
             
-            // Start initial timers
-            startMainTimer();
-            startResendTimer();
+            // Check if form is blocked initially
+            const isBlocked = document.getElementById('otp').disabled;
+            if (isBlocked) {
+                // If blocked, show blocked message and hide resend section
+                timerDisplay.innerHTML = '<i class="fas fa-ban me-2"></i><span style="color: #dc3545;">Too many failed attempts. Please wait 5 minutes.</span>';
+                return; // Don't set up timers or resend functionality
+            } else if (otpExpired) {
+                timerDisplay.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span style="color: #dc3545;">Code has expired</span>';
+                document.getElementById('otp').disabled = true;
+                document.querySelector('button[type="submit"]').disabled = true;
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code';
+            } else {
+                startMainTimer();
+                // Initially disable resend button until OTP expires
+                resendBtn.disabled = true;
+                resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code (Wait for expiry)';
+            }
             
-            // Resend button click
-            resendBtn.addEventListener('click', function() {
+            // Resend button click (only if resend button exists)
+            if (resendBtn) {
+                resendBtn.addEventListener('click', function() {
                 if (resendBtn.disabled) return;
+                
+                // Allow resend if blocked OR expired
+                if (!isBlocked && !otpExpired) return;
+                
+                // Disable button during request
+                resendBtn.disabled = true;
+                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
                 
                 fetch('/api/resend-otp', {
                     method: 'POST',
@@ -235,17 +267,18 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Show success message
+                        // Show success message in English
+                        successMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i><span>New verification code sent successfully!</span>';
                         successMessage.style.display = 'block';
                         setTimeout(() => {
                             successMessage.style.display = 'none';
                         }, 3000);
                         
-                        // Reset timers
+                        // Reset everything for new OTP
                         countdownTime = 60;
-                        resendCountdown = 60;
+                        otpExpired = false;
                         
-                        // Re-enable form
+                        // Re-enable form (unblock)
                         document.getElementById('otp').disabled = false;
                         document.querySelector('button[type="submit"]').disabled = false;
                         document.getElementById('otp').value = '';
@@ -260,31 +293,31 @@
                         timerDisplay.appendChild(newCountdownElement);
                         timerDisplay.appendChild(document.createTextNode(' seconds'));
                         
-                        // Update resend button
-                        const newResendCountdownElement = document.createElement('span');
-                        newResendCountdownElement.id = 'resend-countdown';
-                        newResendCountdownElement.textContent = '60';
+                        // Disable resend button again until new OTP expires
                         resendBtn.disabled = true;
-                        resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code (';
-                        resendBtn.appendChild(newResendCountdownElement);
-                        resendBtn.appendChild(document.createTextNode('s)'));
+                        resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code (Wait for expiry)';
                         
-                        // Restart timers manually
+                        // Restart timer
                         startMainTimer();
-                        startResendTimer();
                     } else {
                         alert('Failed to resend code: ' + data.message);
+                        // Re-enable resend button on failure
+                        resendBtn.disabled = false;
+                        resendBtn.innerHTML = isBlocked ? '<i class="fas fa-redo me-2"></i>Get New Code' : '<i class="fas fa-redo me-2"></i>Resend Code';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Failed to resend code. Please try again.');
+                    // Re-enable resend button on error
+                    resendBtn.disabled = false;
+                    resendBtn.innerHTML = isBlocked ? '<i class="fas fa-redo me-2"></i>Get New Code' : '<i class="fas fa-redo me-2"></i>Resend Code';
                 });
-            });
+            }
             
             // Auto-submit when 6 digits entered
             document.getElementById('otp').addEventListener('input', function() {
-                if (this.value.length === 6) {
+                if (this.value.length === 6 && !otpExpired) {
                     // Small delay to let user see the complete code
                     setTimeout(() => {
                         document.getElementById('verify-form').submit();

@@ -39,6 +39,8 @@ public class ChatbotService {
 
     public String processMessage(String userMessage) {
         // Check if API is configured
+
+
         if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_OPENAI_API_KEY")) {
             return processMessageWithRules(userMessage);
         }

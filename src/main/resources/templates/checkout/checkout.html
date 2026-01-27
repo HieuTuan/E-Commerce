@@ -296,7 +296,7 @@
                         <!-- Display cart items from database -->
                         <div th:if="${cart != null && !cart.items.isEmpty()}">
                             <div class="product-item" th:each="item : ${cart.items}">
-                                <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : 'https://via.placeholder.com/100'}"
+                                <img th:src="${item.product.primaryImage != null ? item.product.primaryImage.thumbnailUrl : '/images/no-image.svg'}"
                                     class="product-img" th:alt="${item.product.name}">
                                 <div class="product-info">
                                     <div class="product-name" th:text="${item.product.name}">Product Name</div>

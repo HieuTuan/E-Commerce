@@ -43,6 +43,10 @@ public class ProductImage {
     // Video file name (instead of URL)
     @Column(name = "video_filename", length = 255)
     private String videoFilename;
+    
+    // Video thumbnail image
+    @Column(name = "video_thumbnail", length = 255)
+    private String videoThumbnail;
     @Column(length = 255)
     private String altText;
 
@@ -68,6 +72,11 @@ public class ProductImage {
     @Transient
     public String getVideoUrl() {
         return videoFilename != null ? "/files/videos/" + videoFilename : null;
+    }
+    
+    @Transient
+    public String getVideoThumbnailUrl() {
+        return videoThumbnail != null ? "/files/images/" + videoThumbnail : "/images/video-thumbnail.svg";
     }
     @Transient
     public String getOriginalUrl() {

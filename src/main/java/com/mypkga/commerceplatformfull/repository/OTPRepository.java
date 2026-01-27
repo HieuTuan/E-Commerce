@@ -52,9 +52,14 @@ public interface OTPRepository extends JpaRepository<OTPVerification, Long> {
     @Query("DELETE FROM OTPVerification o WHERE o.email = :email")
     void deleteByEmail(@Param("email") String email);
 
-    // Check if email is blocked
-    @Query("SELECT COUNT(o) > 0 FROM OTPVerification o WHERE o.email = :email " +
-           "AND o.blocked = true AND o.createdAt > :since")
-    boolean isEmailBlocked(@Param("email") String email, 
-                          @Param("since") LocalDateTime since);
+    // Check if email has recent failed attempts (for blocking logic)
+    @Query("SELECT COUNT(o) FROM OTPVerification o WHERE o.email = :email " +
+           "AND o.attempts >= 5 AND o.createdAt > :since")
+    long countRecentFailedAttempts(@Param("email") String email, 
+                                  @Param("since") LocalDateTime since);
+    
+    // Check if email is blocked based on recent failed attempts
+    default boolean isEmailBlocked(String email, LocalDateTime since) {
+        return countRecentFailedAttempts(email, since) > 0;
+    }
 }

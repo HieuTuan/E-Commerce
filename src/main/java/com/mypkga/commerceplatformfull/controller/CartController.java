@@ -8,11 +8,16 @@ import com.mypkga.commerceplatformfull.service.CartService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/cart")
@@ -49,11 +54,18 @@ public class CartController {
             @RequestParam(defaultValue = "1") Integer quantity,
             @RequestParam(required = false) String returnUrl,
             Authentication authentication,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request) {
 
         // Guest user handling - redirect to login
         if (authentication == null || !authentication.isAuthenticated()) {
             log.info("Guest user attempted to add to cart - redirecting to login");
+            
+            // Handle AJAX requests
+            if (isAjaxRequest(request)) {
+                return "redirect:/login"; // AJAX will handle this
+            }
+            
             redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng");
             return "redirect:/login";
         }
@@ -61,20 +73,49 @@ public class CartController {
         try {
             User user = getCurrentUser(authentication);
             cartService.addToCart(user, productId, quantity);
-            redirectAttributes.addFlashAttribute("success", "Đã thêm sản phẩm vào giỏ hàng!");
+            
+            String successMessage = "Đã thêm sản phẩm vào giỏ hàng!";
             log.info("Product {} added to cart for user {}", productId, user.getUsername());
+            
+            // Handle AJAX requests
+            if (isAjaxRequest(request)) {
+                // For AJAX requests, we'll return a success response
+                // The JavaScript will handle the animation
+                return "redirect:/cart/add/success"; // This will be handled by JS
+            }
+            
+            redirectAttributes.addFlashAttribute("success", successMessage);
         } catch (OutOfStockException e) {
             log.warn("Out of stock error: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", e.getMessage() +
-                " (Bạn yêu cầu: " + e.getRequestedQuantity() + ")");
+            String errorMessage = e.getMessage() + " (Bạn yêu cầu: " + e.getRequestedQuantity() + ")";
+            
+            if (isAjaxRequest(request)) {
+                redirectAttributes.addFlashAttribute("error", errorMessage);
+                return "redirect:/products/" + productId;
+            }
+            
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return returnUrl != null && !returnUrl.isEmpty() ? "redirect:" + returnUrl : "redirect:/products/" + productId;
         } catch (CartUpdateException e) {
             log.error("Cart update error: {}", e.getMessage());
+            
+            if (isAjaxRequest(request)) {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+                return "redirect:/products/" + productId;
+            }
+            
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return returnUrl != null && !returnUrl.isEmpty() ? "redirect:" + returnUrl : "redirect:/products/" + productId;
         } catch (Exception e) {
             log.error("Error adding to cart", e);
-            redirectAttributes.addFlashAttribute("error", "Không thể thêm sản phẩm vào giỏ hàng");
+            String errorMessage = "Không thể thêm sản phẩm vào giỏ hàng";
+            
+            if (isAjaxRequest(request)) {
+                redirectAttributes.addFlashAttribute("error", errorMessage);
+                return "redirect:/products/" + productId;
+            }
+            
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return returnUrl != null && !returnUrl.isEmpty() ? "redirect:" + returnUrl : "redirect:/products/" + productId;
         }
 
@@ -83,6 +124,19 @@ public class CartController {
             return "redirect:" + returnUrl;
         }
         return "redirect:/cart";
+    }
+
+    @GetMapping("/add/success")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> addToCartSuccess() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Đã thêm sản phẩm vào giỏ hàng!");
+        return ResponseEntity.ok(response);
+    }
+
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
     }
 
     @PostMapping("/update/{itemId}")

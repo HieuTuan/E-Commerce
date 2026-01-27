@@ -213,4 +213,27 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         return user.getEmailVerified() != null && user.getEmailVerified();
     }
+    
+    // Password management methods
+    @Override
+    @Transactional
+    public boolean updatePassword(String email, String newPassword) {
+        try {
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                log.warn("Attempted to update password for non-existent email: {}", email);
+                return false;
+            }
+            
+            User user = userOpt.get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            
+            log.info("Password updated successfully for user: {}", user.getUsername());
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to update password for email: {}", email, e);
+            return false;
+        }
+    }
 }

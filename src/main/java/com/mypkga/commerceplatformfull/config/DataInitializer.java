@@ -35,9 +35,7 @@ public class DataInitializer implements CommandLineRunner {
                 roleService.initializeDefaultRoles();
                 
                 initializeUsers();
-                initializeCategories();
-                initializeProducts();
-                initializeReviews();
+
 
                 log.info("Data initialization completed successfully!");
         }

@@ -33,9 +33,24 @@ public class ImageOptimizationService {
     public ImageData optimizeProductImage(MultipartFile file) throws IOException {
         validateImageFile(file);
         
-        BufferedImage originalImage = ImageIO.read(file.getInputStream());
-        if (originalImage == null) {
-            throw new IllegalArgumentException("Invalid image file");
+        BufferedImage originalImage;
+        try {
+            originalImage = ImageIO.read(file.getInputStream());
+            if (originalImage == null) {
+                log.error("ImageIO.read() returned null for file: {} ({})", 
+                    file.getOriginalFilename(), file.getContentType());
+                
+                // Special handling for WebP files
+                if ("image/webp".equals(file.getContentType())) {
+                    throw new IllegalArgumentException("WebP format is not supported by this system. Please convert to JPEG, PNG, or GIF format.");
+                }
+                
+                throw new IllegalArgumentException("Cannot read image file. File may be corrupted or format not supported by ImageIO.");
+            }
+        } catch (IOException e) {
+            log.error("IOException reading image file: {} ({})", 
+                file.getOriginalFilename(), file.getContentType(), e);
+            throw new IllegalArgumentException("Cannot read image file: " + e.getMessage());
         }
 
         // Create different sizes
@@ -114,8 +129,8 @@ public class ImageOptimizationService {
             throw new IllegalArgumentException("File must be an image");
         }
 
-        // Check supported formats
-        String[] supportedFormats = {"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"};
+        // Check supported formats - Only formats supported by ImageIO
+        String[] supportedFormats = {"image/jpeg", "image/jpg", "image/png", "image/gif"};
         boolean isSupported = false;
         for (String format : supportedFormats) {
             if (format.equals(contentType)) {
@@ -125,7 +140,7 @@ public class ImageOptimizationService {
         }
 
         if (!isSupported) {
-            throw new IllegalArgumentException("Unsupported image format. Supported: JPEG, PNG, GIF, WebP");
+            throw new IllegalArgumentException("Unsupported image format. Supported formats: JPEG, PNG, GIF");
         }
     }
 

@@ -35,4 +35,7 @@ public interface OrderService {
     long countOrdersByStatus(Order.OrderStatus status);
     
     List<Order> getRecentOrders(int limit);
+
+    // Fix method for existing COD orders
+    void fixExistingCODOrders();
 }

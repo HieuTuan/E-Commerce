@@ -31,4 +31,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> searchProducts(@Param("keyword") String keyword);
 
     List<Product> findTop10ByOrderByCreatedDateDesc();
+    
+    // Eager load product images to fix display issues
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.productImages")
+    List<Product> findAllWithImages();
+    
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.productImages WHERE p.category.id = :categoryId")
+    List<Product> findByCategoryIdWithImages(@Param("categoryId") Long categoryId);
+    
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.productImages WHERE " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Product> searchProductsWithImages(@Param("keyword") String keyword);
 }

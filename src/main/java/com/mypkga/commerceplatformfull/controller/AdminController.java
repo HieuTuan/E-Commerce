@@ -84,11 +84,15 @@ public class AdminController {
                             productImage.setImageThumbnail(imageResult.getThumbnailFileName());
                             productImage.setImageMedium(imageResult.getMediumFileName());
                             productImage.setImageLarge(imageResult.getLargeFileName());
-                            productImage.setDisplayOrder(displayOrder++);
-                            productImage.setIsPrimary(displayOrder == 1); // First image is primary
+                            productImage.setDisplayOrder(displayOrder);
+                            productImage.setIsPrimary(displayOrder == 0); // First image is primary
+                            displayOrder++;
                             
-                            productImageRepository.save(productImage);
+                            ProductImage savedImage = productImageRepository.save(productImage);
+                            System.out.println("Saved ProductImage with ID: " + savedImage.getId() + " for Product ID: " + savedProduct.getId());
                         } catch (Exception e) {
+                            System.err.println("Error saving ProductImage: " + e.getMessage());
+                            e.printStackTrace();
                             redirectAttributes.addFlashAttribute("error", "Error uploading image: " + e.getMessage());
                             return "redirect:/admin/products";
                         }
@@ -329,5 +333,16 @@ public class AdminController {
         model.addAttribute("totalUsers", userService.getAllUsers().size());
         model.addAttribute("recentOrders", orderService.getRecentOrders(10));
         return "admin/reports";
+    }
+
+    @PostMapping("/fix-cod-orders")
+    public String fixCODOrders(RedirectAttributes redirectAttributes) {
+        try {
+            orderService.fixExistingCODOrders();
+            redirectAttributes.addFlashAttribute("success", "Fixed existing COD orders successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error fixing COD orders: " + e.getMessage());
+        }
+        return "redirect:/admin/reports";
     }
 }

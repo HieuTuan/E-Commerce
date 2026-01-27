@@ -41,8 +41,7 @@ public class OTPVerification {
     @Column(nullable = false)
     private boolean verified = false;
 
-    @Column(nullable = false)
-    private boolean blocked = false;
+
 
     // Constructor for creating new OTP verification
     public OTPVerification(String email, String otpCode, LocalDateTime expiresAt) {
@@ -51,7 +50,6 @@ public class OTPVerification {
         this.expiresAt = expiresAt;
         this.attempts = 0;
         this.verified = false;
-        this.blocked = false;
     }
 
     // Helper method to check if OTP is expired
@@ -67,8 +65,8 @@ public class OTPVerification {
 
     // Helper method to check if max attempts reached
     @Transient
-    public boolean isMaxAttemptsReached() {
-        return attempts >= 3; // Maximum 3 attempts
+    public boolean isMaxAttemptsReached(int maxAttempts) {
+        return attempts >= maxAttempts;
     }
 
     // Helper method to mark as verified
@@ -76,8 +74,5 @@ public class OTPVerification {
         this.verified = true;
     }
 
-    // Helper method to block further attempts
-    public void block() {
-        this.blocked = true;
-    }
+
 }

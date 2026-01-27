@@ -1,0 +1,13 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="80" height="80" rx="8" fill="#667eea"/>
+  
+  <!-- Play button circle -->
+  <circle cx="40" cy="40" r="16" fill="white" fill-opacity="0.9"/>
+  
+  <!-- Play triangle -->
+  <path d="M35 30L35 50L50 40L35 30Z" fill="#667eea"/>
+  
+  <!-- VIDEO text -->
+  <text x="40" y="70" font-family="Arial, sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="white">VIDEO</text>
+</svg>
