@@ -180,12 +180,71 @@ public class AdminController {
             @RequestParam String status,
             RedirectAttributes redirectAttributes) {
         try {
-            orderService.updateOrderStatus(id, Order.OrderStatus.valueOf(status));
-            redirectAttributes.addFlashAttribute("success", "Order status updated!");
+            Order order = orderService.getOrderById(id)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+            
+            Order.OrderStatus currentStatus = order.getStatus();
+            Order.OrderStatus newStatus = Order.OrderStatus.valueOf(status);
+            
+            // Validate status transition
+            if (!isValidStatusTransition(currentStatus, newStatus)) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Không thể chuyển từ trạng thái " + currentStatus + " sang " + newStatus);
+                return "redirect:/admin/orders";
+            }
+            
+            orderService.updateOrderStatus(id, newStatus);
+            redirectAttributes.addFlashAttribute("success", 
+                "Cập nhật trạng thái đơn hàng thành công: " + newStatus);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error updating order: " + e.getMessage());
         }
         return "redirect:/admin/orders";
+    }
+
+    /**
+     * Validate if status transition is allowed
+     */
+    private boolean isValidStatusTransition(Order.OrderStatus currentStatus, Order.OrderStatus newStatus) {
+        // If same status, allow (no change)
+        if (currentStatus == newStatus) {
+            return true;
+        }
+        
+        // Once delivered, cannot change to any other status
+        if (currentStatus == Order.OrderStatus.DELIVERED) {
+            return false;
+        }
+        
+        // Once cancelled, cannot change to any other status except back to cancelled
+        if (currentStatus == Order.OrderStatus.CANCELLED && newStatus != Order.OrderStatus.CANCELLED) {
+            return false;
+        }
+        
+        // Cannot go back to previous statuses (except cancellation)
+        if (newStatus == Order.OrderStatus.CANCELLED) {
+            // Can cancel from any status except DELIVERED
+            return currentStatus != Order.OrderStatus.DELIVERED;
+        }
+        
+        // Define allowed forward transitions
+        switch (currentStatus) {
+            case PENDING:
+                return newStatus == Order.OrderStatus.PROCESSING || 
+                       newStatus == Order.OrderStatus.CANCELLED;
+            case PROCESSING:
+                return newStatus == Order.OrderStatus.SHIPPED || 
+                       newStatus == Order.OrderStatus.CANCELLED;
+            case SHIPPED:
+                return newStatus == Order.OrderStatus.DELIVERED || 
+                       newStatus == Order.OrderStatus.CANCELLED;
+            case DELIVERED:
+                return false; // Already handled above
+            case CANCELLED:
+                return false; // Already handled above
+            default:
+                return false;
+        }
     }
 
     @PostMapping("/products/{productId}/images/{imageId}/delete")

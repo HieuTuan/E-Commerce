@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Vietnam Address Enhancement</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Test Vietnam Address Enhancement</h2>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Tỉnh/Thành phố *</label>
+                <select class="form-select" id="provinceSelect" required>
+                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Quận/Huyện *</label>
+                <select class="form-select" id="districtSelect" disabled required>
+                    <option value="">-- Chọn Quận/Huyện --</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <label class="form-label">Phường/Xã</label>
+                <select class="form-select" id="wardSelect" disabled>
+                    <option value="">-- Chọn Phường/Xã --</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Địa chỉ cụ thể</label>
+                <input type="text" class="form-control" id="specificAddress" placeholder="Số nhà, tên đường...">
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <strong>Địa chỉ đầy đủ:</strong> 
+            <span id="fullAddressDisplay">Vui lòng chọn địa chỉ</span>
+        </div>
+        
+        <input type="hidden" id="fullShippingAddress">
+    </div>
+
+    <script src="/js/vietnam-address.js"></script>
+</body>
+</html>
