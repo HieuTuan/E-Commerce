@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận giao hàng bị từ chối</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .action-buttons .btn {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+        
+        .rejection-reason {
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        .rejection-preview {
+            max-height: 60px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .rejection-preview.expanded {
+            max-height: none;
+        }
+        
+        .expand-btn {
+            cursor: pointer;
+            color: #0d6efd;
+            text-decoration: underline;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-times-circle me-2 text-danger"></i>
+                            Xác nhận giao hàng bị từ chối
+                        </h4>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="/delivery/admin/pending" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-clock me-1"></i>
+                                Xem chờ xử lý
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-1" th:text="${confirmations != null ? confirmations.size() : 0}">0</h3>
+                                        <small>Bị từ chối</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rejected Confirmations Table -->
+                        <div th:if="${confirmations != null and !confirmations.empty}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã đơn hàng</th>
+                                            <th>Khách hàng</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Ngày từ chối</th>
+                                            <th>Lý do từ chối</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="confirmation : ${confirmations}">
+                                            <td>
+                                                <strong th:text="${confirmation.order.orderNumber}"></strong>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong th:text="${confirmation.order.customerName}"></strong>
+                                                </div>
+                                                <small class="text-muted" th:text="${confirmation.order.customerPhone}"></small>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-success" 
+                                                      th:text="${#numbers.formatDecimal(confirmation.order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                                            </td>
+                                            <td>
+                                                <span th:text="${#temporals.format(confirmation.confirmedAt, 'dd/MM/yyyy')}"></span>
+                                                <br>
+                                                <small class="text-muted" 
+                                                       th:text="${#temporals.format(confirmation.confirmedAt, 'HH:mm')}"></small>
+                                            </td>
+                                            <td class="rejection-reason">
+                                                <div class="rejection-preview" th:id="'reason-' + ${confirmation.id}">
+                                                    <span th:text="${confirmation.rejectionReason}"></span>
+                                                </div>
+                                                <div th:if="${#strings.length(confirmation.rejectionReason) > 100}">
+                                                    <span class="expand-btn" 
+                                                          th:onclick="'toggleReason(' + ${confirmation.id} + ')'">
+                                                        Xem thêm...
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge status-rejected">
+                                                    <i class="fas fa-times me-1"></i>
+                                                    Đã từ chối
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a th:href="@{/delivery/admin/details/{orderId}(orderId=${confirmation.order.id})}" 
+                                                       class="btn btn-outline-primary btn-sm me-1">
+                                                        <i class="fas fa-eye"></i>
+                                                        Chi tiết
+                                                    </a>
+                                                    
+                                                    <a th:href="@{/orders/{orderId}/timeline(orderId=${confirmation.order.id})}" 
+                                                       class="btn btn-outline-info btn-sm me-1">
+                                                        <i class="fas fa-clock"></i>
+                                                        Timeline
+                                                    </a>
+                                                    
+                                                    <button type="button" 
+                                                            class="btn btn-outline-warning btn-sm"
+                                                            th:onclick="'showReasonModal(\'' + ${confirmation.order.orderNumber} + '\', \'' + ${confirmation.rejectionReason} + '\')'">
+                                                        <i class="fas fa-comment"></i>
+                                                        Xem lý do
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div th:if="${confirmations == null or confirmations.empty}" class="text-center py-5">
+                            <i class="fas fa-smile fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Không có đơn hàng nào bị từ chối</h5>
+                            <p class="text-muted">Tất cả khách hàng đều hài lòng với việc giao hàng.</p>
+                        </div>
+                        
+                        <!-- Navigation -->
+                        <div class="mt-4 text-center">
+                            <a href="/admin/dashboard" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Quay lại Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div class="modal fade" id="reasonModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-comment me-2"></i>
+                        Lý do từ chối - Đơn hàng <span id="modalOrderNumber"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Khách hàng báo cáo vấn đề:</strong>
+                    </div>
+                    <p id="modalReason" class="mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function toggleReason(confirmationId) {
+            const reasonDiv = document.getElementById('reason-' + confirmationId);
+            const expandBtn = reasonDiv.nextElementSibling?.querySelector('.expand-btn');
+            
+            if (reasonDiv.classList.contains('expanded')) {
+                reasonDiv.classList.remove('expanded');
+                if (expandBtn) expandBtn.textContent = 'Xem thêm...';
+            } else {
+                reasonDiv.classList.add('expanded');
+                if (expandBtn) expandBtn.textContent = 'Thu gọn';
+            }
+        }
+        
+        function showReasonModal(orderNumber, reason) {
+            document.getElementById('modalOrderNumber').textContent = orderNumber;
+            document.getElementById('modalReason').textContent = reason;
+            
+            const modal = new bootstrap.Modal(document.getElementById('reasonModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>

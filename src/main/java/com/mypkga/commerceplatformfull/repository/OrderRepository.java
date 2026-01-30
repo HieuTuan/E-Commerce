@@ -1,6 +1,7 @@
 package com.mypkga.commerceplatformfull.repository;
 
 import com.mypkga.commerceplatformfull.entity.Order;
+import com.mypkga.commerceplatformfull.entity.OrderStatus;
 import com.mypkga.commerceplatformfull.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,19 +22,25 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByOrderNumber(String orderNumber);
 
-    List<Order> findByStatus(Order.OrderStatus status);
+    List<Order> findByStatus(OrderStatus status);
+    
+    List<Order> findByCurrentStatus(OrderStatus currentStatus);
 
     List<Order> findByPaymentStatus(Order.PaymentStatus paymentStatus);
 
     List<Order> findAllByOrderByCreatedDateDesc();
     
     // Staff workflow methods
-    Page<Order> findByStatusOrderByCreatedDateDesc(Order.OrderStatus status, Pageable pageable);
+    Page<Order> findByStatusOrderByCreatedDateDesc(OrderStatus status, Pageable pageable);
     
-    long countByStatus(Order.OrderStatus status);
+    Page<Order> findByCurrentStatusOrderByCreatedDateDesc(OrderStatus currentStatus, Pageable pageable);
+    
+    long countByStatus(OrderStatus status);
+    
+    long countByCurrentStatus(OrderStatus currentStatus);
     
     List<Order> findTop5ByOrderByCreatedDateDesc();
 
     // Find COD orders with specific status
-    List<Order> findByPaymentMethodAndStatus(String paymentMethod, Order.OrderStatus status);
+    List<Order> findByPaymentMethodAndStatus(String paymentMethod, OrderStatus status);
 }

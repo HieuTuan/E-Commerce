@@ -47,7 +47,7 @@ public class ProductImage {
     // Video thumbnail image
     @Column(name = "video_thumbnail", length = 255)
     private String videoThumbnail;
-    @Column(length = 255)
+    @Column(length = 255,columnDefinition = "NVARCHAR(200)")
     private String altText;
 
     @CreationTimestamp

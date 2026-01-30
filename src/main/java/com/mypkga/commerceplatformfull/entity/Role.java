@@ -25,7 +25,7 @@ public class Role {
     @Column(name = "name", nullable = false, unique = true, length = 50)
     private String name;
 
-    @Column(name = "description", length = 255)
+    @Column(name = "description", length = 255,columnDefinition = "NVARCHAR(200)")
     private String description;
 
     @Column(name = "permissions", columnDefinition = "TEXT")

@@ -30,7 +30,7 @@ public class Review {
     @Column(nullable = false)
     private Integer rating; // 1-5 stars
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(200)")
     private String comment;
 
     @Column(nullable = false)

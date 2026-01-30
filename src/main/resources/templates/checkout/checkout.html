@@ -242,52 +242,57 @@
                             <div class="mb-3">
                                 <label class="form-label">Shipping Address *</label>
                                 
-                                <!-- Province/City Selection -->
-                                <div class="row mb-2">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Tỉnh/Thành phố *</label>
-                                        <select class="form-select" id="provinceSelect" required>
-                                            <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Quận/Huyện *</label>
-                                        <select class="form-select" id="districtSelect" disabled required>
-                                            <option value="">-- Chọn Quận/Huyện --</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <!-- Ward/Commune Selection -->
-                                <div class="row mb-2">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Phường/Xã</label>
-                                        <select class="form-select" id="wardSelect" disabled>
-                                            <option value="">-- Chọn Phường/Xã --</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <!-- Empty column for layout balance -->
-                                    </div>
-                                </div>
-                                
-                                <!-- Specific Address -->
+                                <!-- Simple address input -->
                                 <div class="mb-2">
-                                    <label class="form-label">Địa chỉ cụ thể *</label>
-                                    <input type="text" class="form-control" id="specificAddress" 
-                                           placeholder="Số nhà, tên đường..." required>
+                                    <label class="form-label">Địa chỉ giao hàng *</label>
+                                    <textarea class="form-control" name="shippingAddress" rows="3" 
+                                              placeholder="Nhập địa chỉ đầy đủ: Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" 
+                                              required></textarea>
                                 </div>
                                 
-                                <!-- Hidden field for full address -->
-                                <input type="hidden" name="shippingAddress" id="fullShippingAddress">
-                                
-                                <!-- Display full address -->
-                                <div class="mt-2">
-                                    <small class="text-muted">
-                                        <strong>Địa chỉ đầy đủ:</strong> 
-                                        <span id="fullAddressDisplay">Vui lòng chọn địa chỉ</span>
-                                    </small>
+                                <!-- Advanced address selection (optional) -->
+                                <div class="collapse" id="advancedAddress">
+                                    <!-- Province/City Selection -->
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Tỉnh/Thành phố</label>
+                                            <select class="form-select" id="provinceSelect">
+                                                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Quận/Huyện</label>
+                                            <select class="form-select" id="districtSelect" disabled>
+                                                <option value="">-- Chọn Quận/Huyện --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Ward/Commune Selection -->
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Phường/Xã</label>
+                                            <select class="form-select" id="wardSelect" disabled>
+                                                <option value="">-- Chọn Phường/Xã --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <!-- Empty column for layout balance -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Specific Address -->
+                                    <div class="mb-2">
+                                        <label class="form-label">Địa chỉ cụ thể</label>
+                                        <input type="text" class="form-control" id="specificAddress" 
+                                               placeholder="Số nhà, tên đường...">
+                                    </div>
                                 </div>
+                                
+                                <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#advancedAddress">
+                                    <i class="fas fa-map-marker-alt"></i> Chọn địa chỉ chi tiết
+                                </button>
                             </div>
 
                             <div class="mb-3">
@@ -316,13 +321,13 @@
                                     </div>
                                 </div>
 
-                                <div class="payment-option" onclick="selectPayment('COD')" style="opacity: 0.5; cursor: not-allowed;">
+                                <div class="payment-option" onclick="selectPayment('COD')">
                                     <div class="d-flex align-items-center">
-                                        <input type="radio" name="paymentMethod" value="COD" id="cod" disabled>
+                                        <input type="radio" name="paymentMethod" value="COD" id="cod">
                                         <label class="ms-3 mb-0 flex-grow-1" for="cod">
-                                            <i class="fas fa-money-bill text-muted"></i>
-                                            <strong class="text-muted">COD (Tạm thời không khả dụng)</strong>
-                                            <small class="text-muted d-block">Cash on delivery - Temporarily disabled</small>
+                                            <i class="fas fa-money-bill text-success"></i>
+                                            <strong>COD (Cash on Delivery)</strong>
+                                            <small class="text-muted d-block">Pay when you receive the order</small>
                                         </label>
                                     </div>
                                 </div>
@@ -394,7 +399,7 @@
                         </div>
 
                         <button type="submit" form="checkoutForm" class="btn btn-primary btn-order" th:if="${cart != null && !cart.items.isEmpty()}">
-                            <i class="fas fa-check-circle"></i> Place Order Now
+                            <i class="fas fa-check-circle"></i> Payment
                         </button>
 
                         <div class="text-center mt-3" th:if="${cart != null && !cart.items.isEmpty()}">
@@ -412,11 +417,6 @@
     <script src="/js/vietnam-address.js"></script>
     <script>
         function selectPayment(method) {
-            // Skip if COD is disabled
-            if (method === 'COD') {
-                return;
-            }
-            
             document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
             document.querySelector(`input[value="${method}"]`).closest('.payment-option').classList.add('active');
             document.querySelector(`input[value="${method}"]`).checked = true;
@@ -453,26 +453,6 @@
             document.body.appendChild(form);
             form.submit();
         }
-
-        // Update full address display when address components change
-        document.addEventListener('DOMContentLoaded', function() {
-            function updateAddressDisplay() {
-                if (window.addressSelector) {
-                    const fullAddress = window.addressSelector.updateFullAddress();
-                    document.getElementById('fullAddressDisplay').textContent = 
-                        fullAddress || 'Vui lòng chọn địa chỉ';
-                }
-            }
-
-            // Listen for changes in address components
-            ['provinceSelect', 'districtSelect', 'wardSelect', 'specificAddress'].forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('change', updateAddressDisplay);
-                    element.addEventListener('input', updateAddressDisplay);
-                }
-            });
-        });
     </script>
 </body>
 

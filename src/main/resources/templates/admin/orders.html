@@ -36,6 +36,11 @@
                             <i class="fas fa-shopping-cart"></i> Orders
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/delivery-issues}">
+                            <i class="fas fa-exclamation-triangle"></i> Delivery Issues
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -68,10 +73,13 @@
                             <td><span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</td>
                             <td>
                                 <span class="badge"
-                                    th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
-                                                       order.status.name() == 'PROCESSING' ? 'bg-info' :
-                                                       order.status.name() == 'DELIVERED' ? 'bg-success' : 'bg-secondary'}"
-                                    th:text="${order.status}">Status</span>
+                                    th:classappend="${order.currentStatus.name() == 'PENDING' ? 'bg-warning' : 
+                                                       order.currentStatus.name() == 'CONFIRMED' ? 'bg-info' :
+                                                       order.currentStatus.name() == 'SHIPPING' ? 'bg-primary' :
+                                                       order.currentStatus.name() == 'DELIVERED' ? 'bg-success' : 
+                                                       order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
+                                                       order.currentStatus.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
+                                    th:text="${order.currentStatus.displayName}">Status</span>
                             </td>
                             <td>
                                 <span class="badge"
@@ -84,21 +92,21 @@
                                 <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"
                                     class="d-inline">
                                     <select name="status" class="form-select form-select-sm d-inline"
-                                        style="width: auto;" onchange="confirmStatusChange(this, '[[${order.status.name()}]]')">
-                                        <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}"
-                                                th:disabled="${order.status.name() == 'CANCELLED' || order.status.name() == 'DELIVERED'}">
-                                            Pending</option>
-                                        <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}"
-                                                th:disabled="${order.status.name() == 'CANCELLED' || order.status.name() == 'DELIVERED'}">
-                                            Processing</option>
-                                        <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}"
-                                                th:disabled="${order.status.name() == 'CANCELLED' || order.status.name() == 'DELIVERED'}">
-                                            Shipped</option>
-                                        <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">
-                                            Delivered</option>
-                                        <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}"
-                                                th:disabled="${order.status.name() == 'DELIVERED'}">
-                                            Cancelled</option>
+                                        style="width: auto;" onchange="confirmStatusChange(this, '[[${order.currentStatus.name()}]]')">
+                                        <option value="PENDING" th:selected="${order.currentStatus.name() == 'PENDING'}"
+                                                th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                            PENDING</option>
+                                        <option value="CONFIRMED" th:selected="${order.currentStatus.name() == 'CONFIRMED'}"
+                                                th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                            CONFIRMED</option>
+                                        <option value="SHIPPING" th:selected="${order.currentStatus.name() == 'SHIPPING'}"
+                                                th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                            SHIPPING</option>
+                                        <option value="DELIVERED" th:selected="${order.currentStatus.name() == 'DELIVERED'}">
+                                            DELIVERED</option>
+                                        <option value="CANCELLED" th:selected="${order.currentStatus.name() == 'CANCELLED'}"
+                                                th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
+                                            CANCELLED</option>
                                     </select>
                                 </form>
                             </td>
@@ -118,21 +126,21 @@
             // Define status hierarchy
             const statusHierarchy = {
                 'PENDING': 1,
-                'PROCESSING': 2,
-                'SHIPPED': 3,
+                'CONFIRMED': 2,
+                'SHIPPING': 3,
                 'DELIVERED': 4,
                 'CANCELLED': 5
             };
             
             // Check if trying to go backwards (except for cancellation)
             if (currentStatus === 'DELIVERED' && newStatus !== 'DELIVERED') {
-                alert('Không thể thay đổi trạng thái của đơn hàng đã giao!');
+                alert('Cannot change status of delivered order!');
                 selectElement.value = currentStatus;
                 return;
             }
             
             if (currentStatus === 'CANCELLED' && newStatus !== 'CANCELLED') {
-                alert('Không thể thay đổi trạng thái của đơn hàng đã hủy!');
+                alert('Cannot change status of cancelled order!');
                 selectElement.value = currentStatus;
                 return;
             }
@@ -140,23 +148,23 @@
             // Confirm status change
             let confirmMessage = '';
             switch (newStatus) {
-                case 'PROCESSING':
-                    confirmMessage = 'Xác nhận chuyển đơn hàng sang trạng thái "Đang xử lý"?';
+                case 'CONFIRMED':
+                    confirmMessage = 'Confirm order status change to "CONFIRMED"?';
                     break;
-                case 'SHIPPED':
-                    confirmMessage = 'Xác nhận đơn hàng đã được gửi đi?';
+                case 'SHIPPING':
+                    confirmMessage = 'Confirm order has been shipped?';
                     break;
                 case 'DELIVERED':
-                    confirmMessage = 'Xác nhận đơn hàng đã được giao thành công?';
+                    confirmMessage = 'Confirm order has been successfully delivered?';
                     break;
                 case 'CANCELLED':
-                    confirmMessage = 'Xác nhận hủy đơn hàng này? Hành động này không thể hoàn tác!';
+                    confirmMessage = 'Confirm cancellation of this order? This action cannot be undone!';
                     break;
                 case 'PENDING':
-                    confirmMessage = 'Xác nhận chuyển đơn hàng về trạng thái "Chờ xử lý"?';
+                    confirmMessage = 'Confirm order status change to "PENDING"?';
                     break;
                 default:
-                    confirmMessage = 'Xác nhận thay đổi trạng thái đơn hàng?';
+                    confirmMessage = 'Confirm order status change?';
             }
             
             if (confirm(confirmMessage)) {

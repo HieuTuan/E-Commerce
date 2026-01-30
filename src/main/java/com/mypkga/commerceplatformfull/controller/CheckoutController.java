@@ -57,12 +57,14 @@ public class CheckoutController {
                 String paymentUrl = vnPayService.createPaymentUrl(order);
                 return "redirect:" + paymentUrl;
             } else if ("COD".equals(paymentMethod)) {
-                redirectAttributes.addFlashAttribute("success", "Order placed successfully!");
-                return "redirect:/checkout/success?orderNumber=" + order.getOrderNumber();
+                redirectAttributes.addFlashAttribute("success", "Đơn hàng đã được tạo thành công!");
+                // Redirect to timeline instead of success page
+                return "redirect:/orders/" + order.getId() + "/timeline?success=true";
             }
 
-            redirectAttributes.addFlashAttribute("success", "Order placed successfully!");
-            return "redirect:/checkout/success?orderNumber=" + order.getOrderNumber();
+            redirectAttributes.addFlashAttribute("success", "Đơn hàng đã được tạo thành công!");
+            // Redirect to timeline instead of success page
+            return "redirect:/orders/" + order.getId() + "/timeline?success=true";
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Checkout failed: " + e.getMessage());

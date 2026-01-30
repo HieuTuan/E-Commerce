@@ -30,12 +30,17 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private OrderStatus status = OrderStatus.PENDING;
+
+    // Current status field for timeline tracking
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_status", nullable = false, length = 30)
+    private OrderStatus currentStatus = OrderStatus.PENDING;
 
     @Column(length = 50)
     private String paymentMethod;
@@ -44,7 +49,7 @@ public class Order {
     @Column(nullable = false, length = 20)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String shippingAddress;
 
     @Column(length = 100)
@@ -53,7 +58,7 @@ public class Order {
     @Column(length = 20)
     private String customerPhone;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String notes;
 
     @CreationTimestamp
@@ -70,8 +75,59 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
-    public enum OrderStatus {
-        PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+    // New fields for timeline and delivery confirmation
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("updatedAt DESC")
+    private List<OrderTimelineEntry> timeline = new ArrayList<>();
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private DeliveryConfirmation deliveryConfirmation;
+
+    // Helper methods for timeline and status management
+    
+    /**
+     * Add a timeline entry to this order
+     */
+    public void addTimelineEntry(OrderTimelineEntry entry) {
+        timeline.add(entry);
+        entry.setOrder(this);
+    }
+
+    /**
+     * Check if the order status can be updated to a new status
+     */
+    public boolean canUpdateStatus(OrderStatus newStatus) {
+        return !currentStatus.isFinalState();
+    }
+
+    /**
+     * Update the current status and sync with the legacy status field
+     */
+    public void updateCurrentStatus(OrderStatus newStatus) {
+        this.currentStatus = newStatus;
+        this.status = newStatus; // Keep legacy field in sync
+    }
+
+    /**
+     * Get the current status
+     */
+    public OrderStatus getCurrentStatus() {
+        return this.currentStatus;
+    }
+
+    /**
+     * Get the most recent timeline entry
+     */
+    public OrderTimelineEntry getLatestTimelineEntry() {
+        return timeline.isEmpty() ? null : timeline.get(0);
+    }
+
+    /**
+     * Check if delivery confirmation is required (order is delivered but not confirmed)
+     */
+    public boolean requiresDeliveryConfirmation() {
+        return currentStatus == OrderStatus.DELIVERED && 
+               (deliveryConfirmation == null || deliveryConfirmation.isPending());
     }
 
     public enum PaymentStatus {

@@ -29,10 +29,10 @@ public class OrderItem {
     @Column(nullable = false)
     private Integer quantity;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
 
-    @Column(length = 200)
+    @Column(length = 200,columnDefinition = "NVARCHAR(200)")
     private String productName;
 
     @Transient

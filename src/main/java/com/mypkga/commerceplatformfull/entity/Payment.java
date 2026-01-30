@@ -30,7 +30,7 @@ public class Payment {
     @Column(length = 200)
     private String transactionId;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)

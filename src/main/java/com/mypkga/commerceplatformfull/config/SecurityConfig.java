@@ -20,6 +20,9 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
+import jakarta.servlet.ServletException;
+import java.io.IOException;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -83,8 +86,9 @@ public class SecurityConfig {
                 .requestMatchers("/staff/**").hasRole("STAFF")
 
 
-                // Shopping features - Customer only
-                .requestMatchers("/cart/**", "/checkout/**", "/orders/**").hasRole("CUSTOMER")
+                // Shopping features - Customer and Admin can access
+                .requestMatchers("/cart/**", "/checkout/**").hasRole("CUSTOMER")
+                .requestMatchers("/orders/**").hasAnyRole("CUSTOMER", "ADMIN", "STAFF")
 
                 .anyRequest().authenticated()
             )
@@ -126,7 +130,17 @@ public class SecurityConfig {
             
             // Exception handling
             .exceptionHandling(exceptions -> exceptions
-                .accessDeniedPage("/error/403")
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    try {
+                        // Set error attributes for CustomErrorController
+                        request.setAttribute("jakarta.servlet.error.status_code", 403);
+                        request.setAttribute("jakarta.servlet.error.message", "Access Denied");
+                        request.setAttribute("jakarta.servlet.error.request_uri", request.getRequestURI());
+                        request.getRequestDispatcher("/error").forward(request, response);
+                    } catch (ServletException | IOException e) {
+                        response.sendError(403, "Access Denied");
+                    }
+                })
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.sendRedirect("/login");
                 })

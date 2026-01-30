@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận giao hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .confirmation-card {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .order-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .status-delivered {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .confirmation-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .rejection-form {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 576px) {
+            .confirmation-actions {
+                flex-direction: column;
+            }
+            
+            .confirmation-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="confirmation-card">
+                    <div class="card">
+                        <div class="card-header text-center">
+                            <h4 class="mb-0">
+                                <i class="fas fa-box-open me-2 text-success"></i>
+                                Xác nhận giao hàng
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- Error Messages -->
+                            <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <span th:switch="${param.error}">
+                                    <span th:case="'invalid'">Yêu cầu không hợp lệ!</span>
+                                    <span th:case="'invalid_state'">Trạng thái đơn hàng không phù hợp!</span>
+                                    <span th:case="'reason_required'">Vui lòng nhập lý do từ chối!</span>
+                                    <span th:case="'failed'">Có lỗi xảy ra, vui lòng thử lại!</span>
+                                    <span th:case="*">Có lỗi xảy ra!</span>
+                                </span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+
+                            <!-- Order Information -->
+                            <div class="order-info" th:if="${order}">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-receipt me-2"></i>
+                                    Thông tin đơn hàng
+                                </h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Mã đơn hàng:</strong> <span th:text="${order.orderNumber}"></span></p>
+                                        <p><strong>Tổng tiền:</strong> 
+                                           <span class="text-success fw-bold" 
+                                                 th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Trạng thái:</strong> 
+                                           <span class="status-badge status-delivered">
+                                               <i class="fas fa-check me-1"></i>
+                                               <span th:text="${order.currentStatus.displayName}"></span>
+                                           </span>
+                                        </p>
+                                        <p><strong>Ngày đặt:</strong> 
+                                           <span th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${order.shippingAddress}">
+                                    <p><strong>Địa chỉ giao hàng:</strong> <span th:text="${order.shippingAddress}"></span></p>
+                                </div>
+                            </div>
+
+                            <!-- Confirmation Status -->
+                            <div th:if="${confirmation}" class="text-center mb-4">
+                                <div th:switch="${confirmation.status.name()}">
+                                    <div th:case="'PENDING'" class="alert alert-info">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <strong>Đơn hàng đã được giao đến bạn.</strong><br>
+                                        Vui lòng xác nhận việc nhận hàng hoặc báo cáo nếu có vấn đề.
+                                    </div>
+                                    
+                                    <div th:case="'CONFIRMED'" class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Bạn đã xác nhận nhận hàng thành công!</strong><br>
+                                        Cảm ơn bạn đã mua hàng tại cửa hàng của chúng tôi.
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                Xác nhận lúc: <span th:text="${#temporals.format(confirmation.confirmedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div th:case="'REJECTED'" class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <strong>Bạn đã báo cáo vấn đề với đơn hàng này.</strong><br>
+                                        Chúng tôi sẽ liên hệ với bạn để giải quyết.
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                Báo cáo lúc: <span th:text="${#temporals.format(confirmation.confirmedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                            </small>
+                                        </div>
+                                        <div class="mt-2" th:if="${confirmation.rejectionReason}">
+                                            <strong>Lý do:</strong> <span th:text="${confirmation.rejectionReason}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons (only show for pending confirmations) -->
+                            <div th:if="${confirmation != null and confirmation.status.name() == 'PENDING'}" 
+                                 class="confirmation-actions">
+                                
+                                <!-- Confirm Button -->
+                                <form th:action="@{/delivery/confirm/{orderId}(orderId=${orderId})}" method="post" 
+                                      onsubmit="return confirm('Bạn có chắc chắn đã nhận được hàng?')">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-check me-2"></i>
+                                        Đã nhận hàng
+                                    </button>
+                                </form>
+                                
+                                <!-- Reject Button -->
+                                <button type="button" class="btn btn-warning btn-lg" onclick="showRejectionForm()">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Báo cáo vấn đề
+                                </button>
+                            </div>
+
+                            <!-- Rejection Form -->
+                            <div id="rejectionForm" class="rejection-form">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Vui lòng mô tả vấn đề bạn gặp phải:
+                                </h6>
+                                
+                                <form th:action="@{/delivery/reject/{orderId}(orderId=${orderId})}" method="post">
+                                    <div class="mb-3">
+                                        <textarea name="reason" class="form-control" rows="4" 
+                                                  placeholder="Ví dụ: Hàng bị hỏng, thiếu sản phẩm, giao sai địa chỉ..."
+                                                  required maxlength="500"></textarea>
+                                        <div class="form-text">Tối đa 500 ký tự</div>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button type="button" class="btn btn-secondary" onclick="hideRejectionForm()">
+                                            Hủy
+                                        </button>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fas fa-paper-plane me-2"></i>
+                                            Gửi báo cáo
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Navigation -->
+                            <div class="text-center mt-4">
+                                <a th:href="@{/orders/{orderId}/timeline(orderId=${orderId})}" class="btn btn-outline-primary">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Xem timeline đơn hàng
+                                </a>
+                                
+                                <a href="/orders" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-list me-2"></i>
+                                    Danh sách đơn hàng
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showRejectionForm() {
+            document.getElementById('rejectionForm').style.display = 'block';
+            document.querySelector('textarea[name="reason"]').focus();
+        }
+        
+        function hideRejectionForm() {
+            document.getElementById('rejectionForm').style.display = 'none';
+            document.querySelector('textarea[name="reason"]').value = '';
+        }
+        
+        // Character counter for textarea
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.querySelector('textarea[name="reason"]');
+            if (textarea) {
+                const formText = textarea.nextElementSibling;
+                
+                textarea.addEventListener('input', function() {
+                    const remaining = 500 - this.value.length;
+                    formText.textContent = `Còn lại ${remaining} ký tự`;
+                    
+                    if (remaining < 50) {
+                        formText.classList.add('text-warning');
+                    } else {
+                        formText.classList.remove('text-warning');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

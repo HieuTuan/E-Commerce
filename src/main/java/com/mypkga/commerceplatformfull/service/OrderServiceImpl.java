@@ -6,6 +6,7 @@ import com.mypkga.commerceplatformfull.repository.OrderItemRepository;
 import com.mypkga.commerceplatformfull.repository.OrderRepository;
 import com.mypkga.commerceplatformfull.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
@@ -27,6 +29,8 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final CartService cartService;
     private final ProductRepository productRepository;
+    private final OrderTimelineService orderTimelineService;
+    private final DeliveryConfirmationService deliveryConfirmationService;
 
     @Override
     @Transactional
@@ -54,31 +58,32 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderNumber(generateOrderNumber());
         order.setUser(user);
         order.setTotalAmount(cart.getTotalAmount());
-        order.setStatus(Order.OrderStatus.PENDING);
+        order.setStatus(OrderStatus.PENDING);
+        order.setCurrentStatus(OrderStatus.PENDING); // Set current status for timeline
         order.setPaymentMethod(paymentMethod);
         order.setShippingAddress(shippingAddress);
         order.setCustomerName(customerName);
         order.setCustomerPhone(customerPhone);
 
         // Set payment status and reduce stock based on payment method
-        if ("COD".equals(paymentMethod)) {
-            // For COD, reduce stock immediately and set payment as pending
-            order.setPaymentStatus(Order.PaymentStatus.PENDING);
-            order.setStatus(Order.OrderStatus.PROCESSING);
-            
-            // Reduce stock immediately for COD orders
-            for (CartItem cartItem : cart.getItems()) {
-                Product product = cartItem.getProduct();
-                int newStock = product.getStockQuantity() - cartItem.getQuantity();
-                product.setStockQuantity(newStock);
-                productRepository.save(product);
-                System.out.println("Reduced stock for product: " + product.getName() + 
-                    " from " + (newStock + cartItem.getQuantity()) + " to " + newStock);
-            }
-        } else {
-            // For online payment methods, stock will be reduced when payment is confirmed
-            order.setPaymentStatus(Order.PaymentStatus.PENDING);
-        }
+//        if ("COD".equals(paymentMethod)) {
+//            // For COD, reduce stock immediately and set payment as pending
+//            order.setPaymentStatus(Order.PaymentStatus.PENDING);
+//            order.setStatus(OrderStatus.PROCESSING);
+//
+//            // Reduce stock immediately for COD orders
+//            for (CartItem cartItem : cart.getItems()) {
+//                Product product = cartItem.getProduct();
+//                int newStock = product.getStockQuantity() - cartItem.getQuantity();
+//                product.setStockQuantity(newStock);
+//                productRepository.save(product);
+//                System.out.println("Reduced stock for product: " + product.getName() +
+//                    " from " + (newStock + cartItem.getQuantity()) + " to " + newStock);
+//            }
+//        } else {
+//            // For online payment methods, stock will be reduced when payment is confirmed
+//            order.setPaymentStatus(Order.PaymentStatus.PENDING);
+//        }
 
         Order savedOrder = orderRepository.save(order);
 
@@ -95,6 +100,14 @@ public class OrderServiceImpl implements OrderService {
 
         // Clear cart
         cartService.clearCart(user.getId());
+
+        // Create initial timeline entry
+        try {
+            orderTimelineService.createTimelineEntry(savedOrder.getId(), OrderStatus.PENDING, "SYSTEM", 
+                "Đơn hàng được tạo với phương thức thanh toán: " + paymentMethod);
+        } catch (Exception e) {
+            log.warn("Failed to create initial timeline entry for order {}: {}", savedOrder.getId(), e.getMessage());
+        }
 
         return savedOrder;
     }
@@ -121,11 +134,30 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Order updateOrderStatus(Long orderId, Order.OrderStatus status) {
+    public Order updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        
+        OrderStatus oldStatus = order.getCurrentStatus();
         order.setStatus(status);
-        return orderRepository.save(order);
+        order.updateCurrentStatus(status);
+        
+        Order savedOrder = orderRepository.save(order);
+        
+        // Create timeline entry for status change
+        try {
+            orderTimelineService.createTimelineEntry(orderId, status, "SYSTEM", 
+                "Trạng thái đơn hàng được cập nhật từ " + oldStatus.getDisplayName() + " thành " + status.getDisplayName());
+            
+            // Create delivery confirmation request when order is awaiting confirmation
+            if (status == OrderStatus.AWAITING_CONFIRMATION && deliveryConfirmationService.getConfirmationStatus(orderId) == null) {
+                deliveryConfirmationService.createConfirmationRequest(orderId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to create timeline entry for order {} status update: {}", orderId, e.getMessage());
+        }
+        
+        return savedOrder;
     }
 
     @Override
@@ -139,7 +171,16 @@ public class OrderServiceImpl implements OrderService {
 
         // If payment is successful and was not paid before, reduce stock (only for non-COD orders)
         if (status == Order.PaymentStatus.PAID && oldStatus != Order.PaymentStatus.PAID) {
-            order.setStatus(Order.OrderStatus.PROCESSING);
+            // Keep order status as PENDING after successful payment
+            // Admin/Staff will manually change to CONFIRMED
+            
+            // Create timeline entry for payment confirmation
+            try {
+                orderTimelineService.createTimelineEntry(orderId, OrderStatus.PENDING, "SYSTEM", 
+                    "Thanh toán thành công - Đơn hàng đang chờ xác nhận từ admin/staff");
+            } catch (Exception e) {
+                log.warn("Failed to create timeline entry for payment confirmation: {}", e.getMessage());
+            }
             
             // Only reduce stock for non-COD orders (COD stock is already reduced in createOrder)
             if (!"COD".equals(order.getPaymentMethod())) {
@@ -169,11 +210,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
         
+        boolean shouldRestoreStock = false;
+        
         // Only restore stock if order was not already cancelled and stock was previously reduced
-        if (order.getStatus() != Order.OrderStatus.CANCELLED) {
-            // Restore stock for cancelled orders
-            boolean shouldRestoreStock = false;
-            
+        if (order.getStatus() != OrderStatus.CANCELLED) {
             // Restore stock if:
             // 1. COD order (stock was reduced on creation)
             // 2. Paid order (stock was reduced on payment)
@@ -194,8 +234,18 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         
-        order.setStatus(Order.OrderStatus.CANCELLED);
-        orderRepository.save(order);
+        order.setStatus(OrderStatus.CANCELLED);
+        order.updateCurrentStatus(OrderStatus.CANCELLED);
+        
+        Order savedOrder = orderRepository.save(order);
+        
+        // Create timeline entry for cancellation
+        try {
+            orderTimelineService.createTimelineEntry(orderId, OrderStatus.CANCELLED, "SYSTEM", 
+                "Đơn hàng bị hủy" + (shouldRestoreStock ? " - Đã hoàn trả kho" : ""));
+        } catch (Exception e) {
+            log.warn("Failed to create timeline entry for order cancellation: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -207,12 +257,12 @@ public class OrderServiceImpl implements OrderService {
     
     // Staff workflow methods
     @Override
-    public Page<Order> getOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
+    public Page<Order> getOrdersByStatus(OrderStatus status, Pageable pageable) {
         return orderRepository.findByStatusOrderByCreatedDateDesc(status, pageable);
     }
     
     @Override
-    public long countOrdersByStatus(Order.OrderStatus status) {
+    public long countOrdersByStatus(OrderStatus status) {
         return orderRepository.countByStatus(status);
     }
     
@@ -228,7 +278,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void fixExistingCODOrders() {
         // Find all COD orders with PENDING status (these likely haven't had stock reduced)
-        List<Order> codOrders = orderRepository.findByPaymentMethodAndStatus("COD", Order.OrderStatus.PENDING);
+        List<Order> codOrders = orderRepository.findByPaymentMethodAndStatus("COD", OrderStatus.PENDING);
         
         for (Order order : codOrders) {
             try {
@@ -256,7 +306,7 @@ public class OrderServiceImpl implements OrderService {
                     }
                     
                     // Update order status to PROCESSING
-                    order.setStatus(Order.OrderStatus.PROCESSING);
+                    order.setStatus(OrderStatus.PENDING);
                     orderRepository.save(order);
                     System.out.println("Updated COD order " + order.getOrderNumber() + " status to PROCESSING");
                 }

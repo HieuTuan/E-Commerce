@@ -23,6 +23,29 @@
     </nav>
 
     <div class="container my-5">
+        <!-- Success/Error Messages -->
+        <div th:if="${param.confirmed}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Thành công!</strong> Bạn đã xác nhận nhận hàng thành công. Cảm ơn bạn!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${param.rejected}" class="alert alert-warning alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Đã báo cáo!</strong> Chúng tôi đã nhận được báo cáo của bạn và sẽ xử lý sớm nhất.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-times-circle me-2"></i>
+            <strong>Lỗi!</strong> 
+            <span th:if="${param.error[0] == 'invalid_confirmation'}">Không thể xác nhận đơn hàng này.</span>
+            <span th:if="${param.error[0] == 'invalid_rejection'}">Không thể báo cáo vấn đề cho đơn hàng này.</span>
+            <span th:if="${param.error[0] == 'confirmation_failed'}">Có lỗi xảy ra khi xác nhận. Vui lòng thử lại.</span>
+            <span th:if="${param.error[0] == 'rejection_failed'}">Có lỗi xảy ra khi báo cáo. Vui lòng thử lại.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Order #<span th:text="${order.orderNumber}">ORD-001</span></h4>
@@ -73,6 +96,202 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Order Timeline Section -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Order Timeline</h5>
+                        <a th:href="@{/orders/{id}/timeline(id=${order.id})}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-expand-arrows-alt me-1"></i>View Full Timeline
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <!-- Timeline -->
+                        <div th:if="${timeline != null and !timeline.empty}" class="timeline-container">
+                            <style>
+                                .timeline-container {
+                                    position: relative;
+                                    padding: 20px 0;
+                                }
+                                
+                                .timeline-container::before {
+                                    content: '';
+                                    position: absolute;
+                                    left: 20px;
+                                    top: 0;
+                                    bottom: 0;
+                                    width: 2px;
+                                    background: #dee2e6;
+                                }
+                                
+                                .timeline-item {
+                                    position: relative;
+                                    margin-bottom: 20px;
+                                    padding-left: 60px;
+                                }
+                                
+                                .timeline-icon {
+                                    position: absolute;
+                                    left: 8px;
+                                    top: 0;
+                                    width: 24px;
+                                    height: 24px;
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: white;
+                                    font-size: 12px;
+                                    z-index: 1;
+                                }
+                                
+                                .timeline-icon.pending { 
+                                    background: #6c757d; 
+                                }
+                                .timeline-icon.pending::after { 
+                                    content: '⏱️';
+                                    font-size: 14px;
+                                }
+                                
+                                .timeline-icon.confirmed { 
+                                    background: #0d6efd; 
+                                }
+                                .timeline-icon.confirmed::after { 
+                                    content: '✅';
+                                    font-size: 14px;
+                                }
+                                
+                                .timeline-icon.shipping { 
+                                    background: #fd7e14; 
+                                }
+                                .timeline-icon.shipping::after { 
+                                    content: '🚚';
+                                    font-size: 14px;
+                                }
+                                
+                                .timeline-icon.delivered { 
+                                    background: #198754; 
+                                }
+                                .timeline-icon.delivered::after { 
+                                    content: '📦';
+                                    font-size: 14px;
+                                }
+                                
+                                .timeline-icon.cancelled { 
+                                    background: #dc3545; 
+                                }
+                                .timeline-icon.cancelled::after { 
+                                    content: '❌';
+                                    font-size: 14px;
+                                }
+                                
+                                .timeline-icon.confirmed_by_customer { 
+                                    background: #20c997; 
+                                }
+                                .timeline-icon.confirmed_by_customer::after { 
+                                    content: '✅';
+                                    font-size: 14px;
+                                }
+                                
+                                .timeline-content {
+                                    background: #f8f9fa;
+                                    border: 1px solid #dee2e6;
+                                    border-radius: 6px;
+                                    padding: 15px;
+                                }
+                                
+                                .timeline-status {
+                                    font-weight: bold;
+                                    margin-bottom: 5px;
+                                }
+                                
+                                .timeline-time {
+                                    color: #6c757d;
+                                    font-size: 0.9em;
+                                }
+                                
+                                .timeline-user {
+                                    color: #495057;
+                                    font-size: 0.9em;
+                                    margin-top: 5px;
+                                }
+                                
+                                .timeline-notes {
+                                    margin-top: 8px;
+                                    padding: 8px;
+                                    background: white;
+                                    border-radius: 4px;
+                                    font-style: italic;
+                                    border-left: 3px solid #0d6efd;
+                                }
+                            </style>
+                            
+                            <div class="timeline-item" th:each="entry : ${timeline}">
+                                <div class="timeline-icon" 
+                                     th:classappend="${entry.status.name().toLowerCase()}">
+                                </div>
+                                
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="timeline-status" th:text="${entry.status.displayName}"></div>
+                                        <div class="timeline-time" th:text="${#temporals.format(entry.updatedAt, 'dd/MM/yyyy HH:mm')}"></div>
+                                    </div>
+                                    
+                                    <div class="timeline-user" th:if="${entry.updatedBy}">
+                                        <i class="fas fa-user me-1"></i>
+                                        Updated by: <span th:text="${entry.updatedBy}"></span>
+                                    </div>
+                                    
+                                    <div class="timeline-notes" th:if="${entry.notes}">
+                                        <i class="fas fa-sticky-note me-1"></i>
+                                        <span th:text="${entry.notes}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div th:if="${timeline == null or timeline.empty}" class="text-center py-4">
+                            <i class="fas fa-clock fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">No timeline information available</h6>
+                            <p class="text-muted small">Timeline will be updated when order status changes.</p>
+                        </div>
+                        
+                        <!-- Customer Delivery Confirmation -->
+                        <div th:if="${order.currentStatus.name() == 'DELIVERED'}" class="mt-4">
+                            <div class="alert alert-success">
+                                <i class="fas fa-truck me-2"></i>
+                                <strong>Đơn hàng đã được giao</strong><br>
+                                Đơn hàng đã được giao đến địa chỉ của bạn. Vui lòng xác nhận việc nhận hàng hoặc báo cáo nếu có vấn đề.
+                                <br><small class="text-muted">Việc xác nhận giúp chúng tôi hoàn tất đơn hàng và cải thiện dịch vụ.</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <form th:action="@{/orders/{orderId}/confirm-delivery(orderId=${order.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="fas fa-check me-2"></i>Xác nhận đã nhận hàng
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Báo cáo vấn đề
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Completed -->
+                        <div th:if="${order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER'}" class="mt-4">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Đơn hàng đã hoàn thành</strong><br>
+                                Cảm ơn bạn đã xác nhận nhận hàng. Đơn hàng đã được hoàn tất thành công.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="col-md-4">
@@ -112,6 +331,42 @@
             <p>&copy; 2026 E-Commerce Platform. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Reject Delivery Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">Báo cáo vấn đề giao hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/orders/{orderId}/reject-delivery(orderId=${order.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Lý do từ chối nhận hàng:</label>
+                            <select class="form-select" id="reason" name="reason" required>
+                                <option value="">Chọn lý do...</option>
+                                <option value="Hàng bị hỏng">Hàng bị hỏng</option>
+                                <option value="Không đúng sản phẩm">Không đúng sản phẩm</option>
+                                <option value="Thiếu hàng">Thiếu hàng</option>
+                                <option value="Giao muộn">Giao muộn</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customReason" class="form-label">Chi tiết (tùy chọn):</label>
+                            <textarea class="form-control" id="customReason" name="customReason" rows="3" 
+                                      placeholder="Mô tả chi tiết vấn đề..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Báo cáo vấn đề</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

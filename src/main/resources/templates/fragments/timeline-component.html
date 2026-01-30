@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- Timeline Component Fragment -->
+    <div th:fragment="timeline(timeline, showActions)" class="timeline-component">
+        <style>
+            .timeline-component .timeline {
+                position: relative;
+                padding: 20px 0;
+            }
+            
+            .timeline-component .timeline::before {
+                content: '';
+                position: absolute;
+                left: 30px;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: #dee2e6;
+            }
+            
+            .timeline-component .timeline-item {
+                position: relative;
+                margin-bottom: 30px;
+                padding-left: 80px;
+            }
+            
+            .timeline-component .timeline-icon {
+                position: absolute;
+                left: 15px;
+                top: 0;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 14px;
+                z-index: 1;
+            }
+            
+            .timeline-component .timeline-icon.pending { background: #6c757d; }
+            .timeline-component .timeline-icon.confirmed { background: #0d6efd; }
+            .timeline-component .timeline-icon.shipping { background: #fd7e14; }
+            .timeline-component .timeline-icon.delivered { background: #198754; }
+            .timeline-component .timeline-icon.cancelled { background: #dc3545; }
+            
+            .timeline-component .timeline-content {
+                background: white;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            .timeline-component .timeline-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            
+            .timeline-component .timeline-status {
+                font-weight: bold;
+                font-size: 1em;
+            }
+            
+            .timeline-component .timeline-time {
+                color: #6c757d;
+                font-size: 0.85em;
+            }
+            
+            .timeline-component .timeline-user {
+                color: #495057;
+                font-size: 0.85em;
+                margin-top: 5px;
+            }
+            
+            .timeline-component .timeline-notes {
+                margin-top: 8px;
+                padding: 8px;
+                background: #f8f9fa;
+                border-radius: 4px;
+                font-size: 0.9em;
+                font-style: italic;
+            }
+            
+            @media (max-width: 768px) {
+                .timeline-component .timeline::before {
+                    left: 20px;
+                }
+                
+                .timeline-component .timeline-item {
+                    padding-left: 60px;
+                }
+                
+                .timeline-component .timeline-icon {
+                    left: 5px;
+                    width: 25px;
+                    height: 25px;
+                    font-size: 12px;
+                }
+                
+                .timeline-component .timeline-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+            }
+        </style>
+        
+        <div class="timeline" th:if="${timeline != null and !timeline.empty}">
+            <div class="timeline-item" th:each="entry : ${timeline}">
+                <div class="timeline-icon" 
+                     th:classappend="${entry.status.name().toLowerCase()}">
+                    <i class="fas" 
+                       th:classappend="${entry.status.name() == 'PENDING'} ? 'fa-clock' : 
+                                      ${entry.status.name() == 'CONFIRMED'} ? 'fa-check' :
+                                      ${entry.status.name() == 'SHIPPING'} ? 'fa-truck' :
+                                      ${entry.status.name() == 'DELIVERED'} ? 'fa-box' :
+                                      ${entry.status.name() == 'CANCELLED'} ? 'fa-times' : 'fa-circle'"></i>
+                </div>
+                
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-status" th:text="${entry.status.displayName}"></div>
+                        <div class="timeline-time" 
+                             th:text="${#temporals.format(entry.updatedAt, 'dd/MM/yyyy HH:mm')}"></div>
+                    </div>
+                    
+                    <div class="timeline-user" th:if="${entry.updatedBy}">
+                        <i class="fas fa-user me-1"></i>
+                        <span th:text="${entry.updatedBy}"></span>
+                    </div>
+                    
+                    <div class="timeline-notes" th:if="${entry.notes}">
+                        <i class="fas fa-sticky-note me-1"></i>
+                        <span th:text="${entry.notes}"></span>
+                    </div>
+                    
+                    <!-- Admin Actions -->
+                    <div th:if="${showActions}" class="timeline-actions mt-2">
+                        <small class="text-muted">
+                            ID: <span th:text="${entry.id}"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div th:if="${timeline == null or timeline.empty}" class="text-center py-4">
+            <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">Chưa có thông tin timeline</p>
+        </div>
+    </div>
+    
+    <!-- Compact Timeline Fragment (for smaller spaces) -->
+    <div th:fragment="timeline-compact(timeline)" class="timeline-compact">
+        <style>
+            .timeline-compact .timeline-item {
+                display: flex;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            
+            .timeline-compact .timeline-item:last-child {
+                border-bottom: none;
+            }
+            
+            .timeline-compact .timeline-icon {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 10px;
+                margin-right: 10px;
+                flex-shrink: 0;
+            }
+            
+            .timeline-compact .timeline-icon.pending { background: #6c757d; }
+            .timeline-compact .timeline-icon.confirmed { background: #0d6efd; }
+            .timeline-compact .timeline-icon.shipping { background: #fd7e14; }
+            .timeline-compact .timeline-icon.delivered { background: #198754; }
+            .timeline-compact .timeline-icon.cancelled { background: #dc3545; }
+            
+            .timeline-compact .timeline-info {
+                flex: 1;
+            }
+            
+            .timeline-compact .timeline-status {
+                font-weight: 500;
+                font-size: 0.9em;
+            }
+            
+            .timeline-compact .timeline-time {
+                color: #6c757d;
+                font-size: 0.8em;
+            }
+        </style>
+        
+        <div th:if="${timeline != null and !timeline.empty}">
+            <div class="timeline-item" th:each="entry : ${timeline}">
+                <div class="timeline-icon" 
+                     th:classappend="${entry.status.name().toLowerCase()}">
+                    <i class="fas fa-circle"></i>
+                </div>
+                
+                <div class="timeline-info">
+                    <div class="timeline-status" th:text="${entry.status.displayName}"></div>
+                    <div class="timeline-time" 
+                         th:text="${#temporals.format(entry.updatedAt, 'dd/MM HH:mm')}"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${timeline == null or timeline.empty}" class="text-muted text-center py-2">
+            <small>Chưa có timeline</small>
+        </div>
+    </div>
+</body>
+</html>

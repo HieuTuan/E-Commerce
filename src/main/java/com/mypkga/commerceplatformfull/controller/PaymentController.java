@@ -39,7 +39,8 @@ public class PaymentController {
                     // Payment successful
                     orderService.updatePaymentStatus(order.getId(), Order.PaymentStatus.PAID);
                     log.info("VNPay payment successful for order: {}", orderNumber);
-                    return "redirect:/checkout/success?orderNumber=" + orderNumber;
+                    // Redirect to timeline page instead of success page
+                    return "redirect:/orders/" + order.getId() + "/timeline?success=true&payment=vnpay";
                 } else {
                     // Payment failed
                     orderService.updatePaymentStatus(order.getId(), Order.PaymentStatus.FAILED);

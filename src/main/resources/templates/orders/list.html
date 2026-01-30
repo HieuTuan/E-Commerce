@@ -40,9 +40,11 @@
                                 <div class="col-md-3">
                                     <span class="badge"
                                         th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
-                                                           order.status.name() == 'PROCESSING' ? 'bg-info' :
-                                                           order.status.name() == 'SHIPPED' ? 'bg-primary' :
-                                                           order.status.name() == 'DELIVERED' ? 'bg-success' : 'bg-secondary'}"
+                                                           order.status.name() == 'CONFIRMED' ? 'bg-info' :
+                                                           order.status.name() == 'SHIPPING' ? 'bg-primary' :
+                                                           order.status.name() == 'DELIVERED' ? 'bg-success' : 
+                                                           order.status.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
+                                                           order.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
                                         th:text="${order.status}">Status</span>
                                 </div>
                                 <div class="col-md-3">

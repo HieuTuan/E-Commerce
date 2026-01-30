@@ -25,7 +25,7 @@ public class Category {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(length = 255)

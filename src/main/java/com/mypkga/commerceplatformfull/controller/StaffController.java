@@ -39,8 +39,7 @@ public class StaffController {
     @GetMapping("/dashboard")
     public String staffDashboard(Model model) {
         // Staff Dashboard - Hỗ trợ khách hàng và xử lý đơn hàng
-        model.addAttribute("pendingOrders", orderService.countOrdersByStatus(Order.OrderStatus.PENDING));
-        model.addAttribute("processingOrders", orderService.countOrdersByStatus(Order.OrderStatus.PROCESSING));
+        model.addAttribute("pendingOrders", orderService.countOrdersByStatus(OrderStatus.PENDING));
         model.addAttribute("totalProducts", productService.countAllProducts());
         model.addAttribute("recentOrders", orderService.getRecentOrders(5));
         
@@ -53,12 +52,12 @@ public class StaffController {
                               @RequestParam(defaultValue = "0") int page,
                               @RequestParam(defaultValue = "10") int size) {
         
-        Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status);
+        OrderStatus orderStatus = OrderStatus.valueOf(status);
         Page<Order> orders = orderService.getOrdersByStatus(orderStatus, PageRequest.of(page, size));
         
         model.addAttribute("orders", orders);
         model.addAttribute("currentStatus", status);
-        model.addAttribute("statuses", Order.OrderStatus.values());
+        model.addAttribute("statuses", OrderStatus.values());
         
         return "staff/orders";
     }
@@ -78,7 +77,7 @@ public class StaffController {
                                    Authentication authentication,
                                    RedirectAttributes redirectAttributes) {
         try {
-            Order.OrderStatus newStatus = Order.OrderStatus.valueOf(status);
+            OrderStatus newStatus = OrderStatus.valueOf(status);
             
             orderService.updateOrderStatus(id, newStatus);
             
@@ -98,7 +97,7 @@ public class StaffController {
                                 RedirectAttributes redirectAttributes) {
         try {
             // Logic để assign delivery (có thể mở rộng sau)
-            orderService.updateOrderStatus(id, Order.OrderStatus.PROCESSING);
+            orderService.updateOrderStatus(id, OrderStatus.PENDING);
             
             redirectAttributes.addFlashAttribute("success", 
                 "Delivery assigned successfully!");

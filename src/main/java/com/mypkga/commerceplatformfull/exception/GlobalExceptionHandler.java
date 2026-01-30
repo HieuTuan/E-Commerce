@@ -1,5 +1,6 @@
 package com.mypkga.commerceplatformfull.exception;
 
+import com.mypkga.commerceplatformfull.entity.OrderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,9 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -32,6 +35,12 @@ public class GlobalExceptionHandler {
             fieldErrors.put(fieldName, errorMessage);
         });
 
+        List<String> suggestions = List.of(
+            "Check the request format and required fields",
+            "Ensure all field values are valid",
+            "Refer to API documentation for correct format"
+        );
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -40,6 +49,8 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .errorCode("VALIDATION_ERROR")
                 .fieldErrors(fieldErrors)
+                .suggestions(suggestions)
+                .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
         log.warn("Validation error on path: {} - Errors: {}", request.getRequestURI(), fieldErrors);
@@ -57,6 +68,12 @@ public class GlobalExceptionHandler {
             fieldErrors.put(fieldName, errorMessage);
         });
 
+        List<String> suggestions = List.of(
+            "Check the form data format",
+            "Ensure all required fields are provided",
+            "Verify field value constraints"
+        );
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -65,6 +82,8 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .errorCode("BINDING_ERROR")
                 .fieldErrors(fieldErrors)
+                .suggestions(suggestions)
+                .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
         log.warn("Binding error on path: {} - Errors: {}", request.getRequestURI(), fieldErrors);
@@ -124,6 +143,167 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(OrderTimelineException.class)
+    public ResponseEntity<ErrorResponse> handleOrderTimelineException(
+            OrderTimelineException ex, HttpServletRequest request) {
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Order Timeline Error")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .errorCode("TIMELINE_ERROR")
+                .build();
+
+        log.error("Order timeline error on path: {} - Message: {}", 
+                request.getRequestURI(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DeliveryConfirmationException.class)
+    public ResponseEntity<ErrorResponse> handleDeliveryConfirmationException(
+            DeliveryConfirmationException ex, HttpServletRequest request) {
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Delivery Confirmation Error")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .errorCode("DELIVERY_CONFIRMATION_ERROR")
+                .build();
+
+        log.error("Delivery confirmation error on path: {} - Message: {}", 
+                request.getRequestURI(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatusTransitionException(
+            InvalidStatusTransitionException ex, HttpServletRequest request) {
+        
+        Map<String, String> details = new HashMap<>();
+        details.put("currentStatus", ex.getCurrentStatus().name());
+        details.put("attemptedStatus", ex.getNewStatus().name());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Invalid Status Transition")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .errorCode("INVALID_STATUS_TRANSITION")
+                .fieldErrors(details)
+                .errorId("ERR-" + System.currentTimeMillis())
+                .build();
+
+        log.warn("Invalid status transition on path: {} - From: {} To: {}", 
+                request.getRequestURI(), ex.getCurrentStatus(), ex.getNewStatus());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(OrderStatusValidationException.class)
+    public ResponseEntity<ErrorResponse> handleOrderStatusValidationException(
+            OrderStatusValidationException ex, HttpServletRequest request) {
+        
+        Map<String, Object> details = new HashMap<>();
+        details.put("orderId", ex.getOrderId());
+        
+        if (ex.getCurrentStatus() != null) {
+            details.put("currentStatus", ex.getCurrentStatus().name());
+            details.put("currentStatusDisplayName", ex.getCurrentStatus().getDisplayName());
+        }
+        
+        if (ex.getAttemptedStatus() != null) {
+            details.put("attemptedStatus", ex.getAttemptedStatus().name());
+            details.put("attemptedStatusDisplayName", ex.getAttemptedStatus().getDisplayName());
+        }
+        
+        if (ex.getValidTransitions() != null && !ex.getValidTransitions().isEmpty()) {
+            List<Map<String, String>> validOptions = new ArrayList<>();
+            for (OrderStatus status : ex.getValidTransitions()) {
+                Map<String, String> option = new HashMap<>();
+                option.put("status", status.name());
+                option.put("displayName", status.getDisplayName());
+                validOptions.add(option);
+            }
+            details.put("validTransitions", validOptions);
+        }
+        
+        // Create suggestions based on error type
+        List<String> suggestions = new ArrayList<>();
+        if ("ORDER_NOT_FOUND".equals(ex.getValidationErrorCode())) {
+            suggestions.add("Verify the order ID is correct");
+            suggestions.add("Check if the order exists in the system");
+        } else if ("FINAL_STATE_MODIFICATION".equals(ex.getValidationErrorCode())) {
+            suggestions.add("Final states cannot be modified");
+            suggestions.add("Contact administrator if status correction is needed");
+        } else {
+            suggestions.add("Use GET /api/orders/" + ex.getOrderId() + "/status-options to see available options");
+            if (ex.getValidTransitions() != null && !ex.getValidTransitions().isEmpty()) {
+                StringBuilder validOptions = new StringBuilder("Valid transitions: ");
+                for (int i = 0; i < ex.getValidTransitions().size(); i++) {
+                    if (i > 0) validOptions.append(", ");
+                    validOptions.append(ex.getValidTransitions().get(i).getDisplayName());
+                }
+                suggestions.add(validOptions.toString());
+            }
+        }
+        
+        // Determine HTTP status based on error code
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        if ("ORDER_NOT_FOUND".equals(ex.getValidationErrorCode())) {
+            httpStatus = HttpStatus.NOT_FOUND;
+        } else if ("INVALID_TRANSITION".equals(ex.getValidationErrorCode()) || 
+                   "FINAL_STATE_MODIFICATION".equals(ex.getValidationErrorCode())) {
+            httpStatus = HttpStatus.CONFLICT;
+        }
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(httpStatus.value())
+                .error(httpStatus.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .errorCode(ex.getValidationErrorCode())
+                .details(details)
+                .suggestions(suggestions)
+                .errorId("ERR-" + System.currentTimeMillis())
+                .build();
+
+        log.warn("Order status validation error on path: {} - Error: {} - Order: {}", 
+                request.getRequestURI(), ex.getValidationErrorCode(), ex.getOrderId());
+        return new ResponseEntity<>(errorResponse, httpStatus);
+    }
+
+    @ExceptionHandler(SystemConfigurationException.class)
+    public ResponseEntity<ErrorResponse> handleSystemConfigurationException(
+            SystemConfigurationException ex, HttpServletRequest request) {
+        
+        List<String> suggestions = List.of(
+            "Check system configuration files",
+            "Verify order status transition rules are properly defined",
+            "Contact system administrator for configuration assistance",
+            "Review application logs for detailed error information"
+        );
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error("System Configuration Error")
+                .message("System configuration validation failed: " + ex.getMessage())
+                .path(request.getRequestURI())
+                .errorCode("SYSTEM_CONFIGURATION_ERROR")
+                .suggestions(suggestions)
+                .errorId("ERR-" + System.currentTimeMillis())
+                .build();
+
+        log.error("System configuration error on path: {} - Message: {}", 
+                request.getRequestURI(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ErrorResponse> handleSecurityException(
             SecurityException ex, HttpServletRequest request) {
@@ -146,6 +326,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
         
+        List<String> suggestions = List.of(
+            "Try the request again later",
+            "Contact support if the problem persists",
+            "Check system status page for known issues"
+        );
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -153,6 +339,8 @@ public class GlobalExceptionHandler {
                 .message("An unexpected error occurred")
                 .path(request.getRequestURI())
                 .errorCode("INTERNAL_ERROR")
+                .suggestions(suggestions)
+                .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
         log.error("Unexpected error on path: {} - Exception: {}", 

@@ -41,7 +41,7 @@ public class User {
     @Column(length = 20)
     private String phone;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(200)")
     private String address;
 
     @ManyToOne(fetch = FetchType.EAGER)

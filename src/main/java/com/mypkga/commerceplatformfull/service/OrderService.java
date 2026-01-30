@@ -1,6 +1,7 @@
 package com.mypkga.commerceplatformfull.service;
 
 import com.mypkga.commerceplatformfull.entity.Order;
+import com.mypkga.commerceplatformfull.entity.OrderStatus;
 import com.mypkga.commerceplatformfull.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,7 @@ public interface OrderService {
 
     List<Order> getAllOrders();
 
-    Order updateOrderStatus(Long orderId, Order.OrderStatus status);
+    Order updateOrderStatus(Long orderId, OrderStatus status);
 
     Order updatePaymentStatus(Long orderId, Order.PaymentStatus status);
 
@@ -30,9 +31,9 @@ public interface OrderService {
     String generateOrderNumber();
     
     // Staff workflow methods
-    Page<Order> getOrdersByStatus(Order.OrderStatus status, Pageable pageable);
+    Page<Order> getOrdersByStatus(OrderStatus status, Pageable pageable);
     
-    long countOrdersByStatus(Order.OrderStatus status);
+    long countOrdersByStatus(OrderStatus status);
     
     List<Order> getRecentOrders(int limit);
 

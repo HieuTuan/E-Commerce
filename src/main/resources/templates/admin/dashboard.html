@@ -50,6 +50,12 @@
                                 <i class="fas fa-shopping-cart"></i> Orders
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/delivery-issues}">
+                                <i class="fas fa-exclamation-triangle"></i> Delivery Issues
+                                <span th:if="${pendingIssues > 0}" class="badge bg-danger ms-2" th:text="${pendingIssues}"></span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -66,7 +72,7 @@
 
                 <!-- Statistics Cards -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card text-white bg-primary">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -76,7 +82,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card text-white bg-success">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -86,13 +92,26 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card text-white bg-info">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <i class="fas fa-users"></i> Total Users
                                 </h5>
                                 <h2 th:text="${totalUsers}">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white" th:classappend="${pendingIssues > 0 ? 'bg-warning' : 'bg-secondary'}">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-exclamation-triangle"></i> Pending Issues
+                                </h5>
+                                <h2 th:text="${pendingIssues}">0</h2>
+                                <a th:href="@{/admin/delivery-issues}" class="btn btn-sm btn-outline-light mt-2">
+                                    View Issues
+                                </a>
                             </div>
                         </div>
                     </div>
