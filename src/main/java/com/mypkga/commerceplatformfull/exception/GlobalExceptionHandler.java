@@ -179,6 +179,30 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(DeliveryIssueException.class)
+    public ResponseEntity<ErrorResponse> handleDeliveryIssueException(
+            DeliveryIssueException ex, HttpServletRequest request) {
+        
+        List<String> suggestions = List.of(
+            "Ensure the order exists and has DELIVERED status",
+            "Check if a delivery issue report already exists for this order",
+            "Verify user permissions for the order"
+        );
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Delivery Issue Error")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .errorCode("DELIVERY_ISSUE_ERROR")
+                .suggestions(suggestions)
+                .build();
+
+        log.warn("Delivery issue error: {} at {}", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
     @ExceptionHandler(InvalidStatusTransitionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidStatusTransitionException(
             InvalidStatusTransitionException ex, HttpServletRequest request) {

@@ -7,6 +7,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -14,181 +15,81 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Controller for serving uploaded files with proper security
+ * Only authorized users can access video evidence files
+ */
 @RestController
 @RequestMapping("/files")
 @Slf4j
 public class FileController {
-
-    @Value("${app.image.upload-dir}")
-    private String imageUploadDir;
-
-    @Value("${app.video.upload-dir}")
+    
+    @Value("${app.video.upload-dir:uploads/videos}")
     private String videoUploadDir;
-
+    
     /**
-     * Serve image files
+     * Serve video files to authorized users only
+     * Staff members can view evidence videos for return requests
      */
-    @GetMapping("/images/{filename:.+}")
-    public ResponseEntity<Resource> serveImage(@PathVariable String filename) {
+    @GetMapping("/{folder}/{filename:.+}")
+    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN') or hasRole('CUSTOMER')")
+    public ResponseEntity<Resource> serveFile(@PathVariable String folder, @PathVariable String filename) {
         try {
-            Path filePath = Paths.get(imageUploadDir).resolve(filename);
+            Path filePath = Paths.get(videoUploadDir).resolve(folder).resolve(filename);
             Resource resource = new UrlResource(filePath.toUri());
-
+            
             if (resource.exists() && resource.isReadable()) {
+                // Determine content type
                 String contentType = determineContentType(filename);
                 
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CACHE_CONTROL, "max-age=3600") // Cache for 1 hour
-                        .body(resource);
-            } else {
-                log.warn("Image file not found: {}", filename);
-                return ResponseEntity.notFound().build();
-            }
-        } catch (MalformedURLException e) {
-            log.error("Error serving image file: {}", filename, e);
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    /**
-     * Serve video files
-     */
-    @GetMapping("/videos/{filename:.+}")
-    public ResponseEntity<Resource> serveVideo(@PathVariable String filename) {
-        try {
-            Path filePath = Paths.get(videoUploadDir).resolve(filename);
-            Resource resource = new UrlResource(filePath.toUri());
-
-            if (resource.exists() && resource.isReadable()) {
-                String contentType = determineContentType(filename);
-                
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CACHE_CONTROL, "max-age=7200") // Cache for 2 hours
                         .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                         .body(resource);
             } else {
-                log.warn("Video file not found: {}", filename);
+                log.warn("File not found or not readable: {}/{}", folder, filename);
                 return ResponseEntity.notFound().build();
             }
         } catch (MalformedURLException e) {
-            log.error("Error serving video file: {}", filename, e);
+            log.error("Error serving file: {}/{}", folder, filename, e);
             return ResponseEntity.badRequest().build();
         }
     }
-
+    
     /**
-     * Get image info (for debugging/admin purposes)
+     * Serve files with secure token (for time-limited access)
+     * This is a simplified implementation - in production, you'd want proper token validation
      */
-    @GetMapping("/images/{filename:.+}/info")
-    public ResponseEntity<FileInfo> getImageInfo(@PathVariable String filename) {
-        try {
-            Path filePath = Paths.get(imageUploadDir).resolve(filename);
-            Resource resource = new UrlResource(filePath.toUri());
-
-            if (resource.exists() && resource.isReadable()) {
-                FileInfo info = FileInfo.builder()
-                        .filename(filename)
-                        .size(resource.contentLength())
-                        .contentType(determineContentType(filename))
-                        .path(filePath.toString())
-                        .build();
-                
-                return ResponseEntity.ok(info);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            log.error("Error getting image info: {}", filename, e);
-            return ResponseEntity.badRequest().build();
+    @GetMapping("/secure/{folder}/{filename:.+}")
+    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
+    public ResponseEntity<Resource> serveSecureFile(
+            @PathVariable String folder, 
+            @PathVariable String filename,
+            @RequestParam String token,
+            @RequestParam long expires) {
+        
+        // Check if token is still valid (simplified check)
+        if (System.currentTimeMillis() > expires) {
+            log.warn("Expired token used for file access: {}/{}", folder, filename);
+            return ResponseEntity.status(410).build(); // Gone
         }
+        
+        // For now, just serve the file - in production, validate the token properly
+        return serveFile(folder, filename);
     }
-
+    
     /**
      * Determine content type based on file extension
      */
     private String determineContentType(String filename) {
         String extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-        
-        switch (extension) {
-            case "jpg":
-            case "jpeg":
-                return "image/jpeg";
-            case "png":
-                return "image/png";
-            case "gif":
-                return "image/gif";
-            case "webp":
-                return "image/webp";
-            case "mp4":
-                return "video/mp4";
-            case "avi":
-                return "video/avi";
-            case "mov":
-                return "video/quicktime";
-            case "wmv":
-                return "video/x-ms-wmv";
-            case "webm":
-                return "video/webm";
-            default:
-                return "application/octet-stream";
-        }
-    }
-
-    /**
-     * File info response
-     */
-    public static class FileInfo {
-        private String filename;
-        private long size;
-        private String contentType;
-        private String path;
-
-        public static FileInfoBuilder builder() {
-            return new FileInfoBuilder();
-        }
-
-        public static class FileInfoBuilder {
-            private String filename;
-            private long size;
-            private String contentType;
-            private String path;
-
-            public FileInfoBuilder filename(String filename) {
-                this.filename = filename;
-                return this;
-            }
-
-            public FileInfoBuilder size(long size) {
-                this.size = size;
-                return this;
-            }
-
-            public FileInfoBuilder contentType(String contentType) {
-                this.contentType = contentType;
-                return this;
-            }
-
-            public FileInfoBuilder path(String path) {
-                this.path = path;
-                return this;
-            }
-
-            public FileInfo build() {
-                FileInfo info = new FileInfo();
-                info.filename = this.filename;
-                info.size = this.size;
-                info.contentType = this.contentType;
-                info.path = this.path;
-                return info;
-            }
-        }
-
-        // Getters
-        public String getFilename() { return filename; }
-        public long getSize() { return size; }
-        public String getContentType() { return contentType; }
-        public String getPath() { return path; }
+        return switch (extension) {
+            case "mp4" -> "video/mp4";
+            case "avi" -> "video/x-msvideo";
+            case "mov" -> "video/quicktime";
+            case "wmv" -> "video/x-ms-wmv";
+            case "webm" -> "video/webm";
+            default -> "application/octet-stream";
+        };
     }
 }

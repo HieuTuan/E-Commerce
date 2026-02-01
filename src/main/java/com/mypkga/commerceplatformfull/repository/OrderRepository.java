@@ -6,6 +6,8 @@ import com.mypkga.commerceplatformfull.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -43,4 +45,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Find COD orders with specific status
     List<Order> findByPaymentMethodAndStatus(String paymentMethod, OrderStatus status);
+    
+    // Find order by ID with return request eagerly loaded
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.returnRequest WHERE o.id = :id")
+    Optional<Order> findByIdWithReturnRequest(@Param("id") Long id);
+    
+    // Delivery issue methods
+    List<Order> findByHasDeliveryIssueTrue();
+    
+    List<Order> findByHasDeliveryIssueTrueOrderByUpdatedDateDesc();
 }

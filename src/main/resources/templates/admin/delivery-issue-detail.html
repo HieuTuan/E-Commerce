@@ -1,203 +1,262 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Delivery Issue Report Details - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Issue Report Detail - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
-
 <body>
-    <nav class="navbar navbar-dark bg-dark">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" th:href="@{/admin}">
-                <i class="fas fa-user-shield"></i> Admin Panel
+                <i class="fas fa-cogs"></i> Admin Panel
             </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" th:href="@{/admin}">Dashboard</a>
+                <a class="nav-link" th:href="@{/admin/orders}">Orders</a>
+                <a class="nav-link active" th:href="@{/admin/delivery-issues}">Delivery Issues</a>
+                <a class="nav-link" th:href="@{/admin/products}">Products</a>
+                <a class="nav-link" th:href="@{/logout}">Logout</a>
+            </div>
         </div>
     </nav>
 
-    <div class="container-fluid">
+    <div class="container-fluid mt-4">
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}">Success message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}">Error message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Admin</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/admin/delivery-issues}">Delivery Issues</a></li>
+                <li class="breadcrumb-item active">Report Detail</li>
+            </ol>
+        </nav>
+
+        <!-- Report Detail -->
         <div class="row">
-            <nav class="col-md-2 d-md-block bg-light sidebar py-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin/products}">
-                            <i class="fas fa-box"></i> Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin/orders}">
-                            <i class="fas fa-shopping-cart"></i> Orders
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" th:href="@{/admin/delivery-issues}">
-                            <i class="fas fa-exclamation-triangle"></i> Delivery Issues
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <main class="col-md-10 ms-sm-auto px-md-4 py-3">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Delivery Issue Report #<span th:text="${report.id}">001</span></h2>
-                    <a th:href="@{/admin/delivery-issues}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Reports
-                    </a>
-                </div>
-
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-                    <span th:text="${success}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-
-                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-                    <span th:text="${error}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-8">
-                        <!-- Report Details -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Report Details</h5>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            Delivery Issue Report #<span th:text="${report.id}">ID</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Order Information</h6>
+                                <p class="mb-1">
+                                    <strong>Order ID:</strong> 
+                                    <a th:href="@{/admin/orders/{id}(id=${report.orderId})}" class="text-decoration-none">
+                                        <span th:text="${report.orderId}">Order ID</span>
+                                    </a>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Customer:</strong> <span th:text="${report.customerEmail}">Customer Email</span>
+                                </p>
                             </div>
-                            <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <strong>Report ID:</strong><br>
-                                        <span th:text="${report.id}">#001</span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Status:</strong><br>
-                                        <span class="badge"
-                                            th:classappend="${report.status.name() == 'PENDING' ? 'bg-warning' : 
-                                                               report.status.name() == 'IN_PROGRESS' ? 'bg-info' :
-                                                               report.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-danger'}"
-                                            th:text="${report.status.displayName}">Status</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <strong>Customer Email:</strong><br>
-                                        <span th:text="${report.customerEmail}">customer@email.com</span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Reported Date:</strong><br>
-                                        <span th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-12">
-                                        <strong>Issue Type:</strong><br>
-                                        <span class="badge bg-warning" th:text="${report.issueType}">Issue Type</span>
-                                    </div>
-                                </div>
-                                
-                                <div th:if="${report.description}" class="mb-3">
-                                    <strong>Description:</strong><br>
-                                    <div class="border rounded p-3 bg-light">
-                                        <span th:text="${report.description}">Description details...</span>
-                                    </div>
-                                </div>
-                                
-                                <div th:if="${report.resolvedAt}" class="row mb-3">
-                                    <div class="col-md-6">
-                                        <strong>Resolved Date:</strong><br>
-                                        <span th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Resolved By:</strong><br>
-                                        <span th:text="${report.resolvedBy}">Admin</span>
-                                    </div>
-                                </div>
-                                
-                                <div th:if="${report.adminNotes}" class="mb-3">
-                                    <strong>Admin Notes:</strong><br>
-                                    <div class="border rounded p-3 bg-light">
-                                        <span th:text="${report.adminNotes}">Admin notes...</span>
-                                    </div>
-                                </div>
+                            <div class="col-md-6">
+                                <h6>Report Information</h6>
+                                <p class="mb-1">
+                                    <strong>Issue Type:</strong> 
+                                    <span class="badge bg-info" th:text="${report.issueType}">Issue Type</span>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Reported At:</strong> 
+                                    <span th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                </p>
                             </div>
                         </div>
-
-                        <!-- Order Information -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Related Order</h5>
+                        
+                        <div class="mb-3" th:if="${report.description}">
+                            <h6>Description</h6>
+                            <div class="alert alert-light">
+                                <p class="mb-0" th:text="${report.description}">Description</p>
                             </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Order Number:</strong><br>
-                                        <a th:href="@{/admin/orders}" th:text="${report.order.orderNumber}">ORD-001</a>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Order Status:</strong><br>
-                                        <span class="badge bg-danger" th:text="${report.order.currentStatus.displayName}">Cancelled</span>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <strong>Customer Name:</strong><br>
-                                        <span th:text="${report.order.customerName}">Customer Name</span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Total Amount:</strong><br>
-                                        <span th:text="${#numbers.formatInteger(report.order.totalAmount, 3, 'POINT')}">0</span>đ
-                                    </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Current Status</h6>
+                            <span class="badge fs-6" 
+                                  th:classappend="${report.status.name() == 'PENDING' ? 'bg-warning' : 
+                                                   report.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-danger'}"
+                                  th:text="${report.status.displayName}">Status</span>
+                        </div>
+                        
+                        <div th:if="${report.resolvedAt}" class="mb-3">
+                            <h6>Resolution Information</h6>
+                            <p class="mb-1">
+                                <strong>Resolved At:</strong> 
+                                <span th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </p>
+                            <p class="mb-1" th:if="${report.resolvedBy}">
+                                <strong>Resolved By:</strong> <span th:text="${report.resolvedBy}">Admin</span>
+                            </p>
+                            <div th:if="${report.adminNotes}">
+                                <strong>Admin Notes:</strong>
+                                <div class="alert alert-info mt-2">
+                                    <p class="mb-0" th:text="${report.adminNotes}">Admin Notes</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-4">
-                        <!-- Update Status -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Update Status</h5>
-                            </div>
-                            <div class="card-body">
-                                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post">
-                                    <div class="mb-3">
-                                        <label for="status" class="form-label">Status:</label>
-                                        <select class="form-select" id="status" name="status" required>
-                                            <option th:each="status : ${statuses}" 
-                                                    th:value="${status.name()}" 
-                                                    th:text="${status.displayName}"
-                                                    th:selected="${status == report.status}">Status</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="adminNotes" class="form-label">Admin Notes:</label>
-                                        <textarea class="form-control" id="adminNotes" name="adminNotes" rows="4" 
-                                                  placeholder="Add notes about the resolution or actions taken..."
-                                                  th:text="${report.adminNotes}"></textarea>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-save me-2"></i>Update Status
-                                    </button>
-                                </form>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- Actions Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${report.status.name() == 'PENDING'}">
+                            <button type="button" class="btn btn-success w-100 mb-2" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#resolveModal">
+                                <i class="fas fa-check me-2"></i>Giải quyết báo cáo
+                            </button>
+                            <button type="button" class="btn btn-danger w-100" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#rejectModal">
+                                <i class="fas fa-times me-2"></i>Từ chối báo cáo
+                            </button>
+                        </div>
+                        <div th:unless="${report.status.name() == 'PENDING'}">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Báo cáo này đã được xử lý.
                             </div>
                         </div>
+                        
+                        <hr>
+                        
+                        <a th:href="@{/admin/delivery-issues}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+                        </a>
                     </div>
                 </div>
-            </main>
+                
+                <!-- Order Quick Info -->
+                <div class="card mt-3" th:if="${report.order}">
+                    <div class="card-header">
+                        <h6 class="mb-0">Order Quick Info</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1">
+                            <strong>Order Number:</strong> <span th:text="${report.order.orderNumber}">Order Number</span>
+                        </p>
+                        <p class="mb-1">
+                            <strong>Total Amount:</strong> 
+                            <span th:text="${#numbers.formatInteger(report.order.totalAmount, 3, 'POINT')}">Amount</span>đ
+                        </p>
+                        <p class="mb-1">
+                            <strong>Customer:</strong> <span th:text="${report.order.customerName}">Customer</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Phone:</strong> <span th:text="${report.order.customerPhone}">Phone</span>
+                        </p>
+                        
+                        <a th:href="@{/admin/orders/{id}(id=${report.order.id})}" 
+                           class="btn btn-outline-primary btn-sm w-100 mt-2">
+                            <i class="fas fa-eye me-1"></i>View Full Order
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resolve Modal -->
+    <div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="resolveModalLabel">
+                        <i class="fas fa-check-circle me-2"></i>Giải quyết báo cáo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Xác nhận giải quyết báo cáo này. Trạng thái đơn hàng sẽ được cập nhật về bình thường và khách hàng sẽ nhận được email thông báo.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="resolveNotes" class="form-label">Ghi chú (tùy chọn):</label>
+                            <textarea class="form-control" id="resolveNotes" name="adminNotes" rows="3"
+                                      placeholder="Nhập ghi chú về cách giải quyết vấn đề..."></textarea>
+                        </div>
+                        
+                        <input type="hidden" name="status" value="RESOLVED">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Xác nhận giải quyết
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="rejectModalLabel">
+                        <i class="fas fa-times-circle me-2"></i>Từ chối báo cáo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Từ chối báo cáo này. Vui lòng nhập lý do từ chối để khách hàng hiểu rõ. Khách hàng sẽ nhận được email thông báo.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="rejectReason" class="form-label">Lý do từ chối: <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="rejectReason" name="adminNotes" rows="3" required
+                                      placeholder="Nhập lý do từ chối báo cáo này..."></textarea>
+                        </div>
+                        
+                        <input type="hidden" name="status" value="REJECTED">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times me-1"></i>Xác nhận từ chối
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

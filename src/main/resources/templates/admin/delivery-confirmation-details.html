@@ -100,7 +100,7 @@
                                             </tr>
                                             <tr>
                                                 <td><strong>Địa chỉ giao hàng:</strong></td>
-                                                <td th:text="${order.shippingAddress}"></td>
+                                                <td th:text="${order.decodedShippingAddress}"></td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Ngày đặt hàng:</strong></td>
@@ -167,7 +167,7 @@
                                     
                                     <div class="alert alert-danger">
                                         <strong>Khách hàng báo cáo:</strong>
-                                        <p class="mb-0 mt-2" th:text="${confirmation.rejectionReason}"></p>
+                                        <p class="mb-0 mt-2" th:text="${confirmation.decodedRejectionReason}"></p>
                                     </div>
                                     
                                     <div class="text-muted">

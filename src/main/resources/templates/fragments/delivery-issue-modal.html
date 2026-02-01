@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Delivery Issue Report Modal -->
+<div th:fragment="delivery-issue-modal" class="modal fade" id="deliveryIssueModal" tabindex="-1" aria-labelledby="deliveryIssueModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deliveryIssueModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Báo cáo vấn đề giao hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deliveryIssueForm">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Vui lòng chọn lý do từ danh sách dưới đây:
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="issueType" class="form-label">Lý do từ chối nhận hàng: <span class="text-danger">*</span></label>
+                        <select class="form-select" id="issueType" name="issueType" required>
+                            <option value="">Chọn lý do...</option>
+                            <option value="CHƯA_NHẬN_ĐƯỢC_HÀNG">Chưa nhận được hàng</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả chi tiết (tùy chọn):</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Vui lòng mô tả chi tiết vấn đề bạn gặp phải..."></textarea>
+                    </div>
+                    
+                    <input type="hidden" id="orderId" name="orderId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-paper-plane me-1"></i>Báo cáo vấn đề
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:fragment="delivery-issue-script">
+document.addEventListener('DOMContentLoaded', function() {
+    const deliveryIssueModal = document.getElementById('deliveryIssueModal');
+    const deliveryIssueForm = document.getElementById('deliveryIssueForm');
+    
+    // Handle modal show event
+    deliveryIssueModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const orderId = button.getAttribute('data-order-id');
+        const orderNumber = button.getAttribute('data-order-number');
+        
+        // Set order ID in hidden field
+        document.getElementById('orderId').value = orderId;
+        
+        // Update modal title with order number
+        document.getElementById('deliveryIssueModalLabel').innerHTML = 
+            '<i class="fas fa-exclamation-triangle text-warning me-2"></i>' +
+            'Báo cáo vấn đề giao hàng - Đơn hàng ' + orderNumber;
+    });
+    
+    // Handle form submission
+    deliveryIssueForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(deliveryIssueForm);
+        const data = {
+            orderId: parseInt(formData.get('orderId')),
+            issueType: formData.get('issueType'),
+            description: formData.get('description')
+        };
+        
+        // Disable submit button
+        const submitBtn = deliveryIssueForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang gửi...';
+        
+        // Send API request
+        fetch('/api/delivery-issues/report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Show success message
+                showAlert('success', result.message);
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(deliveryIssueModal);
+                modal.hide();
+                
+                // Reload page to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showAlert('danger', result.error || 'Có lỗi xảy ra khi gửi báo cáo');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Có lỗi xảy ra khi gửi báo cáo. Vui lòng thử lại.');
+        })
+        .finally(() => {
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+    
+    // Reset form when modal is hidden
+    deliveryIssueModal.addEventListener('hidden.bs.modal', function() {
+        deliveryIssueForm.reset();
+    });
+});
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at top of page
+    const container = document.querySelector('.container-fluid') || document.querySelector('.container') || document.body;
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+
+</body>
+</html>

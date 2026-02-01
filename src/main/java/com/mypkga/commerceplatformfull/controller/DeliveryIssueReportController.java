@@ -61,6 +61,31 @@ public class DeliveryIssueReportController {
     }
     
     /**
+     * View reports for a specific order
+     */
+    @GetMapping("/order/{orderId}")
+    public String viewOrderReports(@PathVariable Long orderId, Model model) {
+        List<DeliveryIssueReport> reports = reportService.getReportsByOrderId(orderId);
+        
+        if (reports.isEmpty()) {
+            throw new RuntimeException("No reports found for order: " + orderId);
+        }
+        
+        // If only one report, redirect to detail view
+        if (reports.size() == 1) {
+            return "redirect:/admin/delivery-issues/" + reports.get(0).getId();
+        }
+        
+        // Multiple reports - show list filtered by order
+        model.addAttribute("reports", reports);
+        model.addAttribute("orderId", orderId);
+        model.addAttribute("pendingCount", reportService.getPendingReportsCount());
+        model.addAttribute("statuses", DeliveryIssueReport.ReportStatus.values());
+        
+        return "admin/delivery-issues";
+    }
+    
+    /**
      * Update report status
      */
     @PostMapping("/{id}/update-status")
@@ -73,7 +98,11 @@ public class DeliveryIssueReportController {
             DeliveryIssueReport.ReportStatus reportStatus = DeliveryIssueReport.ReportStatus.valueOf(status);
             String resolvedBy = auth.getName();
             
-            reportService.updateReportStatus(id, reportStatus, resolvedBy, adminNotes);
+            if (reportStatus == DeliveryIssueReport.ReportStatus.RESOLVED) {
+                reportService.resolveReport(id, resolvedBy, adminNotes);
+            } else if (reportStatus == DeliveryIssueReport.ReportStatus.REJECTED) {
+                reportService.rejectReport(id, resolvedBy, adminNotes);
+            }
             
             redirectAttributes.addFlashAttribute("success", 
                 "Cập nhật trạng thái báo cáo thành công: " + reportStatus.getDisplayName());
@@ -84,5 +113,25 @@ public class DeliveryIssueReportController {
         }
         
         return "redirect:/admin/delivery-issues/" + id;
+    }
+    
+    /**
+     * Display delivery issue statistics
+     */
+    @GetMapping("/reports")
+    public String deliveryIssueReports(Model model) {
+        // Get statistics
+        long pendingCount = reportService.getPendingReportsCount();
+        long resolvedCount = reportService.getReportsByStatus(DeliveryIssueReport.ReportStatus.RESOLVED).size();
+        long rejectedCount = reportService.getReportsByStatus(DeliveryIssueReport.ReportStatus.REJECTED).size();
+        long totalCount = pendingCount + resolvedCount + rejectedCount;
+        
+        model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("resolvedCount", resolvedCount);
+        model.addAttribute("rejectedCount", rejectedCount);
+        model.addAttribute("totalCount", totalCount);
+        model.addAttribute("recentReports", reportService.getRecentReports());
+        
+        return "admin/delivery-issue-reports";
     }
 }

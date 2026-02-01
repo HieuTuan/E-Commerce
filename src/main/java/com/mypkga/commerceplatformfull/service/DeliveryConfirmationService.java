@@ -6,6 +6,7 @@ import com.mypkga.commerceplatformfull.entity.Order;
 import com.mypkga.commerceplatformfull.entity.OrderStatus;
 import com.mypkga.commerceplatformfull.repository.DeliveryConfirmationRepository;
 import com.mypkga.commerceplatformfull.repository.OrderRepository;
+import com.mypkga.commerceplatformfull.util.HtmlUtilsHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -108,7 +109,7 @@ public class DeliveryConfirmationService {
             throw new IllegalStateException("Delivery confirmation is not in pending status");
         }
 
-        confirmation.rejectDelivery(reason);
+        confirmation.rejectDelivery(HtmlUtilsHelper.decodeHtml(reason));
         deliveryConfirmationRepository.save(confirmation);
 
         // Create timeline entry

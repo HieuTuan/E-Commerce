@@ -35,4 +35,9 @@ public interface DeliveryIssueReportRepository extends JpaRepository<DeliveryIss
      */
     @Query("SELECT r FROM DeliveryIssueReport r ORDER BY r.reportedAt DESC")
     List<DeliveryIssueReport> findTop10ByOrderByReportedAtDesc();
+    
+    /**
+     * Check if order already has a delivery issue report
+     */
+    boolean existsByOrderId(Long orderId);
 }

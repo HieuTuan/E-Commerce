@@ -30,18 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * REST API Controller for Order Status Management
- * 
- * Provides endpoints for:
- * - PUT /orders/{id}/status: Update order status with validation
- * - GET /orders/{id}/status-options: Get available status options for UI
- * 
- * Integrates with OrderStatusManager and UIIntegrationService to provide
- * validated status updates and UI-friendly status options.
- * 
- * Requirements: 4.3, 4.4
- */
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor

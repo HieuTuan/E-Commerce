@@ -37,4 +37,36 @@ public interface EmailService {
      * @return true if email was sent successfully, false otherwise
      */
     boolean sendHtmlEmail(String email, String subject, String htmlContent);
+    
+    /**
+     * Send return approval notification to customer
+     * @param returnRequest The approved return request
+     * @return true if email was sent successfully, false otherwise
+     */
+    boolean sendReturnApprovalNotification(com.mypkga.commerceplatformfull.entity.ReturnRequest returnRequest);
+    
+    /**
+     * Send return package received notification to staff
+     * @param returnRequest The return request with received package
+     * @return true if email was sent successfully, false otherwise
+     */
+    boolean sendReturnPackageReceivedNotification(com.mypkga.commerceplatformfull.entity.ReturnRequest returnRequest);
+    
+    /**
+     * Send delivery issue resolved notification to customer
+     * @param customerEmail The customer email
+     * @param orderNumber The order number
+     * @param adminNotes Admin notes about resolution
+     * @return true if email was sent successfully, false otherwise
+     */
+    boolean sendDeliveryIssueResolvedNotification(String customerEmail, String orderNumber, String adminNotes);
+    
+    /**
+     * Send delivery issue rejected notification to customer
+     * @param customerEmail The customer email
+     * @param orderNumber The order number
+     * @param adminNotes Admin notes about rejection
+     * @return true if email was sent successfully, false otherwise
+     */
+    boolean sendDeliveryIssueRejectedNotification(String customerEmail, String orderNumber, String adminNotes);
 }

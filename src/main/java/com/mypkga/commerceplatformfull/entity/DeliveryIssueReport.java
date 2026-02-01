@@ -21,17 +21,20 @@ public class DeliveryIssueReport {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
     private Order order;
     
     @Column(name = "customer_email", nullable = false)
     private String customerEmail;
     
-    @Column(name = "issue_type", nullable = false,columnDefinition = "NVARCHAR(255)")
+    @Column(name = "issue_type", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String issueType;
     
-    @Column(name = "description", columnDefinition = "NVARCHAR(255)")
+    @Column(name = "description", columnDefinition = "NVARCHAR(500)")
     private String description;
     
     @Enumerated(EnumType.STRING)
@@ -51,10 +54,9 @@ public class DeliveryIssueReport {
     private String adminNotes;
     
     public enum ReportStatus {
-        PENDING("Chờ xử lý"),
-        IN_PROGRESS("Đang xử lý"),
+        PENDING("Đang xử lý"),
         RESOLVED("Đã giải quyết"),
-        REJECTED("Từ chối");
+        REJECTED("Đã từ chối");
         
         private final String displayName;
         

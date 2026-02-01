@@ -100,6 +100,11 @@ public class StatusOption {
             case DELIVERED -> "Đã giao hàng";
             case CONFIRMED_BY_CUSTOMER -> "Đã xác nhận nhận hàng";
             case CANCELLED -> "Đã hủy";
+            case REFUND_REQUESTED -> "Yêu cầu hoàn trả";
+            case RETURN_APPROVED -> "Chấp nhận hoàn trả";
+            case RETURNING -> "Đang hoàn trả";
+            case RETURN_RECEIVED -> "Đã nhận hàng hoàn trả";
+            case REFUNDED -> "Đã hoàn tiền";
         };
     }
     
@@ -115,6 +120,11 @@ public class StatusOption {
             case DELIVERED -> "Đơn hàng đã được giao đến khách hàng";
             case CONFIRMED_BY_CUSTOMER -> "Khách hàng đã xác nhận nhận được đơn hàng";
             case CANCELLED -> "Đơn hàng đã bị hủy";
+            case REFUND_REQUESTED -> "Khách hàng đã yêu cầu hoàn trả sản phẩm";
+            case RETURN_APPROVED -> "Yêu cầu hoàn trả đã được chấp nhận";
+            case RETURNING -> "Sản phẩm đang được hoàn trả về kho";
+            case RETURN_RECEIVED -> "Đã nhận được sản phẩm hoàn trả";
+            case REFUNDED -> "Đã hoàn tiền cho khách hàng";
         };
     }
     
@@ -137,6 +147,11 @@ public class StatusOption {
             case DELIVERED -> "btn-success status-delivered";
             case CONFIRMED_BY_CUSTOMER -> "btn-success status-confirmed-customer";
             case CANCELLED -> "btn-danger status-cancelled";
+            case REFUND_REQUESTED -> "btn-warning status-refund-requested";
+            case RETURN_APPROVED -> "btn-info status-return-approved";
+            case RETURNING -> "btn-primary status-returning";
+            case RETURN_RECEIVED -> "btn-secondary status-return-received";
+            case REFUNDED -> "btn-success status-refunded";
         };
     }
     

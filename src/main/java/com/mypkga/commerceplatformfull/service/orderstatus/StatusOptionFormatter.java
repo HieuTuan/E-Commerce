@@ -179,10 +179,15 @@ public class StatusOptionFormatter {
             case PENDING -> "Chúng tôi đang xử lý đơn hàng của bạn";
             case CONFIRMED -> "Đơn hàng đã được xác nhận và đang chuẩn bị";
             case SHIPPING -> "Đơn hàng đang trên đường giao đến bạn";
+            case AWAITING_CONFIRMATION -> "Đơn hàng đã được giao, chờ xác nhận";
             case DELIVERED -> "Đơn hàng đã được giao thành công";
             case CONFIRMED_BY_CUSTOMER -> "Cảm ơn bạn đã xác nhận nhận hàng";
             case CANCELLED -> "Đơn hàng đã được hủy";
-            default -> "Đang cập nhật trạng thái đơn hàng";
+            case REFUND_REQUESTED -> "Yêu cầu hoàn trả đang được xử lý";
+            case RETURN_APPROVED -> "Yêu cầu hoàn trả đã được chấp nhận";
+            case RETURNING -> "Hàng đang được hoàn trả";
+            case RETURN_RECEIVED -> "Hàng hoàn trả đã được nhận";
+            case REFUNDED -> "Đã hoàn tiền thành công";
         };
     }
     
@@ -198,6 +203,11 @@ public class StatusOptionFormatter {
             case DELIVERED -> "Delivery completed";
             case CONFIRMED_BY_CUSTOMER -> "Customer confirmed receipt";
             case CANCELLED -> "Order cancelled";
+            case REFUND_REQUESTED -> "Return request submitted, awaiting review";
+            case RETURN_APPROVED -> "Return approved, awaiting shipment";
+            case RETURNING -> "Item being returned to warehouse";
+            case RETURN_RECEIVED -> "Return received, processing refund";
+            case REFUNDED -> "Refund completed";
         };
     }
     
@@ -213,6 +223,11 @@ public class StatusOptionFormatter {
             case DELIVERED -> "fa-box-open";
             case CONFIRMED_BY_CUSTOMER -> "fa-thumbs-up";
             case CANCELLED -> "fa-times-circle";
+            case REFUND_REQUESTED -> "fa-undo";
+            case RETURN_APPROVED -> "fa-check";
+            case RETURNING -> "fa-shipping-fast";
+            case RETURN_RECEIVED -> "fa-warehouse";
+            case REFUNDED -> "fa-money-bill-wave";
         };
     }
     

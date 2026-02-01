@@ -1,5 +1,6 @@
 package com.mypkga.commerceplatformfull.entity;
 
+import com.mypkga.commerceplatformfull.util.HtmlUtilsHelper;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -93,5 +94,12 @@ public class DeliveryConfirmation {
      */
     public boolean isRejected() {
         return status == ConfirmationStatus.REJECTED;
+    }
+    
+    /**
+     * Get decoded rejection reason for display
+     */
+    public String getDecodedRejectionReason() {
+        return HtmlUtilsHelper.decodeHtml(rejectionReason);
     }
 }

@@ -5,6 +5,7 @@ import com.mypkga.commerceplatformfull.repository.CartRepository;
 import com.mypkga.commerceplatformfull.repository.OrderItemRepository;
 import com.mypkga.commerceplatformfull.repository.OrderRepository;
 import com.mypkga.commerceplatformfull.repository.ProductRepository;
+import com.mypkga.commerceplatformfull.util.HtmlUtilsHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -61,29 +62,34 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.PENDING);
         order.setCurrentStatus(OrderStatus.PENDING); // Set current status for timeline
         order.setPaymentMethod(paymentMethod);
-        order.setShippingAddress(shippingAddress);
+        order.setShippingAddress(HtmlUtilsHelper.decodeHtml(shippingAddress));
         order.setCustomerName(customerName);
         order.setCustomerPhone(customerPhone);
 
         // Set payment status and reduce stock based on payment method
-//        if ("COD".equals(paymentMethod)) {
-//            // For COD, reduce stock immediately and set payment as pending
-//            order.setPaymentStatus(Order.PaymentStatus.PENDING);
-//            order.setStatus(OrderStatus.PROCESSING);
-//
-//            // Reduce stock immediately for COD orders
-//            for (CartItem cartItem : cart.getItems()) {
-//                Product product = cartItem.getProduct();
-//                int newStock = product.getStockQuantity() - cartItem.getQuantity();
-//                product.setStockQuantity(newStock);
-//                productRepository.save(product);
-//                System.out.println("Reduced stock for product: " + product.getName() +
-//                    " from " + (newStock + cartItem.getQuantity()) + " to " + newStock);
-//            }
-//        } else {
-//            // For online payment methods, stock will be reduced when payment is confirmed
-//            order.setPaymentStatus(Order.PaymentStatus.PENDING);
-//        }
+        if ("COD".equals(paymentMethod)) {
+            // For COD, reduce stock immediately and set payment as pending
+            order.setPaymentStatus(Order.PaymentStatus.PENDING);
+            order.setStatus(OrderStatus.CONFIRMED); // Set to CONFIRMED for COD
+            order.setCurrentStatus(OrderStatus.CONFIRMED);
+
+            // Reduce stock immediately for COD orders
+            for (CartItem cartItem : cart.getItems()) {
+                Product product = cartItem.getProduct();
+                int newStock = product.getStockQuantity() - cartItem.getQuantity();
+                product.setStockQuantity(newStock);
+                productRepository.save(product);
+                System.out.println("Reduced stock for product: " + product.getName() +
+                    " from " + (newStock + cartItem.getQuantity()) + " to " + newStock);
+            }
+            
+            // Clear cart immediately for COD orders
+            cartService.clearCart(user.getId());
+        } else {
+            // For online payment methods, stock will be reduced when payment is confirmed
+            // Cart will also be cleared when payment is confirmed
+            order.setPaymentStatus(Order.PaymentStatus.PENDING);
+        }
 
         Order savedOrder = orderRepository.save(order);
 
@@ -98,8 +104,7 @@ public class OrderServiceImpl implements OrderService {
             orderItemRepository.save(orderItem);
         }
 
-        // Clear cart
-        cartService.clearCart(user.getId());
+        // Don't clear cart here for online payments - will be cleared when payment is confirmed
 
         // Create initial timeline entry
         try {
@@ -114,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Optional<Order> getOrderById(Long id) {
-        return orderRepository.findById(id);
+        return orderRepository.findByIdWithReturnRequest(id);
     }
 
     @Override
@@ -180,6 +185,18 @@ public class OrderServiceImpl implements OrderService {
                     "Thanh toán thành công - Đơn hàng đang chờ xác nhận từ admin/staff");
             } catch (Exception e) {
                 log.warn("Failed to create timeline entry for payment confirmation: {}", e.getMessage());
+            }
+            
+            // Clear cart when payment is successful (for online payment methods)
+            if (!"COD".equals(order.getPaymentMethod())) {
+                try {
+                    cartService.clearCart(order.getUser().getId());
+                    log.info("Cart cleared for user {} after successful payment for order {}", 
+                        order.getUser().getId(), orderId);
+                } catch (Exception e) {
+                    log.warn("Failed to clear cart for user {} after payment: {}", 
+                        order.getUser().getId(), e.getMessage());
+                }
             }
             
             // Only reduce stock for non-COD orders (COD stock is already reduced in createOrder)
@@ -314,5 +331,29 @@ public class OrderServiceImpl implements OrderService {
                 System.err.println("Error fixing COD order " + order.getOrderNumber() + ": " + e.getMessage());
             }
         }
+    }
+    
+    @Override
+    public List<Order> getOrdersWithDeliveryIssues() {
+        return orderRepository.findByHasDeliveryIssueTrue();
+    }
+    
+    @Override
+    @Transactional
+    public void updateDeliveryIssueFlag(Long orderId, boolean hasIssue) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        
+        order.setHasDeliveryIssue(hasIssue);
+        orderRepository.save(order);
+        
+        log.info("Updated delivery issue flag for order {} to {}", orderId, hasIssue);
+    }
+    
+    @Override
+    public boolean hasDeliveryIssue(Long orderId) {
+        return orderRepository.findById(orderId)
+                .map(Order::hasDeliveryIssue)
+                .orElse(false);
     }
 }

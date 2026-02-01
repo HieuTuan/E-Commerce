@@ -43,6 +43,12 @@ public class User {
 
     @Column(columnDefinition = "NVARCHAR(200)")
     private String address;
+    
+    @Column(name = "district_id")
+    private Integer districtId;
+    
+    @Column(name = "ward_code", length = 20)
+    private String wardCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)

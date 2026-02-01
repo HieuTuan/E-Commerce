@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Không Đủ Điều Kiện Hoàn Tiền - E-Commerce Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-store me-2"></i>E-Commerce Platform
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/orders">Đơn hàng của tôi</a>
+                <a class="nav-link" href="/returns/my-requests">Yêu cầu hoàn tiền</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Đăng Xuất</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-exclamation-triangle text-warning me-2"></i>Không Đủ Điều Kiện Hoàn Tiền</h2>
+            <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại đơn hàng
+            </a>
+        </div>
+
+        <!-- Order Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Thông Tin Đơn Hàng</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Mã đơn hàng:</strong> <span th:text="${order.orderNumber}">ORD001</span></p>
+                        <p><strong>Tổng tiền:</strong> <span th:text="${#numbers.formatCurrency(order.totalAmount)}">500,000 VND</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Ngày đặt:</strong> <span th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
+                        <p><strong>Trạng thái:</strong> 
+                            <span class="badge bg-info" th:text="${order.status}">DELIVERED</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Lý Do Không Đủ Điều Kiện</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">Đơn hàng này không đủ điều kiện để hoàn tiền</h6>
+                    <p class="mb-0" th:text="${error}">Lý do không đủ điều kiện</p>
+                </div>
+
+                <h6 class="mt-4">Điều kiện để được hoàn tiền:</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Đơn hàng phải ở trạng thái "Đã giao hàng" (DELIVERED)
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Yêu cầu hoàn tiền phải được gửi trong vòng 2 ngày (48 giờ) kể từ khi nhận hàng
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Chưa có yêu cầu hoàn tiền nào cho đơn hàng này
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Sản phẩm phải thuộc danh mục được phép hoàn tiền
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Cần Hỗ Trợ?</h5>
+            </div>
+            <div class="card-body">
+                <p>Nếu bạn có thắc mắc về chính sách hoàn tiền hoặc cần hỗ trợ, vui lòng liên hệ:</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><i class="fas fa-phone text-primary me-2"></i><strong>Hotline:</strong> +84-123-456-789</p>
+                        <p><i class="fas fa-envelope text-primary me-2"></i><strong>Email:</strong> support@ecommerce-platform.com</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><i class="fas fa-clock text-primary me-2"></i><strong>Giờ làm việc:</strong> 8:00 - 22:00 (Thứ 2 - Chủ nhật)</p>
+                        <p><i class="fas fa-comments text-primary me-2"></i><strong>Live Chat:</strong> Có sẵn trên website</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -39,4 +39,11 @@ public interface OrderService {
 
     // Fix method for existing COD orders
     void fixExistingCODOrders();
+    
+    // Delivery issue methods
+    List<Order> getOrdersWithDeliveryIssues();
+    
+    void updateDeliveryIssueFlag(Long orderId, boolean hasIssue);
+    
+    boolean hasDeliveryIssue(Long orderId);
 }

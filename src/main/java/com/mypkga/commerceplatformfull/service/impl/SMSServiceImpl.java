@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 /**
  * SMS Service implementation
  * Currently uses mock implementation for development
- * Can be extended to integrate with real SMS providers like Twilio, AWS SNS, etc.
+ * Can be extended to integrate with real SMS providers like Twilio, etc.
  */
 @Service
 @Slf4j
@@ -70,8 +70,6 @@ public class SMSServiceImpl implements SMSService {
         switch (smsProvider.toLowerCase()) {
             case "twilio":
                 return sendViaTwilio(phoneNumber, message);
-            case "aws-sns":
-                return sendViaAWSSNS(phoneNumber, message);
             case "esms":
                 return sendViaESMS(phoneNumber, message);
             default:
@@ -88,17 +86,6 @@ public class SMSServiceImpl implements SMSService {
         log.info("Sending SMS via Twilio to {}", PhoneNumberValidator.maskPhoneNumber(phoneNumber));
         // TODO: Implement Twilio integration
         // Requires: com.twilio.sdk:twilio dependency
-        return true;
-    }
-
-    /**
-     * Send SMS via AWS SNS
-     * Implementation placeholder - requires AWS SDK
-     */
-    private boolean sendViaAWSSNS(String phoneNumber, String message) {
-        log.info("Sending SMS via AWS SNS to {}", PhoneNumberValidator.maskPhoneNumber(phoneNumber));
-        // TODO: Implement AWS SNS integration
-        // Requires: software.amazon.awssdk:sns dependency
         return true;
     }
 

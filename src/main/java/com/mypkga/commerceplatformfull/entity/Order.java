@@ -1,5 +1,6 @@
 package com.mypkga.commerceplatformfull.entity;
 
+import com.mypkga.commerceplatformfull.util.HtmlUtilsHelper;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,10 +50,10 @@ public class Order {
     @Column(nullable = false, length = 20)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
-    @Column(columnDefinition = "NVARCHAR(100)")
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String shippingAddress;
 
-    @Column(length = 100)
+    @Column(length = 100,columnDefinition = "NVARCHAR(100)")
     private String customerName;
 
     @Column(length = 20)
@@ -83,6 +84,17 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private DeliveryConfirmation deliveryConfirmation;
 
+    // Return request relationship
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ReturnRequest returnRequest;
+
+    // Delivery issue tracking
+    @Column(name = "has_delivery_issue", nullable = false)
+    private Boolean hasDeliveryIssue = false;
+    
+    @OneToMany(mappedBy = "orderId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<DeliveryIssueReport> deliveryIssues = new ArrayList<>();
+
     // Helper methods for timeline and status management
     
     /**
@@ -101,11 +113,13 @@ public class Order {
     }
 
     /**
-     * Update the current status and sync with the legacy status field
+     * Update the current status without affecting the legacy status field
+     * This avoids CHECK constraint violations for return-related statuses
      */
     public void updateCurrentStatus(OrderStatus newStatus) {
         this.currentStatus = newStatus;
-        this.status = newStatus; // Keep legacy field in sync
+        // Don't update the legacy status field to avoid CHECK constraint issues
+        // The currentStatus field is the source of truth for order state
     }
 
     /**
@@ -128,6 +142,78 @@ public class Order {
     public boolean requiresDeliveryConfirmation() {
         return currentStatus == OrderStatus.DELIVERED && 
                (deliveryConfirmation == null || deliveryConfirmation.isPending());
+    }
+    
+    /**
+     * Check if this order is eligible for return request
+     */
+    public boolean isEligibleForReturn() {
+        // Must be delivered and within 2 days of delivery
+        if (currentStatus != OrderStatus.DELIVERED) {
+            return false;
+        }
+        
+        // Check if already has a return request
+        if (returnRequest != null) {
+            return false;
+        }
+        
+        // Check delivery date (assuming updatedDate reflects delivery date for DELIVERED status)
+        LocalDateTime deliveryDate = updatedDate;
+        LocalDateTime now = LocalDateTime.now();
+        return deliveryDate.plusDays(2).isAfter(now);
+    }
+    
+    /**
+     * Check if this order has a return request
+     */
+    public boolean hasReturnRequest() {
+        return returnRequest != null;
+    }
+    
+    /**
+     * Get the return request for this order
+     */
+    public ReturnRequest getReturnRequest() {
+        return returnRequest;
+    }
+    
+    /**
+     * Check if this order has delivery issues
+     */
+    public boolean hasDeliveryIssue() {
+        return hasDeliveryIssue != null && hasDeliveryIssue;
+    }
+    
+    /**
+     * Set delivery issue flag
+     */
+    public void setHasDeliveryIssue(boolean hasDeliveryIssue) {
+        this.hasDeliveryIssue = hasDeliveryIssue;
+    }
+    
+    /**
+     * Get all delivery issue reports for this order
+     */
+    public List<DeliveryIssueReport> getDeliveryIssues() {
+        return deliveryIssues != null ? deliveryIssues : new ArrayList<>();
+    }
+    
+    /**
+     * Get the latest delivery issue report
+     */
+    public DeliveryIssueReport getLatestDeliveryIssue() {
+        return deliveryIssues.isEmpty() ? null : 
+               deliveryIssues.stream()
+                   .max((r1, r2) -> r1.getReportedAt().compareTo(r2.getReportedAt()))
+                   .orElse(null);
+    }
+
+    /**
+     * Get decoded shipping address for display
+     */
+    public String getDecodedShippingAddress() {
+        return HtmlUtilsHelper.decodeHtml(shippingAddress);
     }
 
     public enum PaymentStatus {

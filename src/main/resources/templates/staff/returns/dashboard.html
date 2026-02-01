@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Hoàn Tiền - Staff Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/staff">
+                <i class="fas fa-store me-2"></i>Staff Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" th:href="@{/staff}">Dashboard</a>
+                <a class="nav-link" th:href="@{/staff/orders}">Đơn Hàng</a>
+                <a class="nav-link active" th:href="@{/staff/returns}">Hoàn Tiền</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Đăng Xuất</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-undo me-2"></i>Quản Lý Hoàn Tiền</h2>
+            <div>
+                <a href="/staff/returns" class="btn btn-info me-2">
+                    <i class="fas fa-list me-2"></i>Danh Sách Hoàn Trả
+                </a>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 th:text="${#lists.size(pendingRequests)}">0</h4>
+                                <p class="mb-0">Yêu cầu chờ duyệt</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 th:text="${#lists.size(shippingRequests)}">0</h4>
+                                <p class="mb-0">Đang vận chuyển</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-shipping-fast fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>0</h4>
+                                <p class="mb-0">Hoàn tiền hôm nay</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-money-bill-wave fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Yêu Cầu Chờ Duyệt</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${pendingRequests != null and !pendingRequests.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Đơn hàng</th>
+                                    <th>Khách hàng</th>
+                                    <th>Lý do</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="request : ${pendingRequests}">
+                                    <td th:text="${request.id}">#001</td>
+                                    <td th:text="${request.order.orderNumber}">ORD001</td>
+                                    <td th:text="${request.order.user.fullName}">Nguyễn Văn A</td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${request.reason}">DEFECTIVE_ITEM</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    th:onclick="'approveRequest(' + ${request.id} + ')'">
+                                                <i class="fas fa-check"></i> Duyệt
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    th:onclick="'showRejectModal(' + ${request.id} + ')'">
+                                                <i class="fas fa-times"></i> Từ chối
+                                            </button>
+                                            <a th:href="@{/staff/returns/{id}(id=${request.id})}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Xem
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${pendingRequests == null or pendingRequests.empty}" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Không có yêu cầu chờ duyệt</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Requests -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Đang Vận Chuyển</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${shippingRequests != null and !shippingRequests.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Mã trả hàng</th>
+                                    <th>Khách hàng</th>
+                                    <th>Bưu điện</th>
+                                    <th>Ngày duyệt</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="request : ${shippingRequests}">
+                                    <td th:text="${request.id}">#001</td>
+                                    <td>
+                                        <code th:text="${request.returnCode}">RET12345678</code>
+                                    </td>
+                                    <td th:text="${request.order.user.fullName}">Nguyễn Văn A</td>
+                                    <td>
+                                        <span th:if="${request.ghnOrderCode}" class="badge bg-info">
+                                            GHN: <span th:text="${request.ghnOrderCode}">GHN123456</span>
+                                        </span>
+                                        <span th:unless="${request.ghnOrderCode}" class="text-muted">Chưa tạo vận đơn</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-primary" 
+                                                    th:onclick="'confirmReceipt(' + ${request.id} + ')'">
+                                                <i class="fas fa-box"></i> Xác nhận nhận hàng
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    th:onclick="'completeRefund(' + ${request.id} + ')'">
+                                                <i class="fas fa-money-bill-wave"></i> Hoàn tiền
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${shippingRequests == null or shippingRequests.empty}" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Không có yêu cầu đang vận chuyển</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Từ chối yêu cầu hoàn tiền</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="rejectForm" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="rejectReason" class="form-label">Lý do từ chối:</label>
+                            <textarea class="form-control" id="rejectReason" name="reason" rows="3" required
+                                      placeholder="Nhập lý do từ chối yêu cầu hoàn tiền..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Từ chối</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function approveRequest(requestId) {
+            if (confirm('Bạn có chắc chắn muốn duyệt yêu cầu hoàn tiền này?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/staff/returns/' + requestId + '/approve';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function showRejectModal(requestId) {
+            const form = document.getElementById('rejectForm');
+            form.action = '/staff/returns/' + requestId + '/reject';
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+
+        function confirmReceipt(requestId) {
+            if (confirm('Bạn có chắc chắn đã nhận được hàng trả về?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/staff/returns/' + requestId + '/receipt/confirm';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function completeRefund(requestId) {
+            if (confirm('Bạn có chắc chắn muốn hoàn tiền cho khách hàng?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/staff/returns/' + requestId + '/refund/complete';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

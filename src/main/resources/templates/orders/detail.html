@@ -7,6 +7,8 @@
     <title>Order Details - E-Commerce</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/customer.css}">
 </head>
 
 <body>
@@ -55,7 +57,17 @@
                 <div class="row">
                     <div class="col-md-4">
                         <h6>Order Status</h6>
-                        <span class="badge bg-warning" th:text="${order.status}">Status</span>
+                        <!-- Show red status with "Khách hàng report" when has delivery issue -->
+                        <div th:if="${order.hasDeliveryIssue()}">
+                            <span class="badge bg-danger">DELIVERED</span>
+                            <small class="text-danger d-block mt-1">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Khách hàng report
+                            </small>
+                        </div>
+                        <!-- Normal status display -->
+                        <div th:unless="${order.hasDeliveryIssue()}">
+                            <span class="badge bg-warning" th:text="${order.status}">Status</span>
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <h6>Payment Status</h6>
@@ -267,29 +279,126 @@
                             </div>
                             
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <form th:action="@{/orders/{orderId}/confirm-delivery(orderId=${order.id})}" method="post" class="d-inline">
                                         <button type="submit" class="btn btn-success w-100">
                                             <i class="fas fa-check me-2"></i>Xác nhận đã nhận hàng
                                         </button>
                                     </form>
                                 </div>
-                                <div class="col-md-6">
-                                    <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>Báo cáo vấn đề
-                                    </button>
+                                <div class="col-md-4" th:if="${!order.hasReturnRequest()}">
+                                    <a th:href="@{/returns/orders/{orderId}/request(orderId=${order.id})}" class="btn btn-warning w-100">
+                                        <i class="fas fa-undo me-2"></i>Yêu cầu hoàn tiền
+                                    </a>
+                                </div>
+                                <div class="col-md-4" th:if="${order.hasReturnRequest()}">
+                                    <a th:href="@{/returns/my-requests}" class="btn btn-info w-100">
+                                        <i class="fas fa-eye me-2"></i>Xem yêu cầu hoàn tiền
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <!-- Check if order has delivery issue report -->
+                                    <div th:if="${order.hasDeliveryIssue()}">
+                                        <button type="button" class="btn btn-secondary w-100" disabled>
+                                            <i class="fas fa-check me-2"></i>Đã báo cáo vấn đề
+                                        </button>
+                                    </div>
+                                    <div th:unless="${order.hasDeliveryIssue()}">
+                                        <button type="button" class="btn btn-danger w-100" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deliveryIssueModal"
+                                                th:attr="data-order-id=${order.id}, data-order-number=${order.orderNumber}">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Báo cáo vấn đề
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Order Completed -->
+                        <!-- Delivery Issue Reports Section -->
+                        <div th:if="${order.hasDeliveryIssue()}" class="mt-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Báo cáo vấn đề giao hàng
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div th:each="report : ${order.deliveryIssues}" class="mb-3">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <p class="mb-1">
+                                                    <strong>Lý do:</strong> <span th:text="${report.issueType}">Issue Type</span>
+                                                </p>
+                                                <p class="mb-1" th:if="${report.description}">
+                                                    <strong>Mô tả:</strong> <span th:text="${report.description}">Description</span>
+                                                </p>
+                                                <small class="text-muted">
+                                                    Báo cáo lúc: <span th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                                </small>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <!-- Status display based on report status -->
+                                                <div th:if="${report.status.name() == 'PENDING'}">
+                                                    <span class="badge bg-warning">Đang xử lý</span>
+                                                    <small class="text-muted d-block mt-1">Chúng tôi sẽ liên hệ sớm nhất</small>
+                                                </div>
+                                                <div th:if="${report.status.name() == 'RESOLVED'}">
+                                                    <span class="badge bg-success">Đã giải quyết</span>
+                                                    <small class="text-success d-block mt-1">Vấn đề đã được xử lý</small>
+                                                    <div th:if="${report.adminNotes}" class="mt-2">
+                                                        <small class="text-muted">
+                                                            <strong>Ghi chú:</strong> <span th:text="${report.adminNotes}">Notes</span>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div th:if="${report.status.name() == 'REJECTED'}">
+                                                    <span class="badge bg-danger">Đã từ chối</span>
+                                                    <small class="text-danger d-block mt-1">Vui lòng liên hệ hotline để biết thêm chi tiết</small>
+                                                    <div th:if="${report.adminNotes}" class="mt-2">
+                                                        <small class="text-muted">
+                                                            <strong>Lý do:</strong> <span th:text="${report.adminNotes}">Reason</span>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr th:unless="${reportStat.last}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Completed - After Customer Confirmation -->
                         <div th:if="${order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER'}" class="mt-4">
                             <div class="alert alert-success">
                                 <i class="fas fa-check-circle me-2"></i>
                                 <strong>Đơn hàng đã hoàn thành</strong><br>
                                 Cảm ơn bạn đã xác nhận nhận hàng. Đơn hàng đã được hoàn tất thành công.
                             </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-success w-100" disabled>
+                                        <i class="fas fa-check me-2"></i>Đã xác nhận hàng
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-secondary w-100" disabled>
+                                        <i class="fas fa-undo me-2"></i>Yêu cầu hoàn tiền
+                                    </button>
+                                    <small class="text-muted d-block mt-1">Không khả dụng sau khi xác nhận</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-secondary w-100" disabled>
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Báo cáo vấn đề
+                                    </button>
+                                    <small class="text-muted d-block mt-1">Không khả dụng sau khi xác nhận</small>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -301,7 +410,7 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Name:</strong><br><span th:text="${order.customerName}">Name</span></p>
-                        <p><strong>Address:</strong><br><span th:text="${order.shippingAddress}">Address</span></p>
+                        <p><strong>Address:</strong><br><span th:text="${order.decodedShippingAddress}">Address</span></p>
                         <p><strong>Phone:</strong><br><span th:text="${order.customerPhone}">Phone</span></p>
                     </div>
                 </div>
@@ -368,7 +477,13 @@
         </div>
     </div>
 
+    <!-- Include Delivery Issue Modal -->
+    <div th:replace="fragments/delivery-issue-modal :: delivery-issue-modal"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Include Delivery Issue Script -->
+    <div th:replace="fragments/delivery-issue-modal :: delivery-issue-script"></div>
 </body>
 
 </html>

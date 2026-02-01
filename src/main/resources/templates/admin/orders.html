@@ -1,124 +1,259 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Orders - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
 
-<body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" th:href="@{/admin}">
-                <i class="fas fa-user-shield"></i> Admin Panel
-            </a>
+<body class="admin-wrapper">
+    <!-- Sidebar -->
+    <nav class="admin-sidebar" id="adminSidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <div class="admin-nav">
+            <div class="nav-header">Main</div>
+            <div class="nav-item">
+                <a class="nav-link" th:href="@{/admin}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            
+            <div class="nav-header">Management</div>
+            <div class="nav-item">
+                <a class="nav-link" th:href="@{/admin/products}">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link active" th:href="@{/admin/orders}">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" th:href="@{/admin/users}">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" th:href="@{/admin/delivery-issues}">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Delivery Issues</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" th:href="@{/admin/reports}">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </div>
+            
+            <div class="nav-header">System</div>
+            <div class="nav-item">
+                <a class="nav-link" th:href="@{/}">
+                    <i class="fas fa-home"></i>
+                    <span>Back to Store</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <form th:action="@{/logout}" method="post" class="d-inline w-100">
+                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row">
-            <nav class="col-md-2 d-md-block bg-light sidebar py-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin/products}">
-                            <i class="fas fa-box"></i> Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" th:href="@{/admin/orders}">
-                            <i class="fas fa-shopping-cart"></i> Orders
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin/delivery-issues}">
-                            <i class="fas fa-exclamation-triangle"></i> Delivery Issues
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <main class="col-md-10 ms-sm-auto px-md-4 py-3">
-                <h2>Manage Orders</h2>
-
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-                    <span th:text="${success}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Main Content -->
+    <div class="admin-content" id="adminContent">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>Orders</h1>
+            <div class="user-info">
+                <span>Welcome, <span sec:authentication="name">admin@ecommerce.com</span></span>
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
                 </div>
+            </div>
+        </div>
 
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Customer</th>
-                            <th>Phone</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="order : ${orders}">
-                            <td th:text="${order.orderNumber}">ORD-001</td>
-                            <td th:text="${order.customerName}">Customer</td>
-                            <td th:text="${order.customerPhone}">phone</td>
-                            <td><span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</td>
-                            <td>
-                                <span class="badge"
-                                    th:classappend="${order.currentStatus.name() == 'PENDING' ? 'bg-warning' : 
-                                                       order.currentStatus.name() == 'CONFIRMED' ? 'bg-info' :
-                                                       order.currentStatus.name() == 'SHIPPING' ? 'bg-primary' :
-                                                       order.currentStatus.name() == 'DELIVERED' ? 'bg-success' : 
-                                                       order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
-                                                       order.currentStatus.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
-                                    th:text="${order.currentStatus.displayName}">Status</span>
-                            </td>
-                            <td>
-                                <span class="badge"
-                                    th:classappend="${order.paymentStatus.name() == 'PAID' ? 'bg-success' : 
-                                                       order.paymentStatus.name() == 'PENDING' ? 'bg-warning' : 'bg-danger'}"
-                                    th:text="${order.paymentStatus}">Payment</span>
-                            </td>
-                            <td th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy')}">Date</td>
-                            <td>
-                                <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"
-                                    class="d-inline">
-                                    <select name="status" class="form-select form-select-sm d-inline"
-                                        style="width: auto;" onchange="confirmStatusChange(this, '[[${order.currentStatus.name()}]]')">
-                                        <option value="PENDING" th:selected="${order.currentStatus.name() == 'PENDING'}"
-                                                th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
-                                            PENDING</option>
-                                        <option value="CONFIRMED" th:selected="${order.currentStatus.name() == 'CONFIRMED'}"
-                                                th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
-                                            CONFIRMED</option>
-                                        <option value="SHIPPING" th:selected="${order.currentStatus.name() == 'SHIPPING'}"
-                                                th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
-                                            SHIPPING</option>
-                                        <option value="DELIVERED" th:selected="${order.currentStatus.name() == 'DELIVERED'}">
-                                            DELIVERED</option>
-                                        <option value="CANCELLED" th:selected="${order.currentStatus.name() == 'CANCELLED'}"
-                                                th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
-                                            CANCELLED</option>
-                                    </select>
-                                </form>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </main>
+        <!-- Main Content Area -->
+        <div class="admin-main">
+            <div class="content-header">
+                <h2>Manage Orders</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Orders</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="data-table-wrapper">
+                <div class="data-table-header">
+                    <h3><i class="fas fa-shopping-cart me-2"></i>Orders</h3>
+                    <div class="data-table-actions">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">All Orders</a></li>
+                                <li><a class="dropdown-item" href="#">Pending</a></li>
+                                <li><a class="dropdown-item" href="#">Confirmed</a></li>
+                                <li><a class="dropdown-item" href="#">Shipping</a></li>
+                                <li><a class="dropdown-item" href="#">Delivered</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td>
+                                    <strong th:text="${order.orderNumber}">ORD-001</strong>
+                                </td>
+                                <td th:text="${order.customerName}">Customer</td>
+                                <td th:text="${order.customerPhone}">phone</td>
+                                <td>
+                                    <strong class="text-success"><span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</strong>
+                                </td>
+                                <td>
+                                    <!-- Show red status with "Khách hàng report" when has delivery issue -->
+                                    <div th:if="${order.hasDeliveryIssue()}">
+                                        <span class="status-badge danger">DELIVERED</span>
+                                        <small class="text-danger d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>(Khách hàng report)
+                                        </small>
+                                    </div>
+                                    <!-- Normal status display -->
+                                    <div th:unless="${order.hasDeliveryIssue()}">
+                                        <span class="status-badge"
+                                            th:classappend="${order.currentStatus.name() == 'PENDING' ? 'pending' : 
+                                                               order.currentStatus.name() == 'CONFIRMED' ? 'confirmed' :
+                                                               order.currentStatus.name() == 'SHIPPING' ? 'shipped' :
+                                                               order.currentStatus.name() == 'DELIVERED' ? 'delivered' : 
+                                                               order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER' ? 'delivered' :
+                                                               order.currentStatus.name() == 'CANCELLED' ? 'cancelled' : 'pending'}"
+                                            th:text="${order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER' ? 'Đã xác nhận nhận hàng' : order.currentStatus.displayName}">Status</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge"
+                                        th:classappend="${order.paymentStatus.name() == 'PAID' ? 'delivered' : 
+                                                           order.paymentStatus.name() == 'PENDING' ? 'pending' : 'cancelled'}"
+                                        th:text="${order.paymentStatus}">Payment</span>
+                                </td>
+                                <td th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy')}">Date</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <!-- Delivery Issue Report Link -->
+                                        <div th:if="${order.hasDeliveryIssue()}" class="mb-1">
+                                            <a th:href="@{/admin/delivery-issues/order/{orderId}(orderId=${order.id})}" 
+                                               class="btn-action view" title="View Issue Report">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- Show disabled message for confirmed by customer orders -->
+                                        <div th:if="${order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER'}">
+                                            <span class="text-muted small">
+                                                <i class="fas fa-lock me-1"></i>Locked
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Show dropdown for other statuses -->
+                                        <form th:if="${order.currentStatus.name() != 'CONFIRMED_BY_CUSTOMER'}" 
+                                              th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"
+                                              class="d-inline">
+                                            <select name="status" class="form-select form-select-sm"
+                                                style="width: 120px; font-size: 0.8rem;" onchange="confirmStatusChange(this, '[[${order.currentStatus.name()}]]')">
+                                                <option value="PENDING" th:selected="${order.currentStatus.name() == 'PENDING'}"
+                                                        th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                                    PENDING</option>
+                                                <option value="CONFIRMED" th:selected="${order.currentStatus.name() == 'CONFIRMED'}"
+                                                        th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                                    CONFIRMED</option>
+                                                <option value="SHIPPING" th:selected="${order.currentStatus.name() == 'SHIPPING'}"
+                                                        th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                                    SHIPPING</option>
+                                                <option value="DELIVERED" th:selected="${order.currentStatus.name() == 'DELIVERED'}">
+                                                    DELIVERED</option>
+                                                <option value="CANCELLED" th:selected="${order.currentStatus.name() == 'CANCELLED'}"
+                                                        th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
+                                                    CANCELLED</option>
+                                            </select>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div th:if="${orders == null || orders.isEmpty()}" class="text-center py-5">
+                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No orders yet</h5>
+                        <p class="text-muted">Orders will appear here once customers start placing them.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const content = document.getElementById('adminContent');
+            const toggleBtn = document.querySelector('.sidebar-toggle i');
+            
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                toggleBtn.classList.remove('fa-chevron-left');
+                toggleBtn.classList.add('fa-chevron-right');
+            } else {
+                toggleBtn.classList.remove('fa-chevron-right');
+                toggleBtn.classList.add('fa-chevron-left');
+            }
+        }
+
+        // Auto-hide sidebar on mobile
+        if (window.innerWidth <= 768) {
+            document.getElementById('adminSidebar').classList.add('collapsed');
+            document.getElementById('adminContent').classList.add('expanded');
+        }
+
         function confirmStatusChange(selectElement, currentStatus) {
             const newStatus = selectElement.value;
             const form = selectElement.closest('form');
@@ -141,6 +276,12 @@
             
             if (currentStatus === 'CANCELLED' && newStatus !== 'CANCELLED') {
                 alert('Cannot change status of cancelled order!');
+                selectElement.value = currentStatus;
+                return;
+            }
+            
+            if (currentStatus === 'CONFIRMED_BY_CUSTOMER' && newStatus !== 'CONFIRMED_BY_CUSTOMER') {
+                alert('Cannot change status of order confirmed by customer!');
                 selectElement.value = currentStatus;
                 return;
             }

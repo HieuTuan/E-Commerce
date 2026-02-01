@@ -111,6 +111,18 @@
             <artifactId>commons-codec</artifactId>
         </dependency>
 
+        <!-- QR Code Generation -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+
         <!-- Jakarta APIs -->
         <dependency>
             <groupId>jakarta.annotation</groupId>
@@ -149,6 +161,13 @@
             <artifactId>jqwik</artifactId>
             <version>1.8.2</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Cloudinary for cloud storage -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.33.0</version>
         </dependency>
     </dependencies>
 

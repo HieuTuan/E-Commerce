@@ -24,7 +24,6 @@ public class OrderTimelineService {
     private final OrderTimelineRepository orderTimelineRepository;
     private final OrderRepository orderRepository;
     private final AuditLogService auditLogService;
-    private final DeliveryIssueReportService deliveryIssueReportService;
 
     /**
      * Create a new timeline entry for an order
@@ -226,19 +225,9 @@ public class OrderTimelineService {
         if (!order.getUser().getEmail().equals(customerEmail)) {
             throw new IllegalStateException("Customer not authorized to reject this order");
         }
-
-        // Parse reason to extract issue type and description
-        String issueType = reason;
-        String description = "";
         
-        if (reason.contains(" - ")) {
-            String[] parts = reason.split(" - ", 2);
-            issueType = parts[0];
-            description = parts[1];
-        }
-        
-        // Create delivery issue report
-        deliveryIssueReportService.createReport(orderId, customerEmail, issueType, description);
+        // Mark order as having delivery issue
+        order.setHasDeliveryIssue(true);
         
         // Update to CANCELLED status
         order.updateCurrentStatus(OrderStatus.CANCELLED);

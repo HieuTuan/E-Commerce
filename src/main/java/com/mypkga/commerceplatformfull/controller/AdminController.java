@@ -23,7 +23,6 @@ public class AdminController {
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
     private final OrderService orderService;
-    private final OrderTimelineService orderTimelineService;
     private final UserService userService;
     private final FileUploadService fileUploadService;
     private final ProductImageRepository productImageRepository;

@@ -122,7 +122,7 @@
                                             </td>
                                             <td class="rejection-reason">
                                                 <div class="rejection-preview" th:id="'reason-' + ${confirmation.id}">
-                                                    <span th:text="${confirmation.rejectionReason}"></span>
+                                                    <span th:text="${confirmation.decodedRejectionReason}"></span>
                                                 </div>
                                                 <div th:if="${#strings.length(confirmation.rejectionReason) > 100}">
                                                     <span class="expand-btn" 

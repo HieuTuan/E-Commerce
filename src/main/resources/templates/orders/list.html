@@ -7,6 +7,8 @@
     <title>My Orders - E-Commerce</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/customer.css}">
 </head>
 
 <body>
@@ -38,14 +40,24 @@
                                     <strong>Order #<span th:text="${order.orderNumber}">ORD-001</span></strong>
                                 </div>
                                 <div class="col-md-3">
-                                    <span class="badge"
-                                        th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
-                                                           order.status.name() == 'CONFIRMED' ? 'bg-info' :
-                                                           order.status.name() == 'SHIPPING' ? 'bg-primary' :
-                                                           order.status.name() == 'DELIVERED' ? 'bg-success' : 
-                                                           order.status.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
-                                                           order.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
-                                        th:text="${order.status}">Status</span>
+                                    <!-- Show red status with "Khách hàng report" when has delivery issue -->
+                                    <div th:if="${order.hasDeliveryIssue()}">
+                                        <span class="badge bg-danger">DELIVERED</span>
+                                        <small class="text-danger d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Khách hàng report
+                                        </small>
+                                    </div>
+                                    <!-- Normal status display -->
+                                    <div th:unless="${order.hasDeliveryIssue()}">
+                                        <span class="badge"
+                                            th:classappend="${order.status.name() == 'PENDING' ? 'bg-warning' : 
+                                                               order.status.name() == 'CONFIRMED' ? 'bg-info' :
+                                                               order.status.name() == 'SHIPPING' ? 'bg-primary' :
+                                                               order.status.name() == 'DELIVERED' ? 'bg-success' : 
+                                                               order.status.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
+                                                               order.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
+                                            th:text="${order.status}">Status</span>
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
                                     <span class="badge"
@@ -64,7 +76,7 @@
                                 <div class="col-md-8">
                                     <h6>Shipping Address:</h6>
                                     <p class="mb-1"><strong th:text="${order.customerName}">Customer Name</strong></p>
-                                    <p class="mb-1 text-muted" th:text="${order.shippingAddress}">Address</p>
+                                    <p class="mb-1 text-muted" th:text="${order.decodedShippingAddress}">Address</p>
                                     <p class="mb-1 text-muted">
                                         <i class="fas fa-phone"></i> <span th:text="${order.customerPhone}">Phone</span>
                                     </p>
