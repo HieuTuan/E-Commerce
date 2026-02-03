@@ -27,42 +27,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                .requestMatchers("/", "/home", "/products/**", "/register", "/login").permitAll()
-                .requestMatchers("/staff/**").hasAnyRole("STAFF", "MODERATOR", "ADMIN")
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN")
-                .requestMatchers("/api/ghn/webhook/**").permitAll() // Allow GHN webhooks
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .successHandler((request, response, authentication) -> {
-                    // Lấy tất cả authorities và tìm role
-                    String redirectUrl = "/";
-                    
-                    for (var authority : authentication.getAuthorities()) {
-                        String auth = authority.getAuthority();
-                        if (auth.equals("ROLE_STAFF")) {
-                            redirectUrl = "/staff/returns";
-                            break;
-                        } else if (auth.equals("ROLE_ADMIN")) {
-                            redirectUrl = "/admin";
-                            break;
-                        }
-                    }
-                    
-                    System.out.println("User authorities: " + authentication.getAuthorities());
-                    System.out.println("Redirecting to: " + redirectUrl);
-                    response.sendRedirect(redirectUrl);
-                })
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/")
-                .permitAll()
-            )
-            .csrf(csrf -> csrf.disable()); // Tạm thời disable CSRF cho test
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/", "/home", "/products/**", "/register", "/login").permitAll()
+                        .requestMatchers("/checkout/**", "/cart/**").permitAll() // Allow cart and checkout access
+                        .requestMatchers("/staff/**").hasAnyRole("STAFF", "MODERATOR", "ADMIN")
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/api/ghn/**").permitAll() // Allow GHN webhooks and master data APIs
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .successHandler((request, response, authentication) -> {
+                            // Lấy tất cả authorities và tìm role
+                            String redirectUrl = "/";
+
+                            for (var authority : authentication.getAuthorities()) {
+                                String auth = authority.getAuthority();
+                                if (auth.equals("ROLE_STAFF")) {
+                                    redirectUrl = "/staff/returns";
+                                    break;
+                                } else if (auth.equals("ROLE_ADMIN")) {
+                                    redirectUrl = "/admin";
+                                    break;
+                                }
+                            }
+
+                            System.out.println("User authorities: " + authentication.getAuthorities());
+                            System.out.println("Redirecting to: " + redirectUrl);
+                            response.sendRedirect(redirectUrl);
+                        })
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .permitAll())
+                .csrf(csrf -> csrf.disable()); // Tạm thời disable CSRF cho test
 
         return http.build();
     }

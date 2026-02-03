@@ -155,6 +155,66 @@
                 height: 60px;
             }
         }
+
+        /* Add to Cart Animation Styles */
+        .cart-animation {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .cart-animation img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .success-message.show {
+            transform: translateX(0);
+        }
     </style>
 </head>
 
@@ -191,7 +251,8 @@
                     <div class="main-image-container">
                         <img id="mainImage"
                             th:src="${!product.sortedImages.empty ? product.sortedImages[0].largeUrl : '/images/no-image.svg'}"
-                            alt="Product Image">
+                            alt="Product Image"
+                            onerror="this.src='/images/no-image.svg'">
                     </div>
 
                     <!-- Thumbnail Navigation -->
@@ -268,7 +329,7 @@
                 </div>
 
                 <!-- Add to Cart Form -->
-                <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()"
+                <form id="addToCartForm" th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()"
                     th:if="${product.stockQuantity > 0}">
                     <input type="hidden" name="productId" th:value="${product.id}">
                     <div class="row g-3 mb-3">
@@ -281,7 +342,7 @@
                             <small class="text-muted">Tối đa: <span th:text="${product.stockQuantity}">0</span></small>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-primary btn-lg" id="addToCartBtn">
                         <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ Hàng
                     </button>
                 </form>
@@ -361,17 +422,16 @@
         // Product Image Gallery JavaScript
         /*<![CDATA[*/
         const productImages = [];
-        const productVideos = [];
         
         /*[# th:each="image : ${product.sortedImages}"]*/
-        /*[# th:if="${image.imageOriginal != null}"]*/
+        /*[# th:if="${!image.isVideo}"]*/
         productImages.push({
             type: 'image',
             largeUrl: /*[[${image.largeUrl}]]*/,
             thumbnailUrl: /*[[${image.thumbnailUrl}]]*/
         });
         /*[/]*/
-        /*[# th:if="${image.videoFilename != null}"]*/
+        /*[# th:if="${image.isVideo}"]*/
         productImages.push({
             type: 'video',
             videoUrl: /*[[${image.videoUrl}]]*/,
@@ -422,6 +482,9 @@
                     const img = document.createElement('img');
                     img.src = item.thumbnailUrl;
                     img.alt = 'Product thumbnail ' + (index + 1);
+                    img.onerror = function() {
+                        this.src = '/images/no-image.svg';
+                    };
                     thumbnailItem.appendChild(img);
                 }
 
@@ -463,6 +526,9 @@
                 img.src = item.largeUrl;
                 img.alt = 'Product Image';
                 img.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain; transition: opacity 0.3s ease;';
+                img.onerror = function() {
+                    this.src = '/images/no-image.svg';
+                };
                 mainContainer.appendChild(img);
             }
 
@@ -523,6 +589,164 @@
             }
         }
         /*]]>*/
+
+        // Add to Cart Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const addToCartForm = document.getElementById('addToCartForm');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+
+            if (addToCartForm && addToCartBtn) {
+                addToCartForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Show loading state
+                    addToCartBtn.classList.add('btn-loading');
+                    addToCartBtn.innerHTML = '<span style="opacity: 0;">Đang thêm...</span>';
+                    
+                    // Get current main image
+                    const mainImage = document.querySelector('.main-image-container img');
+                    if (mainImage) {
+                        animateAddToCart(mainImage);
+                    }
+                    
+                    // Submit form via AJAX
+                    const formData = new FormData(addToCartForm);
+                    
+                    fetch(addToCartForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            showSuccessMessage();
+                            updateCartCount();
+                        } else {
+                            throw new Error('Network response was not ok');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showErrorMessage('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        setTimeout(() => {
+                            addToCartBtn.classList.remove('btn-loading');
+                            addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm Vào Giỏ Hàng';
+                        }, 1000);
+                    });
+                });
+            }
+        });
+
+        function animateAddToCart(sourceImage) {
+            // Create animated element
+            const animatedImg = document.createElement('div');
+            animatedImg.className = 'cart-animation';
+            
+            const img = document.createElement('img');
+            img.src = sourceImage.src;
+            img.alt = 'Product';
+            animatedImg.appendChild(img);
+            
+            // Get source position
+            const sourceRect = sourceImage.getBoundingClientRect();
+            
+            // Set initial position
+            animatedImg.style.left = sourceRect.left + 'px';
+            animatedImg.style.top = sourceRect.top + 'px';
+            
+            document.body.appendChild(animatedImg);
+            
+            // Find cart icon (try multiple selectors)
+            let cartIcon = document.querySelector('.fa-shopping-cart');
+            if (!cartIcon) {
+                cartIcon = document.querySelector('[href="/cart"]');
+            }
+            if (!cartIcon) {
+                cartIcon = document.querySelector('.navbar-nav .nav-link');
+            }
+            
+            // Animate to cart
+            setTimeout(() => {
+                if (cartIcon) {
+                    const cartRect = cartIcon.getBoundingClientRect();
+                    animatedImg.style.left = cartRect.left + 'px';
+                    animatedImg.style.top = cartRect.top + 'px';
+                    animatedImg.style.transform = 'scale(0.3)';
+                    animatedImg.style.opacity = '0';
+                } else {
+                    // Fallback: animate to top right
+                    animatedImg.style.left = window.innerWidth - 100 + 'px';
+                    animatedImg.style.top = '20px';
+                    animatedImg.style.transform = 'scale(0.3)';
+                    animatedImg.style.opacity = '0';
+                }
+            }, 100);
+            
+            // Remove element after animation
+            setTimeout(() => {
+                if (animatedImg.parentNode) {
+                    animatedImg.parentNode.removeChild(animatedImg);
+                }
+            }, 1000);
+        }
+
+        function showSuccessMessage() {
+            const message = document.createElement('div');
+            message.className = 'success-message';
+            message.innerHTML = '<i class="fas fa-check-circle"></i> Đã thêm sản phẩm vào giỏ hàng!';
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => message.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                message.classList.remove('show');
+                setTimeout(() => {
+                    if (message.parentNode) {
+                        message.parentNode.removeChild(message);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function showErrorMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'success-message';
+            message.style.background = '#dc3545';
+            message.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + text;
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => message.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                message.classList.remove('show');
+                setTimeout(() => {
+                    if (message.parentNode) {
+                        message.parentNode.removeChild(message);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function updateCartCount() {
+            // Try to update cart count in navigation
+            const cartLinks = document.querySelectorAll('[href="/cart"]');
+            cartLinks.forEach(link => {
+                // Add a simple indicator that cart has items
+                if (!link.querySelector('.badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-danger ms-1';
+                    badge.textContent = '•';
+                    link.appendChild(badge);
+                }
+            });
+        }
     </script>
 </body>
 

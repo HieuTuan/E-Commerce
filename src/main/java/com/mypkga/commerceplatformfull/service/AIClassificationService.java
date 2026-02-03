@@ -50,6 +50,11 @@ public class AIClassificationService {
     };
 
     public String classifyProduct(String productName, String description) {
+        // Skip AI classification for better performance - use keyword-based only
+        log.debug("Using keyword-based classification for product: {}", productName);
+        return classifyByKeywords(productName, description);
+        
+        /* AI Classification disabled for performance
         // Try keyword-based classification first (fallback if API fails)
         String keywordCategory = classifyByKeywords(productName, description);
 
@@ -65,6 +70,7 @@ public class AIClassificationService {
             log.error("AI classification failed, falling back to keyword classification", e);
             return keywordCategory;
         }
+        */
     }
 
     private String classifyByKeywords(String productName, String description) {
@@ -128,11 +134,26 @@ public class AIClassificationService {
                     result.append(line);
                 }
 
+                log.debug("OpenAI API response: {}", result.toString());
+
                 Gson gson = new Gson();
                 JsonObject responseJson = gson.fromJson(result.toString(), JsonObject.class);
 
-                String category = responseJson
-                        .getAsJsonArray("choices")
+                // Check if response has error
+                if (responseJson.has("error")) {
+                    JsonObject error = responseJson.getAsJsonObject("error");
+                    log.error("OpenAI API error: {}", error.get("message").getAsString());
+                    throw new RuntimeException("OpenAI API error: " + error.get("message").getAsString());
+                }
+
+                // Check if choices array exists and is not empty
+                JsonArray choices = responseJson.getAsJsonArray("choices");
+                if (choices == null || choices.size() == 0) {
+                    log.error("OpenAI API returned no choices. Response: {}", result.toString());
+                    throw new RuntimeException("OpenAI API returned no choices");
+                }
+
+                String category = choices
                         .get(0).getAsJsonObject()
                         .getAsJsonObject("message")
                         .get("content").getAsString().trim();

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,77 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <style>
+        /* Timeline styles */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -22px;
+            top: 5px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .timeline-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 3px solid #007bff;
+        }
+
+        .timeline-item:last-child .timeline-marker::after {
+            display: none;
+        }
+
+        /* GHN Fee calculation styles */
+        .ghn-fee-loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -47,32 +118,43 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>ID Yêu cầu:</strong> <span th:text="'#' + ${returnRequest.id}">#001</span></p>
-                                <p><strong>Mã trả hàng:</strong> 
+                                <p><strong>ID Yêu cầu:</strong> <span th:text="'#' + ${returnRequest.id}">#001</span>
+                                </p>
+                                <p><strong>Mã trả hàng:</strong>
                                     <code th:text="${returnRequest.returnCode ?: 'Chưa có'}">RET12345678</code>
                                 </p>
-                                <p><strong>Trạng thái:</strong> 
-                                    <span th:class="${'badge ' + 
-                                        (returnRequest.status.name() == 'REFUND_REQUESTED' ? 'bg-warning' :
-                                         returnRequest.status.name() == 'RETURN_APPROVED' ? 'bg-success' :
-                                         returnRequest.status.name() == 'REFUND_REJECTED' ? 'bg-danger' :
-                                         returnRequest.status.name() == 'RETURNING' ? 'bg-info' :
-                                         returnRequest.status.name() == 'RETURN_RECEIVED' ? 'bg-primary' :
-                                         returnRequest.status.name() == 'REFUNDED' ? 'bg-success' : 'bg-secondary')}"
-                                          th:text="${returnRequest.status?.displayName ?: 'Không xác định'}">>
+                                <p><strong>Trạng thái:</strong>
+
+                                    <span th:class="${'badge ' +
+    (returnRequest.status != null ? (returnRequest.status.name() == 'REFUND_REQUESTED' ? 'bg-warning' :
+         returnRequest.status.name() == 'RETURN_APPROVED' ? 'bg-success' :
+         returnRequest.status.name() == 'REFUND_REJECTED' ? 'bg-danger' :
+         returnRequest.status.name() == 'RETURNING' ? 'bg-info' :
+         returnRequest.status.name() == 'RETURN_RECEIVED' ? 'bg-primary' :
+         returnRequest.status.name() == 'REFUNDED' ? 'bg-success' :
+         'bg-secondary')
+        : 'bg-secondary')
+}" th:text="${returnRequest.status != null ? returnRequest.status.displayName : 'Không xác định'}">
                                         Chờ duyệt
                                     </span>
+
                                 </p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Ngày tạo:</strong> <span th:text="${#temporals.format(returnRequest.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
-                                <p><strong>Ngày cập nhật:</strong> <span th:text="${#temporals.format(returnRequest.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
-                                <p><strong>Lý do:</strong> 
-                                    <span class="badge bg-secondary" th:text="${returnRequest.reason?.displayName ?: 'Không xác định'}">Sản phẩm bị lỗi</span>
+                                <p><strong>Ngày tạo:</strong> <span
+                                        th:text="${#temporals.format(returnRequest.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        10:00</span></p>
+                                <p><strong>Ngày cập nhật:</strong> <span
+                                        th:text="${#temporals.format(returnRequest.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        10:00</span></p>
+                                <p><strong>Lý do:</strong>
+                                    <span class="badge bg-secondary"
+                                        th:text="${returnRequest.reason?.displayName ?: 'Không xác định'}">Sản phẩm bị
+                                        lỗi</span>
                                 </p>
                             </div>
                         </div>
-                        
+
                         <!-- Detailed Description -->
                         <div class="mt-3">
                             <strong>Mô tả chi tiết:</strong>
@@ -82,7 +164,8 @@
                         </div>
 
                         <!-- Rejection Reason (if rejected) -->
-                        <div th:if="${returnRequest.status.name() == 'REFUND_REJECTED' and returnRequest.rejectionReason}" class="mt-3">
+                        <div th:if="${returnRequest.status.name() == 'REFUND_REJECTED' and returnRequest.rejectionReason}"
+                            class="mt-3">
                             <strong>Lý do từ chối:</strong>
                             <div class="alert alert-danger mt-2" th:text="${returnRequest.rejectionReason}">
                                 Sản phẩm không đủ điều kiện hoàn trả
@@ -99,17 +182,23 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Mã đơn hàng:</strong> <span th:text="${returnRequest.order.orderNumber}">ORD001</span></p>
-                                <p><strong>Tổng tiền:</strong> <span th:text="${#numbers.formatCurrency(returnRequest.order.totalAmount)}">500,000 VND</span></p>
+                                <p><strong>Mã đơn hàng:</strong> <span
+                                        th:text="${returnRequest.order.orderNumber}">ORD001</span></p>
+                                <p><strong>Tổng tiền:</strong> <span
+                                        th:text="${#numbers.formatCurrency(returnRequest.order.totalAmount)}">500,000
+                                        VND</span></p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Ngày đặt:</strong> <span th:text="${#temporals.format(returnRequest.order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
-                                <p><strong>Trạng thái đơn hàng:</strong> 
+                                <p><strong>Ngày đặt:</strong> <span
+                                        th:text="${#temporals.format(returnRequest.order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        10:00</span></p>
+                                <p><strong>Trạng thái đơn hàng:</strong>
                                     <span class="badge bg-info" th:text="${returnRequest.order.status}">DELIVERED</span>
                                 </p>
                             </div>
                         </div>
-                        <a th:href="@{/staff/orders/{id}(id=${returnRequest.order.id})}" class="btn btn-outline-primary btn-sm">
+                        <a th:href="@{/staff/orders/{id}(id=${returnRequest.order.id})}"
+                            class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-eye me-2"></i>Xem chi tiết đơn hàng
                         </a>
                     </div>
@@ -123,12 +212,17 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Tên:</strong> <span th:text="${returnRequest.order.user.fullName}">Nguyễn Văn A</span></p>
-                                <p><strong>Email:</strong> <span th:text="${returnRequest.order.user.email}">customer@example.com</span></p>
+                                <p><strong>Tên:</strong> <span th:text="${returnRequest.order.user.fullName}">Nguyễn Văn
+                                        A</span></p>
+                                <p><strong>Email:</strong> <span
+                                        th:text="${returnRequest.order.user.email}">customer@example.com</span></p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Số điện thoại:</strong> <span th:text="${returnRequest.order.user.phone ?: 'Chưa có'}">0123456789</span></p>
-                                <p><strong>Địa chỉ:</strong> <span th:text="${returnRequest.order.decodedShippingAddress}">123 Main St, District 1</span></p>
+                                <p><strong>Số điện thoại:</strong> <span
+                                        th:text="${returnRequest.order.user.phone ?: 'Chưa có'}">0123456789</span></p>
+                                <p><strong>Địa chỉ:</strong> <span
+                                        th:text="${returnRequest.order.decodedShippingAddress}">123 Main St, District
+                                        1</span></p>
                             </div>
                         </div>
                     </div>
@@ -144,28 +238,28 @@
                     <div class="card-body">
                         <!-- Pending Status Actions -->
                         <div th:if="${returnRequest.status.name() == 'REFUND_REQUESTED'}">
-                            <button type="button" class="btn btn-success w-100 mb-2" 
-                                    th:onclick="'approveRequest(' + ${returnRequest.id} + ')'">
+                            <button type="button" class="btn btn-success w-100 mb-2"
+                                th:onclick="'approveRequest(' + ${returnRequest.id} + ')'">
                                 <i class="fas fa-check me-2"></i>Duyệt Yêu Cầu
                             </button>
-                            <button type="button" class="btn btn-danger w-100 mb-2" 
-                                    th:onclick="'showRejectModal(' + ${returnRequest.id} + ')'">
+                            <button type="button" class="btn btn-danger w-100 mb-2"
+                                th:onclick="'showRejectModal(' + ${returnRequest.id} + ')'">
                                 <i class="fas fa-times me-2"></i>Từ Chối
                             </button>
                         </div>
 
                         <!-- Returning Status Actions -->
                         <div th:if="${returnRequest.status.name() == 'RETURNING'}">
-                            <button type="button" class="btn btn-primary w-100 mb-2" 
-                                    th:onclick="'confirmReceipt(' + ${returnRequest.id} + ')'">
+                            <button type="button" class="btn btn-primary w-100 mb-2"
+                                th:onclick="'confirmReceipt(' + ${returnRequest.id} + ')'">
                                 <i class="fas fa-box me-2"></i>Xác Nhận Nhận Hàng
                             </button>
                         </div>
 
                         <!-- Received Status Actions -->
                         <div th:if="${returnRequest.status.name() == 'RETURN_RECEIVED'}">
-                            <button type="button" class="btn btn-success w-100 mb-2" 
-                                    th:onclick="'completeRefund(' + ${returnRequest.id} + ')'">
+                            <button type="button" class="btn btn-success w-100 mb-2"
+                                th:onclick="'completeRefund(' + ${returnRequest.id} + ')'">
                                 <i class="fas fa-money-bill-wave me-2"></i>Hoàn Tiền
                             </button>
                         </div>
@@ -194,11 +288,51 @@
                         <h5 class="mb-0"><i class="fas fa-university me-2"></i>Thông Tin Ngân Hàng</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>Ngân hàng:</strong> <span th:text="${returnRequest.bankInfo.bankName}">Vietcombank</span></p>
-                        <p><strong>Số tài khoản:</strong> <code th:text="${returnRequest.bankInfo.accountNumber}">1234567890</code></p>
-                        <p><strong>Chủ tài khoản:</strong> <span th:text="${returnRequest.bankInfo.accountHolderName}">NGUYEN VAN A</span></p>
+                        <p><strong>Ngân hàng:</strong> <span
+                                th:text="${returnRequest.bankInfo.bankName}">Vietcombank</span></p>
+                        <p><strong>Số tài khoản:</strong> <code
+                                th:text="${returnRequest.bankInfo.accountNumber}">1234567890</code></p>
+                        <p><strong>Chủ tài khoản:</strong> <span
+                                th:text="${returnRequest.bankInfo.accountHolderName}">NGUYEN VAN A</span></p>
                     </div>
                 </div>
+
+                <!-- GHN Shipping Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Thông Tin Vận Chuyển GHN</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${returnRequest.ghnOrderCode}">
+                            <p><strong>Mã đơn GHN:</strong> <code
+                                    th:text="${returnRequest.ghnOrderCode}">GHN123456</code></p>
+                            <p><strong>Mã tracking:</strong> <code
+                                    th:text="${returnRequest.ghnTrackingNumber ?: 'Chưa có'}">TRK123456</code></p>
+                            <p><strong>Phí vận chuyển:</strong>
+                                <span th:if="${returnRequest.ghnFee}"
+                                    th:text="${#numbers.formatCurrency(returnRequest.ghnFee)}"
+                                    class="badge bg-info">25,000 VND</span>
+                                <span th:unless="${returnRequest.ghnFee}" class="text-muted">Chưa tính</span>
+                            </p>
+                        </div>
+                        <div th:unless="${returnRequest.ghnOrderCode}">
+                            <div th:if="${ghnFee != null && ghnFee.code == 200}">
+                                <div class="alert alert-warning">
+                                    <strong>Phí vận chuyển dự kiến:</strong>
+                                    <span th:text="${#numbers.formatCurrency(ghnFee.data.total)}">25,000 VND</span>
+                                    <br><small>Phí này sẽ được áp dụng khi tạo đơn vận chuyển</small>
+                                </div>
+                            </div>
+                            <div th:unless="${ghnFee}">
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="calculateGHNFee()">
+                                    <i class="fas fa-calculator me-2"></i>Tính Phí Vận Chuyển
+                                </button>
+                                <div id="ghn-fee-result" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
 
                 <!-- GHN Shipping Information -->
                 <div th:if="${returnRequest.ghnOrderCode}" class="card mb-4">
@@ -206,27 +340,36 @@
                         <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Thông Tin Vận Chuyển GHN</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>Mã vận đơn:</strong> <span th:text="${returnRequest.ghnOrderCode}">GHN123456</span></p>
+                        <p><strong>Mã vận đơn:</strong> <span th:text="${returnRequest.ghnOrderCode}">GHN123456</span>
+                        </p>
                         <p th:if="${returnRequest.ghnTrackingNumber}">
-                            <strong>Mã theo dõi:</strong> <span th:text="${returnRequest.ghnTrackingNumber}">TRK123456</span>
+                            <strong>Mã theo dõi:</strong> <span
+                                th:text="${returnRequest.ghnTrackingNumber}">TRK123456</span>
                         </p>
                         <p th:if="${returnRequest.ghnStatus}">
-                            <strong>Trạng thái GHN:</strong> <span th:text="${returnRequest.ghnStatus}">Đang vận chuyển</span>
+                            <strong>Trạng thái GHN:</strong> <span th:text="${returnRequest.ghnStatus}">Đang vận
+                                chuyển</span>
                         </p>
                         <p th:if="${returnRequest.ghnFee}">
-                            <strong>Phí vận chuyển:</strong> <span th:text="${#numbers.formatInteger(returnRequest.ghnFee, 0, 'COMMA')} + ' VND'">30,000 VND</span>
+                            <strong>Phí vận chuyển:</strong> <span
+                                th:text="${#numbers.formatInteger(returnRequest.ghnFee, 0, 'COMMA')} + ' VND'">30,000
+                                VND</span>
                         </p>
                         <p th:if="${returnRequest.pickupTime}">
-                            <strong>Thời gian lấy hàng:</strong> 
-                            <span th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                            <strong>Thời gian lấy hàng:</strong>
+                            <span
+                                th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                10:00</span>
                         </p>
                         <p th:if="${returnRequest.deliveryTime}">
-                            <strong>Thời gian giao hàng:</strong> 
-                            <span th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">01/01/2024 15:00</span>
+                            <strong>Thời gian giao hàng:</strong>
+                            <span
+                                th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                15:00</span>
                         </p>
                         <div class="mt-3">
-                            <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}" 
-                               target="_blank" class="btn btn-primary btn-sm">
+                            <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}"
+                                target="_blank" class="btn btn-primary btn-sm">
                                 <i class="fas fa-external-link-alt me-2"></i>Theo dõi trên GHN
                             </a>
                         </div>
@@ -240,24 +383,22 @@
                     </div>
                     <div class="card-body">
                         <!-- Enhanced video with multiple format support -->
-                        <video id="evidence-video" controls class="w-100" 
-                               style="max-height: 300px; max-width: 100%;" 
-                               preload="metadata" 
-                               onloadstart="handleVideoLoadStart(this)"
-                               onerror="handleVideoError(this)"
-                               oncanplay="handleVideoCanPlay(this)">
-                            
+                        <video id="evidence-video" controls class="w-100" style="max-height: 300px; max-width: 100%;"
+                            preload="metadata" onloadstart="handleVideoLoadStart(this)" onerror="handleVideoError(this)"
+                            oncanplay="handleVideoCanPlay(this)">
+
                             <!-- Multiple source formats for better compatibility -->
                             <source th:src="${returnRequest.evidenceVideoUrl}" type="video/mp4">
                             <source th:src="${returnRequest.evidenceVideoUrl}" type="video/webm">
                             <source th:src="${returnRequest.evidenceVideoUrl}" type="video/ogg">
-                            
+
                             <!-- Fallback content for unsupported browsers -->
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 Trình duyệt của bạn không hỗ trợ phát video HTML5.
                                 <br>
-                                <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
+                                    class="btn btn-sm btn-outline-primary mt-2">
                                     <i class="fas fa-download me-2"></i>Tải video về để xem
                                 </a>
                             </div>
@@ -278,7 +419,8 @@
                                 <button onclick="retryVideo()" class="btn btn-sm btn-outline-light me-2">
                                     <i class="fas fa-redo me-2"></i>Thử lại
                                 </button>
-                                <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank" class="btn btn-sm btn-outline-light">
+                                <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
+                                    class="btn btn-sm btn-outline-light">
                                     <i class="fas fa-external-link-alt me-2"></i>Mở video trong tab mới
                                 </a>
                             </div>
@@ -293,7 +435,8 @@
                             </small>
                         </div>
 
-                        <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+                        <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
+                            class="btn btn-outline-primary btn-sm mt-2">
                             <i class="fas fa-external-link-alt me-2"></i>Mở trong tab mới
                         </a>
                     </div>
@@ -307,9 +450,11 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Mã vận đơn:</strong> <span th:text="${returnRequest.ghnOrderCode}">-</span></p>
+                                <p><strong>Mã vận đơn:</strong> <span th:text="${returnRequest.ghnOrderCode}">-</span>
+                                </p>
                                 <p th:if="${returnRequest.ghnTrackingNumber}">
-                                    <strong>Mã theo dõi:</strong> <span th:text="${returnRequest.ghnTrackingNumber}">-</span>
+                                    <strong>Mã theo dõi:</strong> <span
+                                        th:text="${returnRequest.ghnTrackingNumber}">-</span>
                                 </p>
                                 <p th:if="${returnRequest.ghnStatus}">
                                     <strong>Trạng thái:</strong> <span th:text="${returnRequest.ghnStatus}">-</span>
@@ -317,22 +462,25 @@
                             </div>
                             <div class="col-md-6">
                                 <p th:if="${returnRequest.pickupTime}">
-                                    <strong>Thời gian lấy hàng:</strong> 
-                                    <span th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">-</span>
+                                    <strong>Thời gian lấy hàng:</strong>
+                                    <span
+                                        th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">-</span>
                                 </p>
                                 <p th:if="${returnRequest.deliveryTime}">
-                                    <strong>Thời gian giao hàng:</strong> 
-                                    <span th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">-</span>
+                                    <strong>Thời gian giao hàng:</strong>
+                                    <span
+                                        th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">-</span>
                                 </p>
                                 <p th:if="${returnRequest.ghnFee}">
-                                    <strong>Phí vận chuyển:</strong> 
-                                    <span th:text="${#numbers.formatDecimal(returnRequest.ghnFee, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">-</span>
+                                    <strong>Phí vận chuyển:</strong>
+                                    <span
+                                        th:text="${#numbers.formatDecimal(returnRequest.ghnFee, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">-</span>
                                 </p>
                             </div>
                         </div>
                         <div class="mt-3">
-                            <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}" 
-                               target="_blank" class="btn btn-primary btn-sm">
+                            <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}"
+                                target="_blank" class="btn btn-primary btn-sm">
                                 <i class="fas fa-external-link-alt me-2"></i>Theo dõi trên GHN
                             </a>
                         </div>
@@ -355,7 +503,7 @@
                         <div class="mb-3">
                             <label for="rejectReason" class="form-label">Lý do từ chối:</label>
                             <textarea class="form-control" id="rejectReason" name="reason" rows="3" required
-                                      placeholder="Nhập lý do từ chối yêu cầu hoàn tiền..."></textarea>
+                                placeholder="Nhập lý do từ chối yêu cầu hoàn tiền..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -405,13 +553,59 @@
             }
         }
 
+        // GHN Fee calculation function
+        function calculateGHNFee() {
+            const requestId = /*[[${returnRequest.id}]]*/ 1;
+            const button = event.target;
+            const resultDiv = document.getElementById('ghn-fee-result');
+
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<span class="ghn-fee-loading me-2"></span>Đang tính...';
+
+            // Make AJAX request
+            fetch(`/staff/returns/${requestId}/ghn-fee`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Display result
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>Phí vận chuyển GHN:</strong> ${new Intl.NumberFormat('vi-VN').format(data.total)} VND
+                            <br><small>Bao gồm: Phí dịch vụ ${new Intl.NumberFormat('vi-VN').format(data.serviceFee)} VND, 
+                            Phí bảo hiểm ${new Intl.NumberFormat('vi-VN').format(data.insuranceFee)} VND</small>
+                        </div>
+                    `;
+
+                    // Hide button after successful calculation
+                    button.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error calculating GHN fee:', error);
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>Lỗi:</strong> Không thể tính phí vận chuyển. Vui lòng thử lại sau.
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Reset button state
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-calculator me-2"></i>Tính Phí Vận Chuyển';
+                });
+        }
+
         // Video handling functions
         function handleVideoLoadStart(video) {
             console.log('Video loading started');
             const loadingDiv = document.getElementById('video-loading');
             const errorDiv = document.getElementById('video-error');
             const metadataDiv = document.getElementById('video-metadata');
-            
+
             if (loadingDiv) {
                 loadingDiv.style.display = 'block';
             }
@@ -428,14 +622,14 @@
             const loadingDiv = document.getElementById('video-loading');
             const errorDiv = document.getElementById('video-error');
             const errorMessage = document.getElementById('video-error-message');
-            
+
             if (loadingDiv) {
                 loadingDiv.style.display = 'none';
             }
-            
+
             if (errorDiv && errorMessage) {
                 let message = 'Không thể tải video';
-                
+
                 if (video.error) {
                     switch (video.error.code) {
                         case video.error.MEDIA_ERR_ABORTED:
@@ -454,7 +648,7 @@
                             message = 'Lỗi không xác định khi tải video';
                     }
                 }
-                
+
                 errorMessage.textContent = message;
                 errorDiv.style.display = 'block';
             }
@@ -464,7 +658,7 @@
             console.log('Video can play');
             const loadingDiv = document.getElementById('video-loading');
             const errorDiv = document.getElementById('video-error');
-            
+
             if (loadingDiv) {
                 loadingDiv.style.display = 'none';
             }
@@ -477,12 +671,12 @@
             const metadataDiv = document.getElementById('video-metadata');
             const durationSpan = document.getElementById('video-duration');
             const dimensionsSpan = document.getElementById('video-dimensions');
-            
+
             if (metadataDiv && durationSpan && dimensionsSpan) {
                 const duration = Math.round(video.duration);
                 const minutes = Math.floor(duration / 60);
                 const seconds = duration % 60;
-                
+
                 durationSpan.textContent = `Thời lượng: ${minutes}:${seconds.toString().padStart(2, '0')} | `;
                 dimensionsSpan.textContent = `Kích thước: ${video.videoWidth}x${video.videoHeight}px`;
                 metadataDiv.style.display = 'block';
@@ -493,57 +687,57 @@
             const video = document.getElementById('evidence-video');
             const errorDiv = document.getElementById('video-error');
             const loadingDiv = document.getElementById('video-loading');
-            
+
             if (video) {
                 console.log('Retrying video load');
-                
+
                 if (errorDiv) {
                     errorDiv.style.display = 'none';
                 }
                 if (loadingDiv) {
                     loadingDiv.style.display = 'block';
                 }
-                
+
                 // Force reload the video
                 video.load();
             }
         }
 
         // Initialize video error handling when page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const video = document.getElementById('evidence-video');
             if (video) {
                 // Add additional event listeners
-                video.addEventListener('loadstart', function() {
+                video.addEventListener('loadstart', function () {
                     handleVideoLoadStart(this);
                 });
-                
-                video.addEventListener('error', function() {
+
+                video.addEventListener('error', function () {
                     handleVideoError(this);
                 });
-                
-                video.addEventListener('canplay', function() {
+
+                video.addEventListener('canplay', function () {
                     handleVideoCanPlay(this);
                 });
-                
-                video.addEventListener('loadedmetadata', function() {
+
+                video.addEventListener('loadedmetadata', function () {
                     console.log('Video metadata loaded - Duration:', this.duration, 'seconds');
                     displayVideoMetadata(this);
                 });
-                
+
                 // Handle network errors
-                video.addEventListener('stalled', function() {
+                video.addEventListener('stalled', function () {
                     console.warn('Video loading stalled');
                 });
-                
-                video.addEventListener('waiting', function() {
+
+                video.addEventListener('waiting', function () {
                     const loadingDiv = document.getElementById('video-loading');
                     if (loadingDiv) {
                         loadingDiv.style.display = 'block';
                     }
                 });
-                
-                video.addEventListener('playing', function() {
+
+                video.addEventListener('playing', function () {
                     const loadingDiv = document.getElementById('video-loading');
                     if (loadingDiv) {
                         loadingDiv.style.display = 'none';
@@ -553,4 +747,5 @@
         });
     </script>
 </body>
+
 </html>

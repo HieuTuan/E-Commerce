@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -43,10 +44,14 @@ public class User {
 
     @Column(columnDefinition = "NVARCHAR(200)")
     private String address;
-    
+
+    // GHN Location Data
+    @Column(name = "province_id")
+    private Integer provinceId;
+
     @Column(name = "district_id")
     private Integer districtId;
-    
+
     @Column(name = "ward_code", length = 20)
     private String wardCode;
 
@@ -61,12 +66,17 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
+    // Exclude collections from toString to prevent circular reference and
+    // performance issues
+    @ToString.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> reviews = new ArrayList<>();
 
+    @ToString.Exclude
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
 

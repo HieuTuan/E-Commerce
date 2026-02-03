@@ -2,6 +2,7 @@ package com.mypkga.commerceplatformfull.service;
 
 import com.mypkga.commerceplatformfull.dto.CreateReturnRequestDto;
 import com.mypkga.commerceplatformfull.entity.ReturnRequest;
+import com.mypkga.commerceplatformfull.entity.ReturnRequestHistory;
 
 import java.util.List;
 
@@ -137,6 +138,14 @@ public interface ReturnService {
      * @throws IllegalArgumentException if return request is not found
      */
     ReturnRequest findById(Long id);
+    
+    /**
+     * Get history of a return request
+     * 
+     * @param returnRequestId the ID of the return request
+     * @return list of history records ordered by creation date
+     */
+    List<ReturnRequestHistory> getReturnRequestHistory(Long returnRequestId);
     
     /**
      * Confirm package receipt at post office with photo upload.

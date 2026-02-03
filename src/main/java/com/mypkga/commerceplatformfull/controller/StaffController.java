@@ -28,7 +28,7 @@ public class StaffController {
     private final ProductService productService;
     private final UserService userService;
     private final CategoryRepository categoryRepository;
-    private final FileUploadService fileUploadService;
+    private final CloudinaryImageService cloudinaryImageService; // Changed to CloudinaryImageService
     private final ProductImageRepository productImageRepository;
 
     @GetMapping("")
@@ -193,20 +193,12 @@ public class StaffController {
                 for (MultipartFile imageFile : imageFiles) {
                     if (imageFile != null && !imageFile.isEmpty()) {
                         try {
-                            FileUploadService.ImageUploadResult imageResult = fileUploadService.uploadImage(imageFile);
-
-                            ProductImage productImage = new ProductImage();
-                            productImage.setProduct(savedProduct);
-                            productImage.setImageOriginal(imageResult.getOriginalFileName());
-                            productImage.setImageThumbnail(imageResult.getThumbnailFileName());
-                            productImage.setImageMedium(imageResult.getMediumFileName());
-                            productImage.setImageLarge(imageResult.getLargeFileName());
-                            productImage.setDisplayOrder(displayOrder);
-                            productImage.setIsPrimary(displayOrder == 0); // First image is primary
-                            displayOrder++;
-
-                            ProductImage savedImage = productImageRepository.save(productImage);
+                            // Save image to Cloudinary
+                            ProductImage savedImage = cloudinaryImageService.saveImageToCloudinary(
+                                imageFile, savedProduct, displayOrder, displayOrder == 0);
+                            
                             System.out.println("Saved ProductImage with ID: " + savedImage.getId() + " for Product ID: " + savedProduct.getId());
+                            displayOrder++;
                         } catch (Exception e) {
                             System.err.println("Error saving ProductImage: " + e.getMessage());
                             e.printStackTrace();
@@ -220,16 +212,11 @@ public class StaffController {
             // Handle video upload
             if (videoFile != null && !videoFile.isEmpty()) {
                 try {
-                    FileUploadService.VideoUploadResult videoResult = fileUploadService.uploadVideo(videoFile);
-
-                    ProductImage videoImage = new ProductImage();
-                    videoImage.setProduct(savedProduct);
-                    videoImage.setVideoFilename(videoResult.getFileName());
-                    videoImage.setDisplayOrder(999);
-                    videoImage.setIsPrimary(false);
-
-                    productImageRepository.save(videoImage);
-                    System.out.println("Saved Video ProductImage with ID: " + videoImage.getId() + " for Product ID: " + savedProduct.getId());
+                    // Save video to Cloudinary
+                    ProductImage savedVideo = cloudinaryImageService.saveVideoToCloudinary(
+                        videoFile, savedProduct, 999);
+                    
+                    System.out.println("Saved Video ProductImage with ID: " + savedVideo.getId() + " for Product ID: " + savedProduct.getId());
                 } catch (Exception e) {
                     redirectAttributes.addFlashAttribute("error", "Lỗi khi tải video lên: " + e.getMessage());
                     return "redirect:/staff/products";
@@ -251,17 +238,8 @@ public class StaffController {
             if (product != null) {
                 List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
                 for (ProductImage productImage : productImages) {
-                    if (productImage.getImageOriginal() != null) {
-                        fileUploadService.deleteImageFiles(
-                            productImage.getImageOriginal(),
-                            productImage.getImageThumbnail(),
-                            productImage.getImageMedium(),
-                            productImage.getImageLarge()
-                        );
-                    }
-                    if (productImage.getVideoFilename() != null) {
-                        fileUploadService.deleteVideoFile(productImage.getVideoFilename());
-                    }
+                    // Images are stored in Cloudinary, deletion handled by cascade delete
+                    // Just delete the database records (handled by cascade delete)
                 }
             }
 
@@ -281,15 +259,8 @@ public class StaffController {
             ProductImage productImage = productImageRepository.findById(imageId)
                     .orElseThrow(() -> new RuntimeException("Image not found"));
 
-            if (productImage.getImageOriginal() != null) {
-                fileUploadService.deleteImageFiles(
-                    productImage.getImageOriginal(),
-                    productImage.getImageThumbnail(),
-                    productImage.getImageMedium(),
-                    productImage.getImageLarge()
-                );
-            }
-
+            // Images are stored in Cloudinary, deletion handled by CloudinaryImageService
+            // Just delete the database record
             productImageRepository.delete(productImage);
             redirectAttributes.addFlashAttribute("success", "Xóa ảnh thành công!");
         } catch (Exception e) {

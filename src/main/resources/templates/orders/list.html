@@ -57,6 +57,12 @@
                                                                order.status.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
                                                                order.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
                                             th:text="${order.status}">Status</span>
+                                        <!-- Show return status if order has active return request -->
+                                        <div th:if="${order.hasActiveReturnRequest()}">
+                                            <small class="text-warning d-block">
+                                                <i class="fas fa-undo me-1"></i>Đang hoàn hàng
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">

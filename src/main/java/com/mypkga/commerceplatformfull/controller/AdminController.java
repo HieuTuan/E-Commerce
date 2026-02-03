@@ -24,7 +24,7 @@ public class AdminController {
     private final CategoryRepository categoryRepository;
     private final OrderService orderService;
     private final UserService userService;
-    private final FileUploadService fileUploadService;
+    private final CloudinaryImageService cloudinaryImageService; // Changed to CloudinaryImageService
     private final ProductImageRepository productImageRepository;
     private final RoleService roleService;
     private final DeliveryIssueReportService deliveryIssueReportService;
@@ -78,20 +78,12 @@ public class AdminController {
                 for (MultipartFile imageFile : imageFiles) {
                     if (imageFile != null && !imageFile.isEmpty()) {
                         try {
-                            FileUploadService.ImageUploadResult imageResult = fileUploadService.uploadImage(imageFile);
+                            // Save image to Cloudinary
+                            ProductImage savedImage = cloudinaryImageService.saveImageToCloudinary(
+                                imageFile, savedProduct, displayOrder, displayOrder == 0);
                             
-                            ProductImage productImage = new ProductImage();
-                            productImage.setProduct(savedProduct);
-                            productImage.setImageOriginal(imageResult.getOriginalFileName());
-                            productImage.setImageThumbnail(imageResult.getThumbnailFileName());
-                            productImage.setImageMedium(imageResult.getMediumFileName());
-                            productImage.setImageLarge(imageResult.getLargeFileName());
-                            productImage.setDisplayOrder(displayOrder);
-                            productImage.setIsPrimary(displayOrder == 0); // First image is primary
-                            displayOrder++;
-                            
-                            ProductImage savedImage = productImageRepository.save(productImage);
                             System.out.println("Saved ProductImage with ID: " + savedImage.getId() + " for Product ID: " + savedProduct.getId());
+                            displayOrder++;
                         } catch (Exception e) {
                             System.err.println("Error saving ProductImage: " + e.getMessage());
                             e.printStackTrace();
@@ -102,19 +94,14 @@ public class AdminController {
                 }
             }
 
-            // Handle video upload - store in ProductImage
+            // Handle video upload - store in Cloudinary
             if (videoFile != null && !videoFile.isEmpty()) {
                 try {
-                    FileUploadService.VideoUploadResult videoResult = fileUploadService.uploadVideo(videoFile);
+                    // Save video to Cloudinary
+                    ProductImage savedVideo = cloudinaryImageService.saveVideoToCloudinary(
+                        videoFile, savedProduct, 999);
                     
-                    // Create a ProductImage entry for video
-                    ProductImage videoImage = new ProductImage();
-                    videoImage.setProduct(savedProduct);
-                    videoImage.setVideoFilename(videoResult.getFileName());
-                    videoImage.setDisplayOrder(999); // Put video at the end
-                    videoImage.setIsPrimary(false);
-                    
-                    productImageRepository.save(videoImage);
+                    System.out.println("Saved Video ProductImage with ID: " + savedVideo.getId() + " for Product ID: " + savedProduct.getId());
                 } catch (Exception e) {
                     redirectAttributes.addFlashAttribute("error", "Error uploading video: " + e.getMessage());
                     return "redirect:/admin/products";
@@ -147,19 +134,8 @@ public class AdminController {
                 // Delete associated product images and their files
                 List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
                 for (ProductImage productImage : productImages) {
-                    // Delete image files
-                    if (productImage.getImageOriginal() != null) {
-                        fileUploadService.deleteImageFiles(
-                            productImage.getImageOriginal(),
-                            productImage.getImageThumbnail(),
-                            productImage.getImageMedium(),
-                            productImage.getImageLarge()
-                        );
-                    }
-                    // Delete video files
-                    if (productImage.getVideoFilename() != null) {
-                        fileUploadService.deleteVideoFile(productImage.getVideoFilename());
-                    }
+                    // Images are stored in Cloudinary, deletion handled by cascade delete
+                    // Just delete the database records (handled by cascade delete)
                 }
             }
             
@@ -205,16 +181,8 @@ public class AdminController {
             ProductImage productImage = productImageRepository.findById(imageId)
                     .orElseThrow(() -> new RuntimeException("Image not found"));
             
-            // Delete physical files
-            if (productImage.getImageOriginal() != null) {
-                fileUploadService.deleteImageFiles(
-                    productImage.getImageOriginal(),
-                    productImage.getImageThumbnail(),
-                    productImage.getImageMedium(),
-                    productImage.getImageLarge()
-                );
-            }
-            
+            // Images are stored in Cloudinary, deletion handled by CloudinaryImageService
+            // Just delete the database record
             productImageRepository.delete(productImage);
             redirectAttributes.addFlashAttribute("success", "Image deleted successfully!");
         } catch (Exception e) {

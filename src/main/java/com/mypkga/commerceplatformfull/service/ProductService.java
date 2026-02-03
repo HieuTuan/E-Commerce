@@ -34,7 +34,7 @@ public interface ProductService {
 
     List<Product> getLatestProducts();
 
-    String saveProductImage(MultipartFile file);
+    // Removed saveProductImage method - now using CloudinaryImageService
 
     void classifyProduct(Product product);
     

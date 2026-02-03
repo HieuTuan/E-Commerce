@@ -6,6 +6,7 @@ import com.mypkga.commerceplatformfull.exception.VideoUploadException;
 import com.mypkga.commerceplatformfull.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
@@ -18,6 +19,8 @@ import java.util.UUID;
 /**
  * Cloudinary implementation of FileService for video upload handling.
  * Provides cloud storage with automatic optimization and secure URLs.
+ * 
+ * Note: This class is not used as a Spring service. Use CloudinaryFileServiceImpl instead.
  */
 @Slf4j
 public class CloudinaryFileService implements FileService {

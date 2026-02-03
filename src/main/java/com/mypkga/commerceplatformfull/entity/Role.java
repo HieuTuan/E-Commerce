@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,7 @@ public class Role {
     @Column(name = "name", nullable = false, unique = true, length = 50)
     private String name;
 
-    @Column(name = "description", length = 255,columnDefinition = "NVARCHAR(200)")
+    @Column(name = "description", length = 255, columnDefinition = "NVARCHAR(200)")
     private String description;
 
     @Column(name = "permissions", columnDefinition = "TEXT")
@@ -39,6 +41,8 @@ public class Role {
     @Column(nullable = false)
     private LocalDateTime updatedDate;
 
+    // Exclude from toString to prevent circular reference
+    @ToString.Exclude
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<User> users = new ArrayList<>();
 
@@ -51,8 +55,10 @@ public class Role {
 
     // Helper method to check if role has specific permission
     public boolean hasPermission(String permission) {
-        if (permissions == null) return false;
-        if ("ALL".equals(permissions)) return true;
+        if (permissions == null)
+            return false;
+        if ("ALL".equals(permissions))
+            return true;
         return permissions.contains(permission);
     }
 

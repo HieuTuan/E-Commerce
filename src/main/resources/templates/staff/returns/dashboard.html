@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -35,6 +37,9 @@
                 <a href="/staff/returns" class="btn btn-info me-2">
                     <i class="fas fa-list me-2"></i>Danh Sách Hoàn Trả
                 </a>
+                <a href="/staff/returns/history" class="btn btn-outline-secondary">
+                    <i class="fas fa-history me-2"></i>Lịch Sử Xử Lý
+                </a>
             </div>
         </div>
 
@@ -44,7 +49,7 @@
             <span th:text="${success}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        
+
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-circle me-2"></i>
             <span th:text="${error}"></span>
@@ -125,21 +130,23 @@
                                     <td th:text="${request.order.orderNumber}">ORD001</td>
                                     <td th:text="${request.order.user.fullName}">Nguyễn Văn A</td>
                                     <td>
-                                        <span class="badge bg-secondary" th:text="${request.reason}">DEFECTIVE_ITEM</span>
+                                        <span class="badge bg-secondary"
+                                            th:text="${request.reason}">DEFECTIVE_ITEM</span>
                                     </td>
-                                    <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                    <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        10:00</td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-success" 
-                                                    th:onclick="'approveRequest(' + ${request.id} + ')'">
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                th:onclick="'approveRequest(' + ${request.id} + ')'">
                                                 <i class="fas fa-check"></i> Duyệt
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-danger" 
-                                                    th:onclick="'showRejectModal(' + ${request.id} + ')'">
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                th:onclick="'showRejectModal(' + ${request.id} + ')'">
                                                 <i class="fas fa-times"></i> Từ chối
                                             </button>
-                                            <a th:href="@{/staff/returns/{id}(id=${request.id})}" 
-                                               class="btn btn-sm btn-outline-primary">
+                                            <a th:href="@{/staff/returns/{id}(id=${request.id})}"
+                                                class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-eye"></i> Xem
                                             </a>
                                         </div>
@@ -186,17 +193,19 @@
                                         <span th:if="${request.ghnOrderCode}" class="badge bg-info">
                                             GHN: <span th:text="${request.ghnOrderCode}">GHN123456</span>
                                         </span>
-                                        <span th:unless="${request.ghnOrderCode}" class="text-muted">Chưa tạo vận đơn</span>
+                                        <span th:unless="${request.ghnOrderCode}" class="text-muted">Chưa tạo vận
+                                            đơn</span>
                                     </td>
-                                    <td th:text="${#temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                    <td th:text="${#temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        10:00</td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-primary" 
-                                                    th:onclick="'confirmReceipt(' + ${request.id} + ')'">
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                th:onclick="'confirmReceipt(' + ${request.id} + ')'">
                                                 <i class="fas fa-box"></i> Xác nhận nhận hàng
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-success" 
-                                                    th:onclick="'completeRefund(' + ${request.id} + ')'">
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                th:onclick="'completeRefund(' + ${request.id} + ')'">
                                                 <i class="fas fa-money-bill-wave"></i> Hoàn tiền
                                             </button>
                                         </div>
@@ -227,7 +236,7 @@
                         <div class="mb-3">
                             <label for="rejectReason" class="form-label">Lý do từ chối:</label>
                             <textarea class="form-control" id="rejectReason" name="reason" rows="3" required
-                                      placeholder="Nhập lý do từ chối yêu cầu hoàn tiền..."></textarea>
+                                placeholder="Nhập lý do từ chối yêu cầu hoàn tiền..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -278,4 +287,5 @@
         }
     </script>
 </body>
+
 </html>

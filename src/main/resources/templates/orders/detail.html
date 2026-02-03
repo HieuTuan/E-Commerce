@@ -31,19 +31,20 @@
             <strong>Thành công!</strong> Bạn đã xác nhận nhận hàng thành công. Cảm ơn bạn!
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        
+
         <div th:if="${param.rejected}" class="alert alert-warning alert-dismissible fade show">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <strong>Đã báo cáo!</strong> Chúng tôi đã nhận được báo cáo của bạn và sẽ xử lý sớm nhất.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        
+
         <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show">
             <i class="fas fa-times-circle me-2"></i>
-            <strong>Lỗi!</strong> 
+            <strong>Lỗi!</strong>
             <span th:if="${param.error[0] == 'invalid_confirmation'}">Không thể xác nhận đơn hàng này.</span>
             <span th:if="${param.error[0] == 'invalid_rejection'}">Không thể báo cáo vấn đề cho đơn hàng này.</span>
-            <span th:if="${param.error[0] == 'confirmation_failed'}">Có lỗi xảy ra khi xác nhận. Vui lòng thử lại.</span>
+            <span th:if="${param.error[0] == 'confirmation_failed'}">Có lỗi xảy ra khi xác nhận. Vui lòng thử
+                lại.</span>
             <span th:if="${param.error[0] == 'rejection_failed'}">Có lỗi xảy ra khi báo cáo. Vui lòng thử lại.</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -67,6 +68,12 @@
                         <!-- Normal status display -->
                         <div th:unless="${order.hasDeliveryIssue()}">
                             <span class="badge bg-warning" th:text="${order.status}">Status</span>
+                            <!-- Show return status if order has active return request -->
+                            <div th:if="${order.hasActiveReturnRequest()}">
+                                <small class="text-warning d-block mt-1">
+                                    <i class="fas fa-undo me-1"></i>Đang hoàn hàng
+                                </small>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -75,7 +82,8 @@
                     </div>
                     <div class="col-md-4">
                         <h6>Total Amount</h6>
-                        <h5 class="text-primary"><span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</h5>
+                        <h5 class="text-primary"><span
+                                th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</h5>
                     </div>
                 </div>
             </div>
@@ -102,7 +110,9 @@
                                     <td th:text="${item.product.name}">Product</td>
                                     <td><span th:text="${#numbers.formatInteger(item.price, 3, 'POINT')}"></span>đ</td>
                                     <td th:text="${item.quantity}">1</td>
-                                    <td><span th:text="${#numbers.formatInteger(item.price * item.quantity, 3, 'POINT')}"></span>đ</td>
+                                    <td><span
+                                            th:text="${#numbers.formatInteger(item.price * item.quantity, 3, 'POINT')}"></span>đ
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -125,7 +135,7 @@
                                     position: relative;
                                     padding: 20px 0;
                                 }
-                                
+
                                 .timeline-container::before {
                                     content: '';
                                     position: absolute;
@@ -135,13 +145,13 @@
                                     width: 2px;
                                     background: #dee2e6;
                                 }
-                                
+
                                 .timeline-item {
                                     position: relative;
                                     margin-bottom: 20px;
                                     padding-left: 60px;
                                 }
-                                
+
                                 .timeline-icon {
                                     position: absolute;
                                     left: 8px;
@@ -156,78 +166,84 @@
                                     font-size: 12px;
                                     z-index: 1;
                                 }
-                                
-                                .timeline-icon.pending { 
-                                    background: #6c757d; 
+
+                                .timeline-icon.pending {
+                                    background: #6c757d;
                                 }
-                                .timeline-icon.pending::after { 
+
+                                .timeline-icon.pending::after {
                                     content: '⏱️';
                                     font-size: 14px;
                                 }
-                                
-                                .timeline-icon.confirmed { 
-                                    background: #0d6efd; 
+
+                                .timeline-icon.confirmed {
+                                    background: #0d6efd;
                                 }
-                                .timeline-icon.confirmed::after { 
+
+                                .timeline-icon.confirmed::after {
                                     content: '✅';
                                     font-size: 14px;
                                 }
-                                
-                                .timeline-icon.shipping { 
-                                    background: #fd7e14; 
+
+                                .timeline-icon.shipping {
+                                    background: #fd7e14;
                                 }
-                                .timeline-icon.shipping::after { 
+
+                                .timeline-icon.shipping::after {
                                     content: '🚚';
                                     font-size: 14px;
                                 }
-                                
-                                .timeline-icon.delivered { 
-                                    background: #198754; 
+
+                                .timeline-icon.delivered {
+                                    background: #198754;
                                 }
-                                .timeline-icon.delivered::after { 
+
+                                .timeline-icon.delivered::after {
                                     content: '📦';
                                     font-size: 14px;
                                 }
-                                
-                                .timeline-icon.cancelled { 
-                                    background: #dc3545; 
+
+                                .timeline-icon.cancelled {
+                                    background: #dc3545;
                                 }
-                                .timeline-icon.cancelled::after { 
+
+                                .timeline-icon.cancelled::after {
                                     content: '❌';
                                     font-size: 14px;
                                 }
-                                
-                                .timeline-icon.confirmed_by_customer { 
-                                    background: #20c997; 
+
+                                .timeline-icon.confirmed_by_customer {
+                                    background: #20c997;
                                 }
-                                .timeline-icon.confirmed_by_customer::after { 
+
+                                .timeline-icon.confirmed_by_customer::after {
                                     content: '✅';
                                     font-size: 14px;
                                 }
-                                
+
                                 .timeline-content {
                                     background: #f8f9fa;
                                     border: 1px solid #dee2e6;
                                     border-radius: 6px;
                                     padding: 15px;
                                 }
-                                
+
                                 .timeline-status {
                                     font-weight: bold;
                                     margin-bottom: 5px;
                                 }
-                                
+
                                 .timeline-time {
                                     color: #6c757d;
                                     font-size: 0.9em;
                                 }
-                                
+
                                 .timeline-user {
                                     color: #495057;
                                     font-size: 0.9em;
                                     margin-top: 5px;
                                 }
-                                
+
                                 .timeline-notes {
                                     margin-top: 8px;
                                     padding: 8px;
@@ -237,23 +253,23 @@
                                     border-left: 3px solid #0d6efd;
                                 }
                             </style>
-                            
+
                             <div class="timeline-item" th:each="entry : ${timeline}">
-                                <div class="timeline-icon" 
-                                     th:classappend="${entry.status.name().toLowerCase()}">
+                                <div class="timeline-icon" th:classappend="${entry.status.name().toLowerCase()}">
                                 </div>
-                                
+
                                 <div class="timeline-content">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="timeline-status" th:text="${entry.status.displayName}"></div>
-                                        <div class="timeline-time" th:text="${#temporals.format(entry.updatedAt, 'dd/MM/yyyy HH:mm')}"></div>
+                                        <div class="timeline-time"
+                                            th:text="${#temporals.format(entry.updatedAt, 'dd/MM/yyyy HH:mm')}"></div>
                                     </div>
-                                    
+
                                     <div class="timeline-user" th:if="${entry.updatedBy}">
                                         <i class="fas fa-user me-1"></i>
                                         Updated by: <span th:text="${entry.updatedBy}"></span>
                                     </div>
-                                    
+
                                     <div class="timeline-notes" th:if="${entry.notes}">
                                         <i class="fas fa-sticky-note me-1"></i>
                                         <span th:text="${entry.notes}"></span>
@@ -261,39 +277,49 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Empty State -->
                         <div th:if="${timeline == null or timeline.empty}" class="text-center py-4">
                             <i class="fas fa-clock fa-2x text-muted mb-3"></i>
                             <h6 class="text-muted">No timeline information available</h6>
                             <p class="text-muted small">Timeline will be updated when order status changes.</p>
                         </div>
-                        
-                        <!-- Customer Delivery Confirmation -->
-                        <div th:if="${order.currentStatus.name() == 'DELIVERED'}" class="mt-4">
+
+                        <!-- Customer Delivery Confirmation - Show for DELIVERED and all return-related statuses -->
+                        <div th:if="${order.currentStatus.name() == 'DELIVERED' or 
+                                      order.currentStatus.name() == 'REFUND_REQUESTED' or 
+                                      order.currentStatus.name() == 'RETURN_APPROVED' or 
+                                      order.currentStatus.name() == 'RETURNING' or 
+                                      order.currentStatus.name() == 'RETURN_RECEIVED'}" class="mt-4">
                             <div class="alert alert-success">
                                 <i class="fas fa-truck me-2"></i>
                                 <strong>Đơn hàng đã được giao</strong><br>
-                                Đơn hàng đã được giao đến địa chỉ của bạn. Vui lòng xác nhận việc nhận hàng hoặc báo cáo nếu có vấn đề.
-                                <br><small class="text-muted">Việc xác nhận giúp chúng tôi hoàn tất đơn hàng và cải thiện dịch vụ.</small>
+                                Đơn hàng đã được giao đến địa chỉ của bạn. Vui lòng xác nhận việc nhận hàng hoặc báo cáo
+                                nếu có vấn đề.
+                                <br><small class="text-muted">Việc xác nhận giúp chúng tôi hoàn tất đơn hàng và cải
+                                    thiện dịch vụ.</small>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-4">
-                                    <form th:action="@{/orders/{orderId}/confirm-delivery(orderId=${order.id})}" method="post" class="d-inline">
+                                    <form th:action="@{/orders/{orderId}/confirm-delivery(orderId=${order.id})}"
+                                        method="post" class="d-inline">
                                         <button type="submit" class="btn btn-success w-100">
                                             <i class="fas fa-check me-2"></i>Xác nhận đã nhận hàng
                                         </button>
                                     </form>
                                 </div>
-                                <div class="col-md-4" th:if="${!order.hasReturnRequest()}">
-                                    <a th:href="@{/returns/orders/{orderId}/request(orderId=${order.id})}" class="btn btn-warning w-100">
+
+                                <div class="col-md-4" th:if="${order.returnRequest == null}">
+                                    <a th:href="@{/returns/orders/{orderId}/request(orderId=${order.id})}"
+                                        class="btn btn-warning w-100">
                                         <i class="fas fa-undo me-2"></i>Yêu cầu hoàn tiền
                                     </a>
                                 </div>
-                                <div class="col-md-4" th:if="${order.hasReturnRequest()}">
-                                    <a th:href="@{/returns/my-requests}" class="btn btn-info w-100">
-                                        <i class="fas fa-eye me-2"></i>Xem yêu cầu hoàn tiền
+                                <div class="col-md-4" th:if="${order.returnRequest != null}">
+                                    <a th:href="@{/customer/returns/{id}(id=${order.returnRequest.id})}"
+                                        class="btn btn-info w-100">
+                                        <i class="fas fa-eye me-2"></i>Xem chi tiết đơn hoàn
                                     </a>
                                 </div>
                                 <div class="col-md-4">
@@ -304,17 +330,16 @@
                                         </button>
                                     </div>
                                     <div th:unless="${order.hasDeliveryIssue()}">
-                                        <button type="button" class="btn btn-danger w-100" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#deliveryIssueModal"
-                                                th:attr="data-order-id=${order.id}, data-order-number=${order.orderNumber}">
+                                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal"
+                                            data-bs-target="#deliveryIssueModal"
+                                            th:attr="data-order-id=${order.id}, data-order-number=${order.orderNumber}">
                                             <i class="fas fa-exclamation-triangle me-2"></i>Báo cáo vấn đề
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Delivery Issue Reports Section -->
                         <div th:if="${order.hasDeliveryIssue()}" class="mt-4">
                             <div class="card border-warning">
@@ -329,36 +354,44 @@
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <p class="mb-1">
-                                                    <strong>Lý do:</strong> <span th:text="${report.issueType}">Issue Type</span>
+                                                    <strong>Lý do:</strong> <span th:text="${report.issueType}">Issue
+                                                        Type</span>
                                                 </p>
                                                 <p class="mb-1" th:if="${report.description}">
-                                                    <strong>Mô tả:</strong> <span th:text="${report.description}">Description</span>
+                                                    <strong>Mô tả:</strong> <span
+                                                        th:text="${report.description}">Description</span>
                                                 </p>
                                                 <small class="text-muted">
-                                                    Báo cáo lúc: <span th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                                    Báo cáo lúc: <span
+                                                        th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
                                                 </small>
                                             </div>
                                             <div class="col-md-4 text-end">
                                                 <!-- Status display based on report status -->
                                                 <div th:if="${report.status.name() == 'PENDING'}">
                                                     <span class="badge bg-warning">Đang xử lý</span>
-                                                    <small class="text-muted d-block mt-1">Chúng tôi sẽ liên hệ sớm nhất</small>
+                                                    <small class="text-muted d-block mt-1">Chúng tôi sẽ liên hệ sớm
+                                                        nhất</small>
                                                 </div>
                                                 <div th:if="${report.status.name() == 'RESOLVED'}">
                                                     <span class="badge bg-success">Đã giải quyết</span>
-                                                    <small class="text-success d-block mt-1">Vấn đề đã được xử lý</small>
+                                                    <small class="text-success d-block mt-1">Vấn đề đã được xử
+                                                        lý</small>
                                                     <div th:if="${report.adminNotes}" class="mt-2">
                                                         <small class="text-muted">
-                                                            <strong>Ghi chú:</strong> <span th:text="${report.adminNotes}">Notes</span>
+                                                            <strong>Ghi chú:</strong> <span
+                                                                th:text="${report.adminNotes}">Notes</span>
                                                         </small>
                                                     </div>
                                                 </div>
                                                 <div th:if="${report.status.name() == 'REJECTED'}">
                                                     <span class="badge bg-danger">Đã từ chối</span>
-                                                    <small class="text-danger d-block mt-1">Vui lòng liên hệ hotline để biết thêm chi tiết</small>
+                                                    <small class="text-danger d-block mt-1">Vui lòng liên hệ hotline để
+                                                        biết thêm chi tiết</small>
                                                     <div th:if="${report.adminNotes}" class="mt-2">
                                                         <small class="text-muted">
-                                                            <strong>Lý do:</strong> <span th:text="${report.adminNotes}">Reason</span>
+                                                            <strong>Lý do:</strong> <span
+                                                                th:text="${report.adminNotes}">Reason</span>
                                                         </small>
                                                     </div>
                                                 </div>
@@ -369,7 +402,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Order Completed - After Customer Confirmation -->
                         <div th:if="${order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER'}" class="mt-4">
                             <div class="alert alert-success">
@@ -377,7 +410,7 @@
                                 <strong>Đơn hàng đã hoàn thành</strong><br>
                                 Cảm ơn bạn đã xác nhận nhận hàng. Đơn hàng đã được hoàn tất thành công.
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-4">
                                     <button type="button" class="btn btn-success w-100" disabled>
@@ -410,7 +443,8 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Name:</strong><br><span th:text="${order.customerName}">Name</span></p>
-                        <p><strong>Address:</strong><br><span th:text="${order.decodedShippingAddress}">Address</span></p>
+                        <p><strong>Address:</strong><br><span th:text="${order.decodedShippingAddress}">Address</span>
+                        </p>
                         <p><strong>Phone:</strong><br><span th:text="${order.customerPhone}">Phone</span></p>
                     </div>
                 </div>
@@ -464,8 +498,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="customReason" class="form-label">Chi tiết (tùy chọn):</label>
-                            <textarea class="form-control" id="customReason" name="customReason" rows="3" 
-                                      placeholder="Mô tả chi tiết vấn đề..."></textarea>
+                            <textarea class="form-control" id="customReason" name="customReason" rows="3"
+                                placeholder="Mô tả chi tiết vấn đề..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -481,7 +515,7 @@
     <div th:replace="fragments/delivery-issue-modal :: delivery-issue-modal"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Include Delivery Issue Script -->
     <div th:replace="fragments/delivery-issue-modal :: delivery-issue-script"></div>
 </body>

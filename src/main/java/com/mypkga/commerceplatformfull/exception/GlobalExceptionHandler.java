@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
-        
+
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -36,10 +36,9 @@ public class GlobalExceptionHandler {
         });
 
         List<String> suggestions = List.of(
-            "Check the request format and required fields",
-            "Ensure all field values are valid",
-            "Refer to API documentation for correct format"
-        );
+                "Check the request format and required fields",
+                "Ensure all field values are valid",
+                "Refer to API documentation for correct format");
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
@@ -60,7 +59,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleBindExceptions(
             BindException ex, HttpServletRequest request) {
-        
+
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -69,10 +68,9 @@ public class GlobalExceptionHandler {
         });
 
         List<String> suggestions = List.of(
-            "Check the form data format",
-            "Ensure all required fields are provided",
-            "Verify field value constraints"
-        );
+                "Check the form data format",
+                "Ensure all required fields are provided",
+                "Verify field value constraints");
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
@@ -93,7 +91,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex, HttpServletRequest request) {
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.FORBIDDEN.value())
@@ -103,7 +101,7 @@ public class GlobalExceptionHandler {
                 .errorCode("ACCESS_DENIED")
                 .build();
 
-        log.warn("Access denied for path: {} - User: {}", 
+        log.warn("Access denied for path: {} - User: {}",
                 request.getRequestURI(), getCurrentUsername(request));
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
@@ -111,7 +109,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(
             NoHandlerFoundException ex, HttpServletRequest request) {
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.NOT_FOUND.value())
@@ -128,7 +126,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.NOT_FOUND.value())
@@ -138,7 +136,7 @@ public class GlobalExceptionHandler {
                 .errorCode("RESOURCE_NOT_FOUND")
                 .build();
 
-        log.error("Runtime exception on path: {} - Message: {}", 
+        log.error("Runtime exception on path: {} - Message: {}",
                 request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
@@ -146,7 +144,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(OrderTimelineException.class)
     public ResponseEntity<ErrorResponse> handleOrderTimelineException(
             OrderTimelineException ex, HttpServletRequest request) {
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -156,7 +154,7 @@ public class GlobalExceptionHandler {
                 .errorCode("TIMELINE_ERROR")
                 .build();
 
-        log.error("Order timeline error on path: {} - Message: {}", 
+        log.error("Order timeline error on path: {} - Message: {}",
                 request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -164,7 +162,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DeliveryConfirmationException.class)
     public ResponseEntity<ErrorResponse> handleDeliveryConfirmationException(
             DeliveryConfirmationException ex, HttpServletRequest request) {
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -174,7 +172,7 @@ public class GlobalExceptionHandler {
                 .errorCode("DELIVERY_CONFIRMATION_ERROR")
                 .build();
 
-        log.error("Delivery confirmation error on path: {} - Message: {}", 
+        log.error("Delivery confirmation error on path: {} - Message: {}",
                 request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -182,12 +180,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DeliveryIssueException.class)
     public ResponseEntity<ErrorResponse> handleDeliveryIssueException(
             DeliveryIssueException ex, HttpServletRequest request) {
-        
+
         List<String> suggestions = List.of(
-            "Ensure the order exists and has DELIVERED status",
-            "Check if a delivery issue report already exists for this order",
-            "Verify user permissions for the order"
-        );
+                "Ensure the order exists and has DELIVERED status",
+                "Check if a delivery issue report already exists for this order",
+                "Verify user permissions for the order");
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
@@ -206,11 +203,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidStatusTransitionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidStatusTransitionException(
             InvalidStatusTransitionException ex, HttpServletRequest request) {
-        
+
         Map<String, String> details = new HashMap<>();
         details.put("currentStatus", ex.getCurrentStatus().name());
         details.put("attemptedStatus", ex.getNewStatus().name());
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.CONFLICT.value())
@@ -222,7 +219,7 @@ public class GlobalExceptionHandler {
                 .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
-        log.warn("Invalid status transition on path: {} - From: {} To: {}", 
+        log.warn("Invalid status transition on path: {} - From: {} To: {}",
                 request.getRequestURI(), ex.getCurrentStatus(), ex.getNewStatus());
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
@@ -230,20 +227,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(OrderStatusValidationException.class)
     public ResponseEntity<ErrorResponse> handleOrderStatusValidationException(
             OrderStatusValidationException ex, HttpServletRequest request) {
-        
+
         Map<String, Object> details = new HashMap<>();
         details.put("orderId", ex.getOrderId());
-        
+
         if (ex.getCurrentStatus() != null) {
             details.put("currentStatus", ex.getCurrentStatus().name());
             details.put("currentStatusDisplayName", ex.getCurrentStatus().getDisplayName());
         }
-        
+
         if (ex.getAttemptedStatus() != null) {
             details.put("attemptedStatus", ex.getAttemptedStatus().name());
             details.put("attemptedStatusDisplayName", ex.getAttemptedStatus().getDisplayName());
         }
-        
+
         if (ex.getValidTransitions() != null && !ex.getValidTransitions().isEmpty()) {
             List<Map<String, String>> validOptions = new ArrayList<>();
             for (OrderStatus status : ex.getValidTransitions()) {
@@ -254,7 +251,7 @@ public class GlobalExceptionHandler {
             }
             details.put("validTransitions", validOptions);
         }
-        
+
         // Create suggestions based on error type
         List<String> suggestions = new ArrayList<>();
         if ("ORDER_NOT_FOUND".equals(ex.getValidationErrorCode())) {
@@ -268,22 +265,23 @@ public class GlobalExceptionHandler {
             if (ex.getValidTransitions() != null && !ex.getValidTransitions().isEmpty()) {
                 StringBuilder validOptions = new StringBuilder("Valid transitions: ");
                 for (int i = 0; i < ex.getValidTransitions().size(); i++) {
-                    if (i > 0) validOptions.append(", ");
+                    if (i > 0)
+                        validOptions.append(", ");
                     validOptions.append(ex.getValidTransitions().get(i).getDisplayName());
                 }
                 suggestions.add(validOptions.toString());
             }
         }
-        
+
         // Determine HTTP status based on error code
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         if ("ORDER_NOT_FOUND".equals(ex.getValidationErrorCode())) {
             httpStatus = HttpStatus.NOT_FOUND;
-        } else if ("INVALID_TRANSITION".equals(ex.getValidationErrorCode()) || 
-                   "FINAL_STATE_MODIFICATION".equals(ex.getValidationErrorCode())) {
+        } else if ("INVALID_TRANSITION".equals(ex.getValidationErrorCode()) ||
+                "FINAL_STATE_MODIFICATION".equals(ex.getValidationErrorCode())) {
             httpStatus = HttpStatus.CONFLICT;
         }
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(httpStatus.value())
@@ -296,7 +294,7 @@ public class GlobalExceptionHandler {
                 .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
-        log.warn("Order status validation error on path: {} - Error: {} - Order: {}", 
+        log.warn("Order status validation error on path: {} - Error: {} - Order: {}",
                 request.getRequestURI(), ex.getValidationErrorCode(), ex.getOrderId());
         return new ResponseEntity<>(errorResponse, httpStatus);
     }
@@ -304,13 +302,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SystemConfigurationException.class)
     public ResponseEntity<ErrorResponse> handleSystemConfigurationException(
             SystemConfigurationException ex, HttpServletRequest request) {
-        
+
         List<String> suggestions = List.of(
-            "Check system configuration files",
-            "Verify order status transition rules are properly defined",
-            "Contact system administrator for configuration assistance",
-            "Review application logs for detailed error information"
-        );
+                "Check system configuration files",
+                "Verify order status transition rules are properly defined",
+                "Contact system administrator for configuration assistance",
+                "Review application logs for detailed error information");
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
@@ -323,7 +320,7 @@ public class GlobalExceptionHandler {
                 .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
-        log.error("System configuration error on path: {} - Message: {}", 
+        log.error("System configuration error on path: {} - Message: {}",
                 request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -331,7 +328,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ErrorResponse> handleSecurityException(
             SecurityException ex, HttpServletRequest request) {
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.FORBIDDEN.value())
@@ -341,20 +338,47 @@ public class GlobalExceptionHandler {
                 .errorCode("SECURITY_ERROR")
                 .build();
 
-        log.error("Security exception on path: {} - Message: {} - User: {}", 
+        log.error("Security exception on path: {} - Message: {} - User: {}",
                 request.getRequestURI(), ex.getMessage(), getCurrentUsername(request));
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+
+        // Suppress DevTools and browser-specific resource requests from logging
+        if (path.contains(".well-known") || path.contains("devtools") ||
+                path.contains("favicon.ico") || path.contains("robots.txt")) {
+            // Only log at debug level for these expected missing resources
+            log.debug("Browser requested missing resource: {}", path);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // Log other missing resources normally
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now().toString())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Resource Not Found")
+                .message("The requested static resource was not found")
+                .path(path)
+                .errorCode("STATIC_RESOURCE_NOT_FOUND")
+                .build();
+
+        log.warn("Static resource not found: {}", path);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
-        
+
         List<String> suggestions = List.of(
-            "Try the request again later",
-            "Contact support if the problem persists",
-            "Check system status page for known issues"
-        );
+                "Try the request again later",
+                "Contact support if the problem persists",
+                "Check system status page for known issues");
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
@@ -367,7 +391,7 @@ public class GlobalExceptionHandler {
                 .errorId("ERR-" + System.currentTimeMillis())
                 .build();
 
-        log.error("Unexpected error on path: {} - Exception: {}", 
+        log.error("Unexpected error on path: {} - Exception: {}",
                 request.getRequestURI(), ex.getMessage(), ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }

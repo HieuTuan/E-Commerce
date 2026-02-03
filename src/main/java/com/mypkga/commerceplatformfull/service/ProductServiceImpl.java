@@ -29,8 +29,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final AIClassificationService aiClassificationService;
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    // Removed uploadDir - no longer needed since images are stored in database
 
     @Override
     public List<Product> getAllProducts() {
@@ -50,8 +49,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Product createProduct(Product product) {
-        // AI classification
-        classifyProduct(product);
+        // AI classification disabled for performance
+        // classifyProduct(product);
         return productRepository.save(product);
     }
 
@@ -93,35 +92,18 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findTop10ByOrderByCreatedDateDesc();
     }
 
-    @Override
-    public String saveProductImage(MultipartFile file) {
-        try {
-            // Create upload directory if not exists
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            // Generate unique filename
-            String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Path filePath = uploadPath.resolve(filename);
-
-            // Save file
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            return "/uploads/" + filename;
-        } catch (IOException e) {
-            log.error("Failed to save product image", e);
-            throw new RuntimeException("Failed to save product image");
-        }
-    }
+    // Removed saveProductImage method - now using CloudinaryImageService
 
     @Override
     public void classifyProduct(Product product) {
-        String aiCategory = aiClassificationService.classifyProduct(
-                product.getName(),
-                product.getDescription());
-        product.setAiCategory(aiCategory);
+        // AI classification disabled for performance
+        // String aiCategory = aiClassificationService.classifyProduct(
+        //         product.getName(),
+        //         product.getDescription());
+        // product.setAiCategory(aiCategory);
+        
+        // Set default category to avoid null
+        product.setAiCategory("General");
     }
     
     @Override

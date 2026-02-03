@@ -28,13 +28,13 @@ public class CheckoutController {
     public String checkoutPage(Authentication authentication, Model model) {
         User user = getCurrentUser(authentication);
         Cart cart = cartService.getCartByUser(user);
-        
+
         // Check if cart is empty
         if (cart == null || cart.getItems().isEmpty()) {
             model.addAttribute("error", "Your cart is empty");
             return "redirect:/cart";
         }
-        
+
         model.addAttribute("cart", cart);
         model.addAttribute("cartTotal", cartService.getCartTotal(user.getId()));
         return "checkout/checkout";
@@ -45,10 +45,22 @@ public class CheckoutController {
             @RequestParam String customerName,
             @RequestParam String customerPhone,
             @RequestParam String paymentMethod,
+            @RequestParam(required = false) Integer provinceId,
+            @RequestParam(required = false) Integer districtId,
+            @RequestParam(required = false) String wardCode,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
             User user = getCurrentUser(authentication);
+
+            // Save location IDs to user if provided
+            if (provinceId != null && districtId != null && wardCode != null) {
+                user.setProvinceId(provinceId);
+                user.setDistrictId(districtId);
+                user.setWardCode(wardCode);
+                userService.saveUser(user);
+            }
+
             Order order = orderService.createOrder(user, shippingAddress, customerName,
                     customerPhone, paymentMethod);
 
