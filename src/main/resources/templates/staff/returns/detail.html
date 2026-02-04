@@ -318,7 +318,7 @@
                         <div th:unless="${returnRequest.ghnOrderCode}">
                             <div th:if="${ghnFee != null && ghnFee.code == 200}">
                                 <div class="alert alert-warning">
-                                    <strong>Phí vận chuyển dự kiến:</strong>
+                                    <strong>Phí vận chuyển của đơn hàng:</strong>
                                     <span th:text="${#numbers.formatCurrency(ghnFee.data.total)}">25,000 VND</span>
                                     <br><small>Phí này sẽ được áp dụng khi tạo đơn vận chuyển</small>
                                 </div>
@@ -372,6 +372,24 @@
                                 target="_blank" class="btn btn-primary btn-sm">
                                 <i class="fas fa-external-link-alt me-2"></i>Theo dõi trên GHN
                             </a>
+
+                            <!-- Print Shipping Label Button -->
+                            <button type="button" class="btn btn-success btn-sm ms-2"
+                                th:onclick="'printGHNLabel(\'' + ${returnRequest.ghnOrderCode} + '\')'">
+                                <i class="fas fa-print me-2"></i>In Nhãn Vận Chuyển
+                            </button>
+                        </div>
+
+                        <!-- QR Code for Shipping Label -->
+                        <div class="mt-4 text-center">
+                            <h6 class="mb-3">Mã QR Vận Đơn</h6>
+                            <div class="qr-code-container p-3 bg-light rounded d-inline-block">
+                                <img th:src="'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + ${returnRequest.ghnOrderCode}"
+                                    alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                                <div class="mt-2 small text-muted">
+                                    Quét mã để tra cứu nhanh
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -745,6 +763,14 @@
                 });
             }
         });
+
+        // Print GHN shipping label
+        function printGHNLabel(orderCode) {
+            // GHN provides a direct URL to view and print shipping labels
+            const token = /*[[${@environment.getProperty('ghn.token')}]]*/ 'default-token';
+            const labelUrl = `https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=${token}&order_codes=${orderCode}`;
+            window.open(labelUrl, '_blank');
+        }
     </script>
 </body>
 

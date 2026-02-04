@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class GHNReturnServiceImpl implements GHNReturnService {
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
     private final com.mypkga.commerceplatformfull.service.GHNMasterDataService ghnMasterDataService;
 
     @Value("${ghn.api-url}")
@@ -58,18 +57,30 @@ public class GHNReturnServiceImpl implements GHNReturnService {
             Order order = returnRequest.getOrder();
             User customer = order.getUser();
 
+            // Debug: Log customer location data
+            log.info("Customer location - DistrictId: {}, WardCode: {}",
+                    customer.getDistrictId(), customer.getWardCode());
+
+            // Use customer location with fallback to default if null
+            Integer fromDistrictId = customer.getDistrictId() != null ? customer.getDistrictId() : 1454;
+            String fromWardCode = customer.getWardCode() != null && !customer.getWardCode().isEmpty()
+                    ? customer.getWardCode()
+                    : "21208";
+
+            log.info("Using fromDistrictId: {}, fromWardCode: {} for fee calculation",
+                    fromDistrictId, fromWardCode);
+
             // Auto-fetch service_id from GHN available services API
-            Integer serviceId = getAvailableServiceId(customer.getDistrictId(), warehouseDistrictId);
+            Integer serviceId = getAvailableServiceId(fromDistrictId, warehouseDistrictId);
 
             // Build fee calculation request with auto-fetched service ID
             GHNFeeRequest feeRequest = GHNFeeRequest.builder()
-                    .fromDistrictId(customer.getDistrictId() != null ? customer.getDistrictId() : 1454) // Customer
-                                                                                                        // location
-                    .fromWardCode(customer.getWardCode() != null ? customer.getWardCode() : "21211")
+                    .fromDistrictId(fromDistrictId) // Customer location (with fallback)
+                    .fromWardCode(fromWardCode)
                     .serviceId(serviceId) // Auto-fetched from available services
                     .serviceTypeId(null) // Set to null as requested
-                    .toDistrictId(warehouseDistrictId) // Shop warehouse
-                    .toWardCode(warehouseWardCode)
+                    .toDistrictId(1454) // Shop warehouse
+                    .toWardCode("21208")
                     .height(50) // Fixed height as in example
                     .length(20) // Fixed length as in example
                     .weight(200) // Fixed weight as in example
@@ -93,7 +104,10 @@ public class GHNReturnServiceImpl implements GHNReturnService {
                     ? ghnToken.substring(0, 8) + "..." + ghnToken.substring(ghnToken.length() - 4)
                     : "NULL_OR_EMPTY";
             log.info("Calling GHN fee API. Token preview: {}, ShopId: {}", tokenPreview, ghnShopId);
-            log.debug("Request details: {}", feeRequest);
+            log.info("Request body - fromDistrictId: {}, fromWardCode: '{}', toDistrictId: {}, toWardCode: '{}'",
+                    feeRequest.getFromDistrictId(), feeRequest.getFromWardCode(),
+                    feeRequest.getToDistrictId(), feeRequest.getToWardCode());
+            log.debug("Full request: {}", feeRequest);
 
             // Call GHN API
             String url = ghnApiUrl + "/v2/shipping-order/fee";
@@ -109,42 +123,12 @@ public class GHNReturnServiceImpl implements GHNReturnService {
             }
 
         } catch (Exception e) {
-            // Check if this is an authentication error
-            if (e.getMessage() != null && (e.getMessage().contains("401") || e.getMessage().contains("Unauthorized"))) {
-                log.warn(
-                        "GHN API authentication failed for request {}. This is expected if GHN_TOKEN is not configured. Using mock data.",
-                        returnRequest.getId());
-                log.info("To use real GHN API, set the GHN_TOKEN environment variable with your GHN API token.");
-            } else {
-                log.error("Error calculating GHN return shipping fee for request {}: {}",
-                        returnRequest.getId(), e.getMessage());
-            }
-
-            // Return mock response as fallback
-            log.info("Using mock shipping fee data (25,000 VND) for return request {}", returnRequest.getId());
-            GHNFeeResponse mockResponse = new GHNFeeResponse();
-            mockResponse.setCode(200);
-            mockResponse.setMessage("Success (Mock Data - Development Mode)");
-
-            GHNFeeResponse.GHNFeeData mockData = new GHNFeeResponse.GHNFeeData();
-            mockData.setTotal(25000); // 25,000 VND default fee
-            mockData.setServiceFee(20000);
-            mockData.setInsuranceFee(5000);
-            mockData.setPickStationFee(0);
-            mockData.setCouponValue(0);
-
-            mockResponse.setData(mockData);
-            return mockResponse;
+            log.error("Error calculating GHN return shipping fee for request {}: {}",
+                    returnRequest.getId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to calculate GHN shipping fee: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Helper method to get available service ID from GHN
-     * 
-     * @param fromDistrictId Origin district
-     * @param toDistrictId   Destination district
-     * @return Service ID or default 53320 if unavailable
-     */
     private Integer getAvailableServiceId(Integer fromDistrictId, Integer toDistrictId) {
         try {
             List<GHNAvailableServicesResponse.ServiceData> services = ghnMasterDataService
@@ -181,9 +165,9 @@ public class GHNReturnServiceImpl implements GHNReturnService {
                     .fromName(customer.getFullName())
                     .fromPhone(customer.getPhone())
                     .fromAddress(customer.getAddress())
-                    .fromWardName(getWardName(customer.getWardCode()))
-                    .fromDistrictName(getDistrictName(customer.getDistrictId()))
-                    .fromProvinceName(getProvinceName(customer.getDistrictId()))
+                    // Note: GHN only needs district/ward CODES, not names
+                    // Removed fromWardName, fromDistrictName, fromProvinceName to avoid validation
+                    // errors
                     .returnPhone(warehousePhone)
                     .returnAddress(warehouseAddress)
                     .returnDistrictId(warehouseDistrictId)
@@ -235,22 +219,7 @@ public class GHNReturnServiceImpl implements GHNReturnService {
         } catch (Exception e) {
             log.error("Error creating GHN return shipping order for request {}: {}",
                     returnRequest.getId(), e.getMessage(), e);
-
-            // Return mock response as fallback
-            log.warn("Falling back to mock order response due to GHN API error");
-            GHNCreateOrderResponse mockResponse = new GHNCreateOrderResponse();
-            mockResponse.setCode(200);
-            mockResponse.setMessage("Success (Mock)");
-
-            GHNCreateOrderResponse.GHNOrderData mockData = new GHNCreateOrderResponse.GHNOrderData();
-            mockData.setOrderCode("MOCK-" + System.currentTimeMillis());
-            mockData.setSortCode("SORT-" + returnRequest.getId());
-            mockData.setFee(25000);
-            mockData.setTotalFee(25000);
-            mockData.setExpectedDeliveryTime("2024-02-05 17:00:00");
-
-            mockResponse.setData(mockData);
-            return mockResponse;
+            throw new RuntimeException("Failed to create GHN return shipping order: " + e.getMessage(), e);
         }
     }
 
@@ -357,19 +326,5 @@ public class GHNReturnServiceImpl implements GHNReturnService {
 
     private Integer calculateTotalHeight(Order order) {
         return Math.max(10, order.getItems().size() * 5); // Height based on item count
-    }
-
-    // These methods would need to call GHN master data APIs
-    // For now, using placeholder values
-    private String getWardName(String wardCode) {
-        return "Ward " + wardCode; // Placeholder
-    }
-
-    private String getDistrictName(Integer districtId) {
-        return "District " + districtId; // Placeholder
-    }
-
-    private String getProvinceName(Integer districtId) {
-        return "Ho Chi Minh City"; // Default province
     }
 }

@@ -14,7 +14,7 @@ public class GHNConfig {
     private Integer shopId;
     
     // Warehouse information (kho hàng của shop)
-    private Integer warehouseDistrictId;
+    private Integer warehouseDistrictId = 1454;
     private String warehouseWardCode;
     private String warehouseAddress;
     private String warehouseName;
