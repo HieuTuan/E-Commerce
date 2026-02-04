@@ -75,11 +75,12 @@ Notes:
     * **Trạng thái:** Đơn khiếu nại chuyển sang `PENDING` (Chờ xử lý) hoặc `PENDING_REVIEW`.
 
 * 🛡️ **Xử lý & Phê duyệt (Admin/System)**
-    * **Manual Review:** Admin xem xét yêu cầu (`AdminController`) → Ra quyết định **APPROVE** (Đồng ý) hoặc **REJECT** (Từ chối).
-    * **Payment Processing:** Nếu được duyệt → `PaymentService` gọi API sang cổng thanh toán (`PaymentGatewayAdapter`) để hoàn tiền thực.
+    * **Manual Review:** Staff xem xét yêu cầu (`AdminController`) → Ra quyết định **APPROVE** (Đồng ý) hoặc **REJECT** (Từ chối).
+    * **Payment Processing:** Nếu được duyệt -> thì đơn hàng sẽ được tạo bên GHN với trạng thái là "Chờ khách hàng gửi hàng" và gửi Email cho khách hàng là từ chối hoặc chấp nhận.
+    * **Staff GHN**: Nhân viên giao hàng nhanh nhận hàng và xác nhận trạng thái thành đã nhận hàng(Vì lý do bảo mật bên GHN lên không thể đổi được trạng thái).
     * **Data Update:**
         * Cập nhật trạng thái `RefundRepository` & `OrderRepository`.
-        * Ghi log giao dịch vào `PaymentRepository`.
+    * **Staff hoàn tiền:** Staff sẽ hoàn tiền và cập nhập ảnh hoàn tiền update lên hệ thống, khách hàng có thể xem bằng chứng đó và status đổi thành đã hoàn tiền*
     * **Success:** Hệ thống gửi thông báo (`NotificationService`) cho người dùng kết quả xử lý.
 
 #### 📋 Bảng phân tích CRUD (Refund Flow)
@@ -92,7 +93,7 @@ Notes:
 | 🛑 **Admin review** | `AdminController.approve` / `reject` → `handleAdminDecision` | **Update** | `refunds` (status → APPROVED / REJECTED) |
 | 💳 **Execute refund** | `PaymentService.refundTransaction` → `Gateway.refund` | **Update** | `payments` (refund status), `refunds` (gateway_tx, executed_at) |
 | 🔄 **Mark order** | `OrderService.markRefunded` | **Update** | `orders` (status → REFUNDED) |
-| 🔔 **Notify user** | `NotificationService.notifyRefund` | **Create** | `notifications` (insert notification / audit log) |
+
 
 Important business rules implemented in service layer:
 - Only refund if order/payment status is allowed (e.g., PAID, DELIVERED within allowed window) — `RefundService.isRefundable(order)`.
@@ -118,11 +119,11 @@ Dưới đây là danh sách các tài khoản được khởi tạo tự độn
 
 The following properties in `application.properties` are **sensitive secrets** (account credentials, API keys, tokens). They must never be committed to source control or exposed in logs/public places.
 
-- `spring.mail.password` — SMTP account password  
-- `vnpay.hash-secret` — VNPay hash secret  
-- `ghn.token` — GHN API token  
-- `ghn.webhook-secret` — GHN webhook secret  
-- `cloudinary.api-key` — Cloudinary API key
+- `spring.mail.password` — giru awvr xkyg gydq 
+- `vnpay.hash-secret` — ZIQU8IKE4YBRYZFX8QTLXPWVNK1S56VW 
+- `ghn.token` — 78be1310-ffe5-11f0-a3d6-dac90fb956b5  
+- `ghn.webhook-secret` — hgfdsfggfdssdvgfdxcfdd
+- `cloudinary.api-key` — 523872985863389
 
 Why this matters
 - 🔐 These values grant access to external services and financial/payment functionality.  
