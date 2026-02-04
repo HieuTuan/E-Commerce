@@ -10,7 +10,6 @@ Dự án sử dụng các công nghệ chính sau:
 * **Database:** SQL sever management (Cấu hình trong `application.properties`)
 * **Frontend:** JavaScript + thymeleaf 
 * **IDE:** IntelliJ IDEA
-* **Testing:** JUnit
 
 ## ⚙️ Cài đặt Database (Database Setup)
 1.  Tạo database mới: ECommercePlatform .
@@ -114,4 +113,40 @@ Dưới đây là danh sách các tài khoản được khởi tạo tự độn
 | **Customer** | `customer` | `tuannhse182788@fpt.edu.vn` | `Admin123@` | **Khách hàng:** Mua sắm, xem lịch sử đơn. |
 
 > **Lưu ý:** Dữ liệu này được tự động tạo bởi `TestDataLoader` khi chạy ứng dụng lần đầu.
+
+# Secrets & Sensitive Configuration 🔒
+
+The following properties in `application.properties` are **sensitive secrets** (account credentials, API keys, tokens). They must never be committed to source control or exposed in logs/public places.
+
+- `spring.mail.password` — SMTP account password  
+- `vnpay.hash-secret` — VNPay hash secret  
+- `ghn.token` — GHN API token  
+- `ghn.webhook-secret` — GHN webhook secret  
+- `cloudinary.api-key` — Cloudinary API key
+
+Why this matters
+- 🔐 These values grant access to external services and financial/payment functionality.  
+- ⚠️ Leaked secrets can lead to account compromise, financial loss, or data breach.
+
+Recommended practices
+1. Use environment variables or a secrets manager instead of hard-coding:
+   - Example in `application.properties`:
+     ```
+     spring.mail.password=${SPRING_MAIL_PASSWORD}
+     vnpay.hash-secret=${VNPAY_HASH_SECRET}
+     ghn.token=${GHN_TOKEN}
+     ghn.webhook-secret=${GHN_WEBHOOK_SECRET}
+     cloudinary.api-key=${CLOUDINARY_API_KEY}
+     ```
+2. Add local secrets files to `.gitignore` (do not commit). 
+3. Use cloud/infra secret stores for production:
+   - GitHub Actions Secrets / GitLab CI variables  
+   - AWS Secrets Manager / Parameter Store  
+   - Azure Key Vault  
+   - HashiCorp Vault
+4. Rotate secrets regularly and minimize scopes/permissions.
+5. Avoid printing secrets in logs and enable auditing for secret access.
+
+Quick example: GitHub Actions usage
+
 
