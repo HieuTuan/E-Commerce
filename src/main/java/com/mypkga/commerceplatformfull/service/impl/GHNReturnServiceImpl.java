@@ -81,10 +81,10 @@ public class GHNReturnServiceImpl implements GHNReturnService {
                     .serviceTypeId(null) // Set to null as requested
                     .toDistrictId(1454) // Shop warehouse
                     .toWardCode("21208")
-                    .height(50) // Fixed height as in example
-                    .length(20) // Fixed length as in example
-                    .weight(200) // Fixed weight as in example
-                    .width(20) // Fixed width as in example
+                    .height(calculateTotalHeight(order)) // Calculate based on order
+                    .length(calculateTotalLength(order)) // Calculate based on order
+                    .weight(calculateTotalWeight(order)) // Calculate based on order
+                    .width(calculateTotalWidth(order)) // Calculate based on order
                     .insuranceValue(order.getTotalAmount().intValue())
                     .codFailedAmount(2000) // Set COD failed amount as in example
                     .coupon(null)
@@ -107,7 +107,6 @@ public class GHNReturnServiceImpl implements GHNReturnService {
             log.info("Request body - fromDistrictId: {}, fromWardCode: '{}', toDistrictId: {}, toWardCode: '{}'",
                     feeRequest.getFromDistrictId(), feeRequest.getFromWardCode(),
                     feeRequest.getToDistrictId(), feeRequest.getToWardCode());
-            log.debug("Full request: {}", feeRequest);
 
             // Call GHN API
             String url = ghnApiUrl + "/v2/shipping-order/fee";
@@ -286,10 +285,10 @@ public class GHNReturnServiceImpl implements GHNReturnService {
                 .map(item -> GHNFeeRequest.GHNItem.builder()
                         .name(item.getProduct().getName())
                         .quantity(item.getQuantity())
-                        .height(200) // Fixed dimensions as in example
-                        .weight(1000) // Fixed weight as in example
-                        .length(200) // Fixed dimensions as in example
-                        .width(200) // Fixed dimensions as in example
+                        .height(15) // Realistic height per item in cm
+                        .weight(300) // Realistic weight per item in grams (0.3kg)
+                        .length(20) // Realistic length per item in cm
+                        .width(15) // Realistic width per item in cm
                         .build())
                 .collect(Collectors.toList());
     }
@@ -313,18 +312,34 @@ public class GHNReturnServiceImpl implements GHNReturnService {
     }
 
     private Integer calculateTotalWeight(Order order) {
-        return order.getItems().size() * 200; // 200g per item default
+        // Calculate total weight: 300g per item
+        int totalWeight = order.getItems().stream()
+                .mapToInt(item -> item.getQuantity() * 300)
+                .sum();
+        return Math.max(100, totalWeight); // Minimum 100g
     }
 
     private Integer calculateTotalLength(Order order) {
-        return 20; // Default package length
+        // Base length + extra for more items
+        int itemCount = order.getItems().stream()
+                .mapToInt(item -> item.getQuantity())
+                .sum();
+        return Math.min(50, 20 + (itemCount / 3) * 5); // Max 50cm
     }
 
     private Integer calculateTotalWidth(Order order) {
-        return 20; // Default package width
+        // Base width + extra for more items
+        int itemCount = order.getItems().stream()
+                .mapToInt(item -> item.getQuantity())
+                .sum();
+        return Math.min(40, 15 + (itemCount / 3) * 5); // Max 40cm
     }
 
     private Integer calculateTotalHeight(Order order) {
-        return Math.max(10, order.getItems().size() * 5); // Height based on item count
+        // Height based on item count: stacking items
+        int itemCount = order.getItems().stream()
+                .mapToInt(item -> item.getQuantity())
+                .sum();
+        return Math.min(50, Math.max(15, itemCount * 5)); // Min 15cm, Max 50cm
     }
 }

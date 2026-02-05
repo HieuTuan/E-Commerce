@@ -16,10 +16,11 @@
         <div class="container">
             <a class="navbar-brand" th:href="@{/}"><i class="fas fa-shopping-bag"></i> E-Commerce</a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" th:href="@{/}">Home</a>
-                <a class="nav-link" th:href="@{/products}">Products</a>
-                <a class="nav-link" th:href="@{/cart}"><i class="fas fa-shopping-cart"></i> Cart</a>
-                <a class="nav-link active" th:href="@{/orders}">My Orders</a>
+                <a class="nav-link" th:href="@{/}">Trang chủ</a>
+                <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
+                <a class="nav-link" th:href="@{/cart}"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a>
+                <a class="nav-link active" th:href="@{/orders}">Đơn hàng</a>
+                <a class="nav-link" th:href="@{/returns/my-requests}"><i class="fas fa-undo"></i> Yêu cầu hoàn trả</a>
             </div>
         </div>
     </nav>
@@ -51,13 +52,13 @@
 
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Order #<span th:text="${order.orderNumber}">ORD-001</span></h4>
+                <h4 class="mb-0">Đặt hàng: <span th:text="${order.orderNumber}">ORD-001</span></h4>
                 <small th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">Date</small>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
-                        <h6>Order Status</h6>
+                        <h6>Trạng thái đơn hàng</h6>
                         <!-- Show red status with "Khách hàng report" when has delivery issue -->
                         <div th:if="${order.hasDeliveryIssue()}">
                             <span class="badge bg-danger">DELIVERED</span>
@@ -77,11 +78,11 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <h6>Payment Status</h6>
+                        <h6>Trạng thái thanh toán</h6>
                         <span class="badge bg-info" th:text="${order.paymentStatus}">Payment</span>
                     </div>
                     <div class="col-md-4">
-                        <h6>Total Amount</h6>
+                        <h6>Tổng tiền</h6>
                         <h5 class="text-primary"><span
                                 th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ</h5>
                     </div>
@@ -93,16 +94,16 @@
             <div class="col-md-8">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Order Items</h5>
+                        <h5 class="mb-0">Sản phẩm</h5>
                     </div>
                     <div class="card-body">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Subtotal</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Giá</th>
+                                    <th>Số lượng</th>
+                                    <th>Tổng</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -122,9 +123,9 @@
                 <!-- Order Timeline Section -->
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Order Timeline</h5>
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Lịch sử đơn hàng</h5>
                         <a th:href="@{/orders/{id}/timeline(id=${order.id})}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-expand-arrows-alt me-1"></i>View Full Timeline
+                            <i class="fas fa-expand-arrows-alt me-1"></i>Xem chi tiết
                         </a>
                     </div>
                     <div class="card-body">
@@ -172,54 +173,157 @@
                                 }
 
                                 .timeline-icon.pending::after {
-                                    content: '⏱️';
-                                    font-size: 14px;
+                                    content: '\f017';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
                                 }
+
+                                /* fa-clock */
 
                                 .timeline-icon.confirmed {
                                     background: #0d6efd;
                                 }
 
                                 .timeline-icon.confirmed::after {
-                                    content: '✅';
-                                    font-size: 14px;
+                                    content: '\f00c';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
                                 }
+
+                                /* fa-check */
 
                                 .timeline-icon.shipping {
                                     background: #fd7e14;
                                 }
 
                                 .timeline-icon.shipping::after {
-                                    content: '🚚';
-                                    font-size: 14px;
+                                    content: '\f0d1';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
                                 }
+
+                                /* fa-truck */
+
+                                .timeline-icon.awaiting_confirmation {
+                                    background: #ffc107;
+                                }
+
+                                .timeline-icon.awaiting_confirmation::after {
+                                    content: '\f46c';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-dolly */
 
                                 .timeline-icon.delivered {
                                     background: #198754;
                                 }
 
                                 .timeline-icon.delivered::after {
-                                    content: '📦';
-                                    font-size: 14px;
+                                    content: '\f48b';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
                                 }
 
-                                .timeline-icon.cancelled {
-                                    background: #dc3545;
-                                }
-
-                                .timeline-icon.cancelled::after {
-                                    content: '❌';
-                                    font-size: 14px;
-                                }
+                                /* fa-clipboard-check */
 
                                 .timeline-icon.confirmed_by_customer {
                                     background: #20c997;
                                 }
 
                                 .timeline-icon.confirmed_by_customer::after {
-                                    content: '✅';
-                                    font-size: 14px;
+                                    content: '\f560';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
                                 }
+
+                                /* fa-smile-beam - using fa-check-double semantic */
+
+                                .timeline-icon.cancelled {
+                                    background: #dc3545;
+                                }
+
+                                .timeline-icon.cancelled::after {
+                                    content: '\f00d';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-times */
+
+                                /* Return statuses */
+                                .timeline-icon.refund_requested {
+                                    background: #fd7e14;
+                                }
+
+                                .timeline-icon.refund_requested::after {
+                                    content: '\f3e5';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-reply */
+
+                                .timeline-icon.return_approved {
+                                    background: #0dcaf0;
+                                }
+
+                                .timeline-icon.return_approved::after {
+                                    content: '\f49e';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-thumbs-up */
+
+                                .timeline-icon.returning {
+                                    background: #6610f2;
+                                }
+
+                                .timeline-icon.returning::after {
+                                    content: '\f48b';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-shipping-fast / clipboard-check placeholder */
+
+                                .timeline-icon.return_received {
+                                    background: #6f42c1;
+                                }
+
+                                .timeline-icon.return_received::after {
+                                    content: '\f493';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-warehouse */
+
+                                .timeline-icon.refunded {
+                                    background: #198754;
+                                }
+
+                                .timeline-icon.refunded::after {
+                                    content: '\f3d1';
+                                    font-family: "Font Awesome 5 Free";
+                                    font-weight: 900;
+                                    font-size: 12px;
+                                }
+
+                                /* fa-money-bill-wave */
 
                                 .timeline-content {
                                     background: #f8f9fa;
@@ -267,12 +371,12 @@
 
                                     <div class="timeline-user" th:if="${entry.updatedBy}">
                                         <i class="fas fa-user me-1"></i>
-                                        Updated by: <span th:text="${entry.updatedBy}"></span>
+                                        Cập nhật bởi: <span th:text="${entry.updatedBy}"></span>
                                     </div>
 
                                     <div class="timeline-notes" th:if="${entry.notes}">
                                         <i class="fas fa-sticky-note me-1"></i>
-                                        <span th:text="${entry.notes}"></span>
+                                        <span th:utext="${entry.notes}"></span>
                                     </div>
                                 </div>
                             </div>
@@ -325,9 +429,19 @@
                                 <div class="col-md-4">
                                     <!-- Check if order has delivery issue report -->
                                     <div th:if="${order.hasDeliveryIssue()}">
-                                        <button type="button" class="btn btn-secondary w-100" disabled>
-                                            <i class="fas fa-check me-2"></i>Đã báo cáo vấn đề
-                                        </button>
+                                        <!-- Check if any report has been processed (RESOLVED or REJECTED) -->
+                                        <div
+                                            th:if="${order.deliveryIssues.?[status.name() == 'RESOLVED' or status.name() == 'REJECTED'].size() > 0}">
+                                            <button type="button" class="btn btn-secondary w-100" disabled>
+                                                <i class="fas fa-check-circle me-2"></i>Đã xử lý
+                                            </button>
+                                        </div>
+                                        <div
+                                            th:unless="${order.deliveryIssues.?[status.name() == 'RESOLVED' or status.name() == 'REJECTED'].size() > 0}">
+                                            <button type="button" class="btn btn-secondary w-100" disabled>
+                                                <i class="fas fa-clock me-2"></i>Đã báo cáo vấn đề
+                                            </button>
+                                        </div>
                                     </div>
                                     <div th:unless="${order.hasDeliveryIssue()}">
                                         <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal"
@@ -340,17 +454,69 @@
                             </div>
                         </div>
 
-                        <!-- Delivery Issue Reports Section -->
-                        <div th:if="${order.hasDeliveryIssue()}" class="mt-4">
-                            <div class="card border-warning">
-                                <div class="card-header bg-warning text-dark">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        Báo cáo vấn đề giao hàng
-                                    </h6>
+                        <!-- Delivery Issue Reports Section - Admin Response -->
+                        <div th:if="${order.deliveryIssues != null and !order.deliveryIssues.isEmpty()}" class="mt-4">
+                            <!-- Loop through delivery issues to show admin responses -->
+                            <div th:each="report : ${order.deliveryIssues}">
+                                <!-- Show prominent admin response if processed -->
+                                <div th:if="${report.status.name() == 'RESOLVED' or report.status.name() == 'REJECTED'}"
+                                    class="mb-3">
+                                    <div th:classappend="${report.status.name() == 'RESOLVED' ? 'alert-success' : 'alert-danger'}"
+                                        class="alert">
+                                        <div class="d-flex align-items-start">
+                                            <i th:class="${report.status.name() == 'RESOLVED' ? 'fas fa-check-circle fa-2x me-3' : 'fas fa-times-circle fa-2x me-3'}"
+                                                th:classappend="${report.status.name() == 'RESOLVED' ? 'text-success' : 'text-danger'}"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-2">
+                                                    <strong
+                                                        th:text="${report.status.name() == 'RESOLVED' ? 'Báo cáo đã được chấp nhận' : 'Báo cáo đã bị từ chối'}">Admin
+                                                        Response</strong>
+                                                </h6>
+                                                <!-- Show admin notes if provided -->
+                                                <div
+                                                    th:if="${report.adminNotes != null and !report.adminNotes.isEmpty()}">
+                                                    <p class="mb-2">
+                                                        <strong
+                                                            th:text="${report.status.name() == 'RESOLVED' ? 'Lý do chấp nhận:' : 'Lý do từ chối:'}">Reason:</strong>
+                                                    </p>
+                                                    <p class="mb-0" th:utext="${report.adminNotes}">Admin notes</p>
+                                                </div>
+                                                <!-- Show default message if no notes -->
+                                                <div
+                                                    th:unless="${report.adminNotes != null and !report.adminNotes.isEmpty()}">
+                                                    <p class="mb-0"
+                                                        th:text="${report.status.name() == 'RESOLVED' ? 'Báo cáo của bạn đã được xem xét và chấp nhận.' : 'Báo cáo của bạn đã được xem xét và từ chối.'}">
+                                                        Default message</p>
+                                                </div>
+                                                <small class="text-muted d-block mt-2">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    Xử lý lúc: <span
+                                                        th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                                </small>
+                                                <!-- Show contact info for rejected reports -->
+                                                <div th:if="${report.status.name() == 'REJECTED'}"
+                                                    class="mt-3 pt-3 border-top">
+                                                    <p class="mb-0">
+                                                        <i class="fas fa-phone-alt me-2"></i>
+                                                        <strong>Vui lòng liên hệ hotline: <a href="tel:1900xxxx"
+                                                                class="text-danger">1900 1898</a> để được hỗ
+                                                            trợ.</strong>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div th:each="report : ${order.deliveryIssues}" class="mb-3">
+
+                                <!-- Original report details card -->
+                                <div class="card border-warning mb-3">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            Báo cáo vấn đề giao hàng
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <p class="mb-1">
@@ -358,8 +524,8 @@
                                                         Type</span>
                                                 </p>
                                                 <p class="mb-1" th:if="${report.description}">
-                                                    <strong>Mô tả:</strong> <span
-                                                        th:text="${report.description}">Description</span>
+                                                    <strong>Mô tả:</strong> <span th:text="${report.description}">Mô
+                                                        tả</span>
                                                 </p>
                                                 <small class="text-muted">
                                                     Báo cáo lúc: <span
@@ -367,7 +533,7 @@
                                                 </small>
                                             </div>
                                             <div class="col-md-4 text-end">
-                                                <!-- Status display based on report status -->
+                                                <!-- Status badge -->
                                                 <div th:if="${report.status.name() == 'PENDING'}">
                                                     <span class="badge bg-warning">Đang xử lý</span>
                                                     <small class="text-muted d-block mt-1">Chúng tôi sẽ liên hệ sớm
@@ -377,27 +543,14 @@
                                                     <span class="badge bg-success">Đã giải quyết</span>
                                                     <small class="text-success d-block mt-1">Vấn đề đã được xử
                                                         lý</small>
-                                                    <div th:if="${report.adminNotes}" class="mt-2">
-                                                        <small class="text-muted">
-                                                            <strong>Ghi chú:</strong> <span
-                                                                th:text="${report.adminNotes}">Notes</span>
-                                                        </small>
-                                                    </div>
                                                 </div>
                                                 <div th:if="${report.status.name() == 'REJECTED'}">
                                                     <span class="badge bg-danger">Đã từ chối</span>
-                                                    <small class="text-danger d-block mt-1">Vui lòng liên hệ hotline để
-                                                        biết thêm chi tiết</small>
-                                                    <div th:if="${report.adminNotes}" class="mt-2">
-                                                        <small class="text-muted">
-                                                            <strong>Lý do:</strong> <span
-                                                                th:text="${report.adminNotes}">Reason</span>
-                                                        </small>
-                                                    </div>
+                                                    <small class="text-danger d-block mt-1">Vui lòng xem lý do bên
+                                                        trên</small>
                                                 </div>
                                             </div>
                                         </div>
-                                        <hr th:unless="${reportStat.last}">
                                     </div>
                                 </div>
                             </div>
@@ -439,24 +592,25 @@
             <div class="col-md-4">
                 <div class="card mb-3">
                     <div class="card-header">
-                        <h6 class="mb-0">Shipping Information</h6>
+                        <h6 class="mb-0">Thông tin giao hàng</h6>
                     </div>
                     <div class="card-body">
-                        <p><strong>Name:</strong><br><span th:text="${order.customerName}">Name</span></p>
-                        <p><strong>Address:</strong><br><span th:text="${order.decodedShippingAddress}">Address</span>
+                        <p><strong>Tên:</strong><br><span th:utext="${order.customerName}">Name</span></p>
+                        <p><strong>Địa chỉ:</strong><br><span th:utext="${order.decodedShippingAddress}">Address</span>
                         </p>
-                        <p><strong>Phone:</strong><br><span th:text="${order.customerPhone}">Phone</span></p>
+                        <p><strong>Số điện thoại:</strong><br><span th:text="${order.customerPhone}">Phone</span></p>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h6 class="mb-0">Payment Information</h6>
+                        <h6 class="mb-0">Thông tin thanh toán</h6>
                     </div>
                     <div class="card-body">
-                        <p><strong>Method:</strong><br><span th:text="${order.paymentMethod}">COD</span></p>
-                        <p><strong>Status:</strong><br><span class="badge bg-success"
-                                th:text="${order.paymentStatus}">Status</span></p>
+                        <p><strong>Phương thức thanh toán:</strong><br><span th:text="${order.paymentMethod}">COD</span>
+                        </p>
+                        <p><strong>Trạng thái:</strong><br><span class="badge bg-success"
+                                th:text="${order.paymentStatus}">Trạng thái thanh toán</span></p>
                     </div>
                 </div>
             </div>
@@ -464,7 +618,7 @@
 
         <div class="mt-4">
             <a th:href="@{/orders}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to My Orders
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách đơn hàng
             </a>
         </div>
     </div>

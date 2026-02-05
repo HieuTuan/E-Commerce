@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/customer.css}">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
 </head>
 
-<body>
+<body class="customer-wrapper landing-page">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
@@ -23,38 +24,39 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}">Home</a>
+                        <a class="nav-link" th:href="@{/}">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/products}">Products</a>
+                        <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <a class="nav-link cart-link" th:href="@{/cart}">
-                            <i class="fas fa-shopping-cart"></i> Cart
-                            <span class="badge bg-light text-dark ms-1 cart-count" style="font-size: 0.7em;" th:text="${cartItemCount ?: 0}">0</span>
+                            <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                            <span class="badge bg-light text-dark ms-1 cart-count" style="font-size: 0.7em;"
+                                th:text="${cartItemCount ?: 0}">0</span>
                         </a>
                     </li>
                     <li class="nav-item" sec:authorize="!isAuthenticated()">
-                        <a class="nav-link" th:href="@{/login}">Login</a>
+                        <a class="nav-link" th:href="@{/login}">Đăng nhập</a>
                     </li>
                     <li class="nav-item" sec:authorize="!isAuthenticated()">
-                        <a class="nav-link" th:href="@{/register}">Register</a>
+                        <a class="nav-link" th:href="@{/register}">Đăng ký</a>
                     </li>
                     <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <a class="nav-link" th:href="@{/orders}">My Orders</a>
+                        <a class="nav-link" th:href="@{/orders}">Đơn hàng</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a class="nav-link" th:href="@{/admin}">Admin</a>
+                        <a class="nav-link" th:href="@{/admin}">Quản trị</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('STAFF')">
-                        <a class="nav-link" th:href="@{/staff}">Staff Dashboard</a>
+                        <a class="nav-link" th:href="@{/staff}">Nhân viên</a>
                     </li>
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <form th:action="@{/logout}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-link nav-link text-white">
-                                <i class="fas fa-sign-out-alt"></i> Logout (<span sec:authentication="name"></span>)
+                                <i class="fas fa-sign-out-alt"></i> Đăng xuất (<span sec:authentication="name"></span>)
                             </button>
                         </form>
                     </li>
@@ -81,86 +83,64 @@
             <p class="lead">Discover amazing products with AI-powered recommendations</p>
             <a class="btn btn-primary btn-lg" th:href="@{/products}" role="button">Shop Now</a>
         </div>
-
+    </div>
+    <div class="landing-page">
         <!-- Featured Products -->
         <div th:if="${featuredProducts != null && !featuredProducts.isEmpty()}" class="featured-products">
             <div class="container">
                 <h2 class="mb-4">Featured Products</h2>
-                <div class="row">
-                    <div class="col-lg-4 col-md-6 mb-4" th:each="product : ${featuredProducts}">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-4 g-4">
+                    <div class="col" th:each="product : ${featuredProducts}">
                         <div class="card featured-product-card h-100">
                             <img th:src="${product.primaryImage != null ? product.primaryImage.mediumUrl : '/images/no-image.svg'}"
                                 class="card-img-top" alt="Product Image">
                             <div class="card-body">
                                 <div class="card-content">
                                     <h5 class="card-title" th:text="${product.name}">Product Name</h5>
-                                    <p class="card-text" th:text="${#strings.abbreviate(product.description, 100)}">Description</p>
-                                    <p class="price"><span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ</p>
+                                    <p class="card-text" th:text="${#strings.abbreviate(product.description, 100)}">
+                                        Description</p>
+                                    <p class="price"><span
+                                            th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ</p>
                                     <div class="mb-2">
                                         <small class="text-muted">
-                                            <i class="fas fa-box"></i> 
-                                            Availability: 
-                                            <span th:if="${product.stockQuantity > 0}" 
-                                                  th:text="${product.stockQuantity} + ' in stock'"
-                                                  class="text-success fw-bold"></span>
-                                            <span th:if="${product.stockQuantity <= 0}" 
-                                                  class="text-danger fw-bold">Out of stock</span>
+                                            <i class="fas fa-box"></i>
+                                            Availability:
+                                            <span th:if="${product.stockQuantity > 0}"
+                                                th:text="${product.stockQuantity} + ' in stock'"
+                                                class="text-success fw-bold"></span>
+                                            <span th:if="${product.stockQuantity <= 0}" class="text-danger fw-bold">Out
+                                                of stock</span>
                                         </small>
                                     </div>
                                 </div>
-                                <div class="btn-group w-100">
-                                    <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-outline-primary flex-fill me-2">
-                                        <i class="fas fa-eye"></i> Xem Chi Tiết
+                                <div class="d-flex w-100 gap-1">
+                                    <a th:href="@{/products/{id}(id=${product.id})}"
+                                        class="btn btn-outline-primary btn-sm flex-fill d-flex align-items-center justify-content-center">
+                                        <span><i class="fas fa-eye me-1"></i> Xem Chi Tiết</span>
                                     </a>
-                                    <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="flex-fill add-to-cart-form"
-                                          th:if="${product.stockQuantity > 0}">
+                                    <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()"
+                                        class="flex-fill add-to-cart-form" th:if="${product.stockQuantity > 0}">
                                         <input type="hidden" name="productId" th:value="${product.id}">
                                         <input type="hidden" name="quantity" value="1">
                                         <input type="hidden" name="returnUrl" value="/">
-                                        <button type="submit" class="btn btn-primary w-100 btn-add-to-cart">
-                                            <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ
+                                        <button type="submit"
+                                            class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center btn-add-to-cart">
+                                            <span><i class="fas fa-cart-plus me-1"></i> Thêm Vào Giỏ</span>
                                         </button>
                                     </form>
-                                    <button class="btn btn-secondary w-100 flex-fill" disabled
-                                            th:if="${product.stockQuantity <= 0}" sec:authorize="isAuthenticated()">
-                                        <i class="fas fa-times-circle"></i> Hết Hàng
+                                    <button
+                                        class="btn btn-secondary btn-sm flex-fill d-flex align-items-center justify-content-center"
+                                        disabled th:if="${product.stockQuantity <= 0}"
+                                        sec:authorize="isAuthenticated()">
+                                        <span><i class="fas fa-times-circle me-1"></i> Hết Hàng</span>
                                     </button>
-                                    <a th:href="@{/login}" class="btn btn-info w-100 flex-fill" sec:authorize="!isAuthenticated()">
-                                        <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+                                    <a th:href="@{/login}"
+                                        class="btn btn-info btn-sm flex-fill d-flex align-items-center justify-content-center"
+                                        sec:authorize="!isAuthenticated()">
+                                        <span><i class="fas fa-sign-in-alt me-1"></i> Đăng Nhập</span>
                                     </a>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Latest Products -->
-        <div th:if="${latestProducts != null && !latestProducts.isEmpty()}" class="latest-products mt-5">
-            <h2 class="mb-4">Latest Products</h2>
-            <div class="row">
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-4" th:each="product : ${latestProducts}">
-                    <div class="card latest-product-card h-100">
-                        <img th:src="${product.primaryImage != null ? product.primaryImage.thumbnailUrl : '/images/no-image.svg'}"
-                            class="card-img-top" alt="Product Image">
-                        <div class="card-body">
-                            <h6 class="card-title" th:text="${product.name}">Product</h6>
-                            <p class="price"><span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ</p>
-                            <div class="mb-2">
-                                <small class="text-muted">
-                                    <i class="fas fa-box"></i> 
-                                    <span th:if="${product.stockQuantity > 0}" 
-                                          th:text="${product.stockQuantity} + ' available'"
-                                          class="text-success"></span>
-                                    <span th:if="${product.stockQuantity <= 0}" 
-                                          class="text-danger">Out of stock</span>
-                                </small>
-                            </div>
-                            <a th:href="@{/products/{id}(id=${product.id})}"
-                                class="btn btn-outline-primary w-100">
-                                <i class="fas fa-eye"></i> View Details
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -204,17 +184,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/chatbot.js}"></script>
     <script src="/js/cart-animation.js"></script>
-    
+
     <!-- Enhanced Product Animations -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Add fade-in animation to product cards
             const observerOptions = {
                 threshold: 0.1,
                 rootMargin: '0px 0px -50px 0px'
             };
-            
-            const observer = new IntersectionObserver(function(entries) {
+
+            const observer = new IntersectionObserver(function (entries) {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('fade-in');
@@ -222,38 +202,25 @@
                     }
                 });
             }, observerOptions);
-            
+
             // Observe all product cards
             document.querySelectorAll('.featured-product-card, .latest-product-card').forEach(card => {
                 observer.observe(card);
             });
-            
-            // Add loading state to buttons
-            document.querySelectorAll('form[action*="/cart/add"] button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const originalText = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-                    this.disabled = true;
-                    
-                    // Re-enable after 2 seconds (adjust based on your server response time)
-                    setTimeout(() => {
-                        this.innerHTML = originalText;
-                        this.disabled = false;
-                    }, 2000);
-                });
-            });
-            
+
+
+
             // Add hover effect sound (optional - can be removed if not needed)
             document.querySelectorAll('.card').forEach(card => {
-                card.addEventListener('mouseenter', function() {
+                card.addEventListener('mouseenter', function () {
                     this.style.transform = 'translateY(-8px) scale(1.02)';
                 });
-                
-                card.addEventListener('mouseleave', function() {
+
+                card.addEventListener('mouseleave', function () {
                     this.style.transform = 'translateY(0) scale(1)';
                 });
             });
-            
+
             // Smooth scroll for navigation links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,66 +10,67 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
+
 <body class="admin-wrapper">
     <!-- Sidebar -->
     <nav class="admin-sidebar" id="adminSidebar">
-        <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <!-- <button class="sidebar-toggle" onclick="toggleSidebar()">
             <i class="fas fa-chevron-left"></i>
-        </button>
-        
+        </button> -->
+
         <div class="admin-nav">
-            <div class="nav-header">Main</div>
+            <div class="nav-header">Chính</div>
             <div class="nav-item">
                 <a class="nav-link" th:href="@{/admin}">
                     <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
+                    <span>Trang chủ</span>
                 </a>
             </div>
-            
-            <div class="nav-header">Management</div>
+
+            <div class="nav-header">Quản lý</div>
             <div class="nav-item">
                 <a class="nav-link" th:href="@{/admin/products}">
                     <i class="fas fa-box"></i>
-                    <span>Products</span>
+                    <span>Sản phẩm</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a class="nav-link" th:href="@{/admin/orders}">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Orders</span>
+                    <span>Đơn hàng</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a class="nav-link active" th:href="@{/admin/users}">
                     <i class="fas fa-users"></i>
-                    <span>Users</span>
+                    <span>Người dùng</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a class="nav-link" th:href="@{/admin/delivery-issues}">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>Delivery Issues</span>
+                    <span>Vấn đề giao hàng</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a class="nav-link" th:href="@{/admin/reports}">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
+                    <span>Báo cáo</span>
                 </a>
             </div>
-            
-            <div class="nav-header">System</div>
+
+            <div class="nav-header">Hệ thống</div>
             <div class="nav-item">
                 <a class="nav-link" th:href="@{/}">
                     <i class="fas fa-home"></i>
-                    <span>Back to Store</span>
+                    <span>Quay lại trang chủ</span>
                 </a>
             </div>
             <div class="nav-item">
                 <form th:action="@{/logout}" method="post" class="d-inline w-100">
                     <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent">
                         <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
+                        <span>Đăng xuất</span>
                     </button>
                 </form>
             </div>
@@ -79,9 +81,9 @@
     <div class="admin-content" id="adminContent">
         <!-- Header -->
         <div class="admin-header">
-            <h1>Users</h1>
+            <h1><i class="fas fa-users me-2"></i>Quản lý người dùng</h1>
             <div class="user-info">
-                <span>Welcome, <span sec:authentication="name">admin@ecommerce.com</span></span>
+                <span>Xin chào, <span sec:authentication="name">admin@ecommerce.com</span></span>
                 <div class="avatar">
                     <i class="fas fa-user"></i>
                 </div>
@@ -91,11 +93,11 @@
         <!-- Main Content Area -->
         <div class="admin-main">
             <div class="content-header">
-                <h2><i class="fas fa-users me-2"></i>User Management</h2>
+
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Users</li>
+                        <li class="breadcrumb-item active">Người dùng</li>
                     </ol>
                 </nav>
             </div>
@@ -103,25 +105,28 @@
             <!-- Users Table -->
             <div class="data-table-wrapper">
                 <div class="data-table-header">
-                    <h3><i class="fas fa-users me-2"></i>Users</h3>
+                    <h3><i class="fas fa-users me-2"></i>Người dùng</h3>
                     <div class="data-table-actions">
                         <div class="btn-group">
-                            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle"
+                                data-bs-toggle="dropdown">
                                 <i class="fas fa-filter"></i> Filter
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">All Users</a></li>
-                                <li><a class="dropdown-item" href="#">Admins</a></li>
-                                <li><a class="dropdown-item" href="#">Staff</a></li>
-                                <li><a class="dropdown-item" href="#">Customers</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Active</a></li>
-                                <li><a class="dropdown-item" href="#">Disabled</a></li>
+                                <li><a class="dropdown-item" href="#">Tất cả</a></li>
+                                <li><a class="dropdown-item" href="#">Quản trị viên</a></li>
+                                <li><a class="dropdown-item" href="#">Nhân viên</a></li>
+                                <li><a class="dropdown-item" href="#">Khách hàng</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="#">Hoạt động</a></li>
+                                <li><a class="dropdown-item" href="#">Không hoạt động</a></li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="table admin-table">
                         <thead>
@@ -140,44 +145,48 @@
                                 <td>
                                     <strong th:text="${user.id}">1</strong>
                                 </td>
-                                <td th:text="${user.username}">username</td>
-                                <td th:text="${user.fullName}">Full Name</td>
-                                <td th:text="${user.email}">email@example.com</td>
+                                <td th:text="${user.username}">Tên đăng nhập</td>
+                                <td th:text="${user.fullName}">Họ và tên</td>
+                                <td th:text="${user.email}">Email</td>
                                 <td>
                                     <span class="status-badge"
-                                          th:classappend="${user.role.name == 'ADMIN'} ? 'danger' : (${user.role.name == 'STAFF'} ? 'warning' : 'confirmed')"
-                                          th:text="${user.role.name}">Role</span>
+                                        th:classappend="${user.role.name == 'ADMIN'} ? 'danger' : (${user.role.name == 'STAFF'} ? 'warning' : 'confirmed')"
+                                        th:text="${user.role.name}">Role</span>
                                 </td>
                                 <td>
                                     <span class="status-badge"
-                                          th:classappend="${user.enabled} ? 'delivered' : 'cancelled'"
-                                          th:text="${user.enabled} ? 'Active' : 'Disabled'">Status</span>
+                                        th:classappend="${user.enabled} ? 'delivered' : 'cancelled'"
+                                        th:text="${user.enabled} ? 'Active' : 'Disabled'">Trạng thái</span>
                                 </td>
                                 <td>
                                     <div class="action-buttons">
                                         <!-- Toggle Status -->
-                                        <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" method="post" class="d-inline">
+                                        <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}"
+                                            method="post" class="d-inline">
                                             <button type="submit" class="btn-action"
-                                                    th:classappend="${user.enabled} ? 'delete' : 'approve'"
-                                                    th:title="${user.enabled} ? 'Disable User' : 'Enable User'"
-                                                    onclick="return confirm('Change user status?')">
-                                                <i class="fas" th:classappend="${user.enabled} ? 'fa-ban' : 'fa-check'"></i>
+                                                th:classappend="${user.enabled} ? 'delete' : 'approve'"
+                                                th:title="${user.enabled} ? 'Disable User' : 'Enable User'"
+                                                onclick="return confirm('Change user status?')">
+                                                <i class="fas"
+                                                    th:classappend="${user.enabled} ? 'fa-ban' : 'fa-check'"></i>
                                             </button>
                                         </form>
 
                                         <!-- Change Role Dropdown -->
                                         <div class="dropdown d-inline">
                                             <button class="btn-action edit dropdown-toggle" type="button"
-                                                    th:id="'roleDropdown' + ${user.id}" data-bs-toggle="dropdown" title="Change Role">
+                                                th:id="'roleDropdown' + ${user.id}" data-bs-toggle="dropdown"
+                                                title="Change Role">
                                                 <i class="fas fa-user-tag"></i>
                                             </button>
                                             <ul class="dropdown-menu" th:aria-labelledby="'roleDropdown' + ${user.id}">
                                                 <li th:each="role : ${roles}">
-                                                    <form th:action="@{/admin/users/{id}/change-role(id=${user.id})}" method="post">
+                                                    <form th:action="@{/admin/users/{id}/change-role(id=${user.id})}"
+                                                        method="post">
                                                         <input type="hidden" name="roleId" th:value="${role.id}">
                                                         <button type="submit" class="dropdown-item"
-                                                                th:disabled="${user.role.id == role.id}"
-                                                                th:text="${role.name}">Role</button>
+                                                            th:disabled="${user.role.id == role.id}"
+                                                            th:text="${role.name}">Quyền</button>
                                                     </form>
                                                 </li>
                                             </ul>
@@ -187,7 +196,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    
+
                     <div th:if="${users == null || users.isEmpty()}" class="text-center py-5">
                         <i class="fas fa-users fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">No users found</h5>
@@ -197,7 +206,7 @@
             </div>
         </div>
     </div>
-</div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -205,10 +214,10 @@
             const sidebar = document.getElementById('adminSidebar');
             const content = document.getElementById('adminContent');
             const toggleBtn = document.querySelector('.sidebar-toggle i');
-            
+
             sidebar.classList.toggle('collapsed');
             content.classList.toggle('expanded');
-            
+
             if (sidebar.classList.contains('collapsed')) {
                 toggleBtn.classList.remove('fa-chevron-left');
                 toggleBtn.classList.add('fa-chevron-right');
@@ -225,4 +234,5 @@
         }
     </script>
 </body>
+
 </html>

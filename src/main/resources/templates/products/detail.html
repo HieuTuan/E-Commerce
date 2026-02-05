@@ -140,7 +140,7 @@
             bottom: 2px;
             right: 2px;
             font-size: 8px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             padding: 1px 3px;
             border-radius: 2px;
         }
@@ -194,8 +194,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .success-message {
@@ -224,10 +229,10 @@
         <div class="container">
             <a class="navbar-brand" th:href="@{/}"><i class="fas fa-shopping-bag"></i> E-Commerce</a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" th:href="@{/}">Home</a>
-                <a class="nav-link" th:href="@{/products}">Products</a>
+                <a class="nav-link" th:href="@{/}">Trang chủ</a>
+                <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
                 <a class="nav-link" th:href="@{/cart}" sec:authorize="isAuthenticated()">
-                    <i class="fas fa-shopping-cart"></i> Cart
+                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
                 </a>
             </div>
         </div>
@@ -237,9 +242,9 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/products}">Products</a></li>
-                <li class="breadcrumb-item active" th:text="${product.name}">Product</li>
+                <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/products}">Sản phẩm</a></li>
+                <li class="breadcrumb-item active" th:text="${product.name}">Sản phẩm</li>
             </ol>
         </nav>
 
@@ -251,8 +256,7 @@
                     <div class="main-image-container">
                         <img id="mainImage"
                             th:src="${!product.sortedImages.empty ? product.sortedImages[0].largeUrl : '/images/no-image.svg'}"
-                            alt="Product Image"
-                            onerror="this.src='/images/no-image.svg'">
+                            alt="Product Image" onerror="this.src='/images/no-image.svg'">
                     </div>
 
                     <!-- Thumbnail Navigation -->
@@ -353,12 +357,13 @@
                 </div>
 
                 <div sec:authorize="!isAuthenticated()" class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Vui lòng <a th:href="@{/login}" class="alert-link">đăng nhập</a> để thêm sản phẩm vào giỏ hàng.
+                    <i class="fas fa-info-circle"></i> Vui lòng <a th:href="@{/login}" class="alert-link">đăng nhập</a>
+                    để thêm sản phẩm vào giỏ hàng.
                 </div>
 
                 <!-- Back to Products -->
                 <a th:href="@{/products}" class="btn btn-outline-secondary mt-3">
-                    <i class="fas fa-arrow-left"></i> Back to Products
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách sản phẩm
                 </a>
             </div>
         </div>
@@ -366,15 +371,15 @@
         <!-- Product Reviews Section -->
         <div class="row mt-5">
             <div class="col-12">
-                <h3 class="mb-4">Customer Reviews</h3>
+                <h3 class="mb-4">Đánh giá sản phẩm</h3>
 
                 <!-- Review Form (for authenticated users) -->
                 <div sec:authorize="isAuthenticated()" class="card mb-4">
                     <div class="card-body">
-                        <h5 class="card-title">Write a Review</h5>
+                        <h5 class="card-title">Viết đánh giá</h5>
                         <form>
                             <div class="mb-3">
-                                <label class="form-label">Rating</label>
+                                <label class="form-label">Đánh giá</label>
                                 <div>
                                     <div class="btn-group" role="group">
                                         <input type="radio" class="btn-check" name="rating" id="rating1" value="1">
@@ -403,7 +408,8 @@
 
                 <!-- Existing Reviews (placeholder) -->
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> No reviews yet. Be the first to review this product!
+                    <i class="fas fa-info-circle"></i> Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm
+                    này!
                 </div>
             </div>
         </div>
@@ -422,7 +428,7 @@
         // Product Image Gallery JavaScript
         /*<![CDATA[*/
         const productImages = [];
-        
+
         /*[# th:each="image : ${product.sortedImages}"]*/
         /*[# th:if="${!image.isVideo}"]*/
         productImages.push({
@@ -439,7 +445,7 @@
         });
         /*[/]*/
         /*[/]*/
-        
+
         /*[# th:if="${product.sortedImages.empty}"]*/
         productImages.push({
             type: 'image',
@@ -482,7 +488,7 @@
                     const img = document.createElement('img');
                     img.src = item.thumbnailUrl;
                     img.alt = 'Product thumbnail ' + (index + 1);
-                    img.onerror = function() {
+                    img.onerror = function () {
                         this.src = '/images/no-image.svg';
                     };
                     thumbnailItem.appendChild(img);
@@ -512,11 +518,11 @@
                 const video = document.createElement('video');
                 video.controls = true;
                 video.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
-                
+
                 const source = document.createElement('source');
                 source.src = item.videoUrl;
                 source.type = 'video/mp4';
-                
+
                 video.appendChild(source);
                 video.innerHTML += 'Your browser does not support the video tag.';
                 mainContainer.appendChild(video);
@@ -526,7 +532,7 @@
                 img.src = item.largeUrl;
                 img.alt = 'Product Image';
                 img.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain; transition: opacity 0.3s ease;';
-                img.onerror = function() {
+                img.onerror = function () {
                     this.src = '/images/no-image.svg';
                 };
                 mainContainer.appendChild(img);
@@ -591,27 +597,27 @@
         /*]]>*/
 
         // Add to Cart Animation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const addToCartForm = document.getElementById('addToCartForm');
             const addToCartBtn = document.getElementById('addToCartBtn');
 
             if (addToCartForm && addToCartBtn) {
-                addToCartForm.addEventListener('submit', function(e) {
+                addToCartForm.addEventListener('submit', function (e) {
                     e.preventDefault();
-                    
+
                     // Show loading state
                     addToCartBtn.classList.add('btn-loading');
                     addToCartBtn.innerHTML = '<span style="opacity: 0;">Đang thêm...</span>';
-                    
+
                     // Get current main image
                     const mainImage = document.querySelector('.main-image-container img');
                     if (mainImage) {
                         animateAddToCart(mainImage);
                     }
-                    
+
                     // Submit form via AJAX
                     const formData = new FormData(addToCartForm);
-                    
+
                     fetch(addToCartForm.action, {
                         method: 'POST',
                         body: formData,
@@ -619,25 +625,25 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => {
-                        if (response.ok) {
-                            showSuccessMessage();
-                            updateCartCount();
-                        } else {
-                            throw new Error('Network response was not ok');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showErrorMessage('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
-                    })
-                    .finally(() => {
-                        // Reset button state
-                        setTimeout(() => {
-                            addToCartBtn.classList.remove('btn-loading');
-                            addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm Vào Giỏ Hàng';
-                        }, 1000);
-                    });
+                        .then(response => {
+                            if (response.ok) {
+                                showSuccessMessage();
+                                updateCartCount();
+                            } else {
+                                throw new Error('Network response was not ok');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showErrorMessage('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+                        })
+                        .finally(() => {
+                            // Reset button state
+                            setTimeout(() => {
+                                addToCartBtn.classList.remove('btn-loading');
+                                addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm Vào Giỏ Hàng';
+                            }, 1000);
+                        });
                 });
             }
         });
@@ -646,21 +652,21 @@
             // Create animated element
             const animatedImg = document.createElement('div');
             animatedImg.className = 'cart-animation';
-            
+
             const img = document.createElement('img');
             img.src = sourceImage.src;
             img.alt = 'Product';
             animatedImg.appendChild(img);
-            
+
             // Get source position
             const sourceRect = sourceImage.getBoundingClientRect();
-            
+
             // Set initial position
             animatedImg.style.left = sourceRect.left + 'px';
             animatedImg.style.top = sourceRect.top + 'px';
-            
+
             document.body.appendChild(animatedImg);
-            
+
             // Find cart icon (try multiple selectors)
             let cartIcon = document.querySelector('.fa-shopping-cart');
             if (!cartIcon) {
@@ -669,7 +675,7 @@
             if (!cartIcon) {
                 cartIcon = document.querySelector('.navbar-nav .nav-link');
             }
-            
+
             // Animate to cart
             setTimeout(() => {
                 if (cartIcon) {
@@ -686,7 +692,7 @@
                     animatedImg.style.opacity = '0';
                 }
             }, 100);
-            
+
             // Remove element after animation
             setTimeout(() => {
                 if (animatedImg.parentNode) {
@@ -699,11 +705,11 @@
             const message = document.createElement('div');
             message.className = 'success-message';
             message.innerHTML = '<i class="fas fa-check-circle"></i> Đã thêm sản phẩm vào giỏ hàng!';
-            
+
             document.body.appendChild(message);
-            
+
             setTimeout(() => message.classList.add('show'), 100);
-            
+
             setTimeout(() => {
                 message.classList.remove('show');
                 setTimeout(() => {
@@ -719,11 +725,11 @@
             message.className = 'success-message';
             message.style.background = '#dc3545';
             message.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + text;
-            
+
             document.body.appendChild(message);
-            
+
             setTimeout(() => message.classList.add('show'), 100);
-            
+
             setTimeout(() => {
                 message.classList.remove('show');
                 setTimeout(() => {

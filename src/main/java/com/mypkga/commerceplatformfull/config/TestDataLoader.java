@@ -59,7 +59,7 @@ public class TestDataLoader implements CommandLineRunner {
             // Admin user
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("Admin123@"));
+                admin.setPassword(passwordEncoder.encode("Admin123@"));
             admin.setFullName("Quản trị viên hệ thống");
             admin.setEmail("tuan01062004kt@gmail.com");
             admin.setEmailVerified(true);

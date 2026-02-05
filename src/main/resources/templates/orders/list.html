@@ -17,18 +17,18 @@
         <div class="container">
             <a class="navbar-brand" th:href="@{/}"><i class="fas fa-shopping-bag"></i> E-Commerce</a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" th:href="@{/}">Home</a>
-                <a class="nav-link" th:href="@{/products}">Products</a>
+                <a class="nav-link" th:href="@{/}">Trang chủ</a>
+                <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
                 <a class="nav-link" th:href="@{/cart}">
-                    <i class="fas fa-shopping-cart"></i> Cart
+                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
                 </a>
-                <a class="nav-link active" th:href="@{/orders}">My Orders</a>
+                <a class="nav-link active" th:href="@{/orders}">Đơn hàng</a>
             </div>
         </div>
     </nav>
 
     <div class="container my-5">
-        <h2 class="mb-4"><i class="fas fa-receipt"></i> My Orders</h2>
+        <h2 class="mb-4"><i class="fas fa-receipt"></i> Đơn hàng của tôi</h2>
 
         <div th:if="${orders != null && !orders.isEmpty()}">
             <div class="row">
@@ -37,7 +37,7 @@
                         <div class="card-header">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
-                                    <strong>Order #<span th:text="${order.orderNumber}">ORD-001</span></strong>
+                                    <strong>Mã đơn hàng: <span th:text="${order.orderNumber}">ORD-001</span></strong>
                                 </div>
                                 <div class="col-md-3">
                                     <!-- Show red status with "Khách hàng report" when has delivery issue -->
@@ -57,11 +57,28 @@
                                                                order.status.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' :
                                                                order.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
                                             th:text="${order.status}">Status</span>
-                                        <!-- Show return status if order has active return request -->
-                                        <div th:if="${order.hasActiveReturnRequest()}">
-                                            <small class="text-warning d-block">
-                                                <i class="fas fa-undo me-1"></i>Đang hoàn hàng
-                                            </small>
+                                        <!-- Show return status if order has return request -->
+                                        <div th:if="${order.returnRequest != null}" class="mt-1">
+                                            <span th:switch="${order.returnRequest.status.name()}">
+                                                <small th:case="'REFUND_REQUESTED'" class="text-warning d-block">
+                                                    <i class="fas fa-clock me-1"></i>Yêu cầu hoàn trả
+                                                </small>
+                                                <small th:case="'RETURN_APPROVED'" class="text-success d-block">
+                                                    <i class="fas fa-check-circle me-1"></i>Chấp nhận hoàn trả
+                                                </small>
+                                                <small th:case="'REFUND_REJECTED'" class="text-danger d-block">
+                                                    <i class="fas fa-times-circle me-1"></i>Từ chối hoàn trả
+                                                </small>
+                                                <small th:case="'RETURNING'" class="text-info d-block">
+                                                    <i class="fas fa-shipping-fast me-1"></i>Đang trả hàng
+                                                </small>
+                                                <small th:case="'RETURN_RECEIVED'" class="text-primary d-block">
+                                                    <i class="fas fa-box me-1"></i>Đã nhận hàng trả
+                                                </small>
+                                                <small th:case="'REFUNDED'" class="text-success d-block">
+                                                    <i class="fas fa-money-bill-wave me-1"></i>Đã hoàn tiền
+                                                </small>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -69,32 +86,34 @@
                                     <span class="badge"
                                         th:classappend="${order.paymentStatus.name() == 'PAID' ? 'bg-success' : 
                                                            order.paymentStatus.name() == 'PENDING' ? 'bg-warning' : 'bg-danger'}"
-                                        th:text="${order.paymentStatus}">Payment</span>
+                                        th:text="${order.paymentStatus}">Thanh toán</span>
                                 </div>
                                 <div class="col-md-3 text-end">
-                                    <small class="text-muted"
-                                        th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                    <small class="text-white"
+                                        th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">Ngày</small>
                                 </div>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-8">
-                                    <h6>Shipping Address:</h6>
-                                    <p class="mb-1"><strong th:text="${order.customerName}">Customer Name</strong></p>
-                                    <p class="mb-1 text-muted" th:text="${order.decodedShippingAddress}">Address</p>
+                                    <h6>Địa chỉ giao hàng:</h6>
+                                    <p class="mb-1"><strong th:utext="${order.customerName}">Tên khách hàng</strong></p>
+                                    <p class="mb-1 text-muted" th:utext="${order.decodedShippingAddress}">Địa chỉ</p>
                                     <p class="mb-1 text-muted">
-                                        <i class="fas fa-phone"></i> <span th:text="${order.customerPhone}">Phone</span>
+                                        <i class="fas fa-phone"></i> <span th:text="${order.customerPhone}">Số điện
+                                            thoại</span>
                                     </p>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <h5 class="text-primary">Total: <span th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ
+                                    <h5 class="text-primary">Tổng tiền: <span
+                                            th:text="${#numbers.formatInteger(order.totalAmount, 3, 'POINT')}"></span>đ
                                     </h5>
-                                    <p class="text-muted mb-0">Payment: <span
+                                    <p class="text-muted mb-0">Thanh toán: <span
                                             th:text="${order.paymentMethod}">COD</span></p>
                                     <a th:href="@{/orders/{id}(id=${order.id})}"
                                         class="btn btn-sm btn-outline-primary mt-2">
-                                        <i class="fas fa-eye"></i> View Details
+                                        <i class="fas fa-eye"></i> Xem chi tiết
                                     </a>
                                 </div>
                             </div>

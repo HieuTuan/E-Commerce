@@ -130,10 +130,10 @@
                         </div>
 
                         <!-- Rejection Reason (if rejected) -->
-                        <div th:if="${returnRequest.status.name() == 'REFUND_REJECTED' and returnRequest.rejectionReason}"
+                        <div th:if="${returnRequest.status.name() == 'REFUND_REJECTED' and returnRequest.rejectionReason != null}"
                             class="mt-3">
                             <strong>Lý do từ chối:</strong>
-                            <div class="alert alert-danger mt-2" th:text="${returnRequest.rejectionReason}">
+                            <div class="alert alert-danger mt-2" th:utext="${returnRequest.rejectionReason}">
                                 Sản phẩm không đủ điều kiện hoàn trả
                             </div>
                         </div>
@@ -219,7 +219,7 @@
                                                     item.actionType == 'RECEIVE' ? 'Đã nhận hàng' :
                                                     item.actionType == 'REFUND' ? 'Đã hoàn tiền' : 'Cập nhật'}">Duyệt
                                                     yêu cầu</h6>
-                                                <p class="mb-1 text-muted" th:text="${item.notes}">Yêu cầu hoàn hàng đã
+                                                <p class="mb-1 text-muted" th:utext="${item.notes}">Yêu cầu hoàn hàng đã
                                                     được duyệt</p>
                                                 <div th:if="${item.ghnOrderCode}">
                                                     <small class="text-info">
@@ -308,6 +308,33 @@
                                 th:text="${returnRequest.bankInfo.accountNumber}">1234567890</code></p>
                         <p><strong>Chủ tài khoản:</strong> <span
                                 th:text="${returnRequest.bankInfo.accountHolderName}">NGUYEN VAN A</span></p>
+                    </div>
+                </div>
+
+                <!-- Refund Proof (if refunded) -->
+                <div th:if="${returnRequest.status.name() == 'REFUNDED' and returnRequest.refundProofImageUrl != null}"
+                    class="card mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Chứng Từ Hoàn Tiền</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Giao dịch hoàn tiền thành công!</strong><br>
+                            <small>Dưới đây là chứng từ chuyển khoản từ cửa hàng. Tiền sẽ được chuyển vào tài khoản của
+                                bạn trong 3-5 ngày làm việc.</small>
+                        </div>
+                        <div class="text-center">
+                            <img th:src="${returnRequest.refundProofImageUrl}" alt="Chứng từ hoàn tiền"
+                                class="img-fluid rounded border shadow"
+                                style="max-width: 300px; max-height: 300px; object-fit: contain; cursor: pointer;"
+                                onclick="window.open(this.src, '_blank')">
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Click vào ảnh để xem kích thước đầy đủ
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

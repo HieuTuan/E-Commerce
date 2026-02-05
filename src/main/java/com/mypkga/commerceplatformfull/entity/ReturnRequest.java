@@ -76,6 +76,9 @@ public class ReturnRequest {
     @Column(name = "delivery_time")
     private LocalDateTime deliveryTime;
 
+    @Column(name = "refund_proof_image_url", length = 500)
+    private String refundProofImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private ReturnStatus status = ReturnStatus.REFUND_REQUESTED;

@@ -10,8 +10,15 @@ import com.mypkga.commerceplatformfull.service.UserService;
 import com.mypkga.commerceplatformfull.service.EmailService;
 import com.mypkga.commerceplatformfull.service.GHNReturnService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -62,11 +69,28 @@ public class StaffReturnController {
      * View all return request history
      */
     @GetMapping("/history")
-    public String showReturnHistory(Model model) {
+    public String showReturnHistory(Model model, @RequestParam(required = false) String status) {
         try {
-            // Get all return requests with history
-            List<ReturnRequest> allRequests = returnRequestRepository.findAll();
-            model.addAttribute("returnRequests", allRequests);
+            List<ReturnRequest> returnRequests;
+            org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort
+                    .by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
+
+            if (status != null && !status.isEmpty() && !status.equals("ALL")) {
+                try {
+                    com.mypkga.commerceplatformfull.entity.ReturnStatus returnStatus = com.mypkga.commerceplatformfull.entity.ReturnStatus
+                            .valueOf(status);
+                    returnRequests = returnRequestRepository.findByStatus(returnStatus, sort);
+                } catch (IllegalArgumentException e) {
+                    // Invalid status, fallback to all
+                    returnRequests = returnRequestRepository.findAll(sort);
+                }
+            } else {
+                returnRequests = returnRequestRepository.findAll(sort);
+            }
+
+            model.addAttribute("returnRequests", returnRequests);
+            model.addAttribute("statuses", com.mypkga.commerceplatformfull.entity.ReturnStatus.values());
+            model.addAttribute("currentStatus", status);
 
             return "staff/returns/history";
         } catch (Exception e) {
@@ -227,7 +251,7 @@ public class StaffReturnController {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return "redirect:/staff/returns";
+        return "redirect:/staff/returns/" + requestId;
     }
 
     /**
@@ -250,6 +274,78 @@ public class StaffReturnController {
         }
 
         return "redirect:/staff/returns";
+    }
+
+    /**
+     * Upload refund proof image
+     */
+    @PostMapping("/{requestId}/upload-refund-proof")
+    public String uploadRefundProof(@PathVariable Long requestId,
+            @RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ReturnRequest returnRequest = returnRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new IllegalArgumentException("Return request not found"));
+
+            // Save file to disk
+            if (!file.isEmpty()) {
+                try {
+                    String fileName = "refund-proof-" + requestId + "-" + System.currentTimeMillis() +
+                            getFileExtension(file.getOriginalFilename());
+
+                    // Define upload directory path
+                    String uploadDir = "src/main/resources/static/uploads/refund-proofs/";
+                    Path uploadPath = Paths.get(uploadDir);
+
+                    // Create directory if it doesn't exist
+                    if (!Files.exists(uploadPath)) {
+                        Files.createDirectories(uploadPath);
+                    }
+
+                    // Save file to disk
+                    Path filePath = uploadPath.resolve(fileName);
+                    Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                    // URL path for accessing the file
+                    String imageUrl = "/uploads/refund-proofs/" + fileName;
+
+                    // Update return request with proof image
+                    returnRequest.setRefundProofImageUrl(imageUrl);
+
+                    // Update return request status to REFUNDED
+                    returnRequest.setStatus(com.mypkga.commerceplatformfull.entity.ReturnStatus.REFUNDED);
+
+                    // Update order status to CANCELLED
+                    returnRequest.getOrder().setStatus(com.mypkga.commerceplatformfull.entity.OrderStatus.CANCELLED);
+
+                    returnRequestRepository.save(returnRequest);
+
+                    redirectAttributes.addFlashAttribute("success",
+                            "✅ Đã upload chứng từ và hoàn tiền thành công! Đơn hàng đã chuyển sang trạng thái HỦY.");
+
+                } catch (IOException e) {
+                    log.error("Error saving file for request {}: {}", requestId, e.getMessage());
+                    redirectAttributes.addFlashAttribute("error",
+                            "Lỗi khi lưu file: " + e.getMessage());
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Vui lòng chọn file ảnh!");
+            }
+
+        } catch (Exception e) {
+            log.error("Error uploading refund proof for request {}: {}", requestId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error",
+                    "Có lỗi khi upload chứng từ: " + e.getMessage());
+        }
+
+        return "redirect:/staff/returns/" + requestId;
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null)
+            return "";
+        int lastDot = filename.lastIndexOf('.');
+        return lastDot > 0 ? filename.substring(lastDot) : "";
     }
 
     private User getCurrentUser(Authentication authentication) {

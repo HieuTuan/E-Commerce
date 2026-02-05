@@ -74,7 +74,7 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Mã yêu cầu</th>
+                                    <th>Mã</th>
                                     <th>Đơn hàng</th>
                                     <th>Lý do</th>
                                     <th>Trạng thái</th>
@@ -85,7 +85,7 @@
                             <tbody>
                                 <tr th:each="request : ${returnRequests}">
                                     <td>
-                                        <strong th:text="'#' + ${request.id}">#001</strong>
+                                        <strong th:text="${request.id}">#001</strong>
                                     </td>
                                     <td th:text="${request.order.orderNumber}">ORD001</td>
                                     <td>
@@ -112,9 +112,9 @@
                                                     điện</span>
                                                 <span th:case="'REFUND_REJECTED'">Yêu cầu đã bị từ chối</span>
                                                 <span th:case="'RETURNING'">Đang chờ bưu điện xác nhận nhận hàng</span>
-                                                <span th:case="'RETURN_RECEIVED'">Bưu điện đã nhận hàng - Đang xử lý
+                                                <span th:case="'RETURN_RECEIVED'">Shop đã nhận hàng - Đang xử lý
                                                     hoàn tiền</span>
-                                                <span th:case="'REFUNDED'">Đã hoàn tiền thành công</span>
+                                                <span th:case="'REFUNDED'">✅ Đã hoàn tiền thành công</span>
                                                 <span th:case="*">Trạng thái không xác định</span>
                                             </small>
                                         </div>
@@ -122,43 +122,50 @@
                                     <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024
                                         10:00</td>
                                     <td>
-                                        <div class="btn-group" role="group">
+                                        <div class="d-flex flex-column gap-2 align-items-start">
                                             <!-- Show return code if approved -->
-                                            <span
-                                                th:if="${request.status.name() == 'RETURN_APPROVED' or request.status.name() == 'RETURNING'}"
-                                                class="badge bg-info me-2" th:text="'Mã: ' + ${request.returnCode}">
-                                                Mã: RET12345678
-                                            </span>
+                                            <div th:if="${request.status.name() == 'RETURN_APPROVED' or request.status.name() == 'RETURNING'}"
+                                                class="text-nowrap mb-1">
+                                                <span class="text-muted small">Mã:</span>
+                                                <code class="text-primary fw-bold" th:text="${request.returnCode}"
+                                                    style="font-size: 0.85rem;">RET123</code>
+                                            </div>
 
-                                            <!-- Confirm shipping button if approved -->
-                                            <button th:if="${request.status.name() == 'RETURN_APPROVED'}" type="button"
-                                                class="btn btn-sm btn-success me-2"
-                                                th:data-return-code="${request.returnCode}"
-                                                onclick="confirmShipping(this.dataset.returnCode)">
-                                                <i class="fas fa-shipping-fast"></i> Xác nhận đã gửi hàng
-                                            </button>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <!-- Confirm shipping button if approved -->
+                                                <button th:if="${request.status.name() == 'RETURN_APPROVED'}"
+                                                    type="button" class="btn btn-sm btn-success"
+                                                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+                                                    th:data-return-code="${request.returnCode}"
+                                                    onclick="confirmShipping(this.dataset.returnCode)">
+                                                    <i class="fas fa-check"></i> Xác nhận gửi
+                                                </button>
 
-                                            <!-- Show GHN tracking if approved and has order code -->
-                                            <button
-                                                th:if="${request.status.name() == 'RETURN_APPROVED' and request.ghnOrderCode != null and !request.ghnOrderCode.isEmpty()}"
-                                                type="button" class="btn btn-sm btn-outline-info me-2"
-                                                data-bs-toggle="modal"
-                                                th:data-bs-target="'#trackingModal' + ${request.id}">
-                                                <i class="fas fa-truck"></i> Theo dõi vận chuyển
-                                            </button>
+                                                <!-- Show GHN tracking if approved and has order code -->
+                                                <button
+                                                    th:if="${request.status.name() == 'RETURN_APPROVED' and request.ghnOrderCode != null and !request.ghnOrderCode.isEmpty()}"
+                                                    type="button" class="btn btn-sm btn-outline-info"
+                                                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+                                                    data-bs-toggle="modal"
+                                                    th:data-bs-target="'#trackingModal' + ${request.id}">
+                                                    <i class="fas fa-truck"></i> Tracking
+                                                </button>
 
-                                            <!-- Show rejection reason if rejected -->
-                                            <button th:if="${request.status.name() == 'REFUND_REJECTED'}" type="button"
-                                                class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip"
-                                                th:title="${request.rejectionReason}">
-                                                <i class="fas fa-info-circle"></i> Lý do từ chối
-                                            </button>
+                                                <!-- Show rejection reason if rejected -->
+                                                <button th:if="${request.status.name() == 'REFUND_REJECTED'}"
+                                                    type="button" class="btn btn-sm btn-outline-danger"
+                                                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+                                                    data-bs-toggle="tooltip" th:title="${request.rejectionReason}">
+                                                    <i class="fas fa-info-circle"></i> Lý do
+                                                </button>
 
-                                            <!-- View order button -->
-                                            <a th:href="@{/orders/{id}(id=${request.order.id})}"
-                                                class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> Xem đơn hàng
-                                            </a>
+                                                <!-- View order button -->
+                                                <a th:href="@{/orders/{id}(id=${request.order.id})}"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                                    <i class="fas fa-eye"></i> Xem đơn
+                                                </a>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -222,6 +229,24 @@
                                         th:text="${#temporals.format(request.deliveryTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
                                         15:00</span>
                                 </p>
+
+                                <!-- Refund Proof Image - Only show when refunded -->
+                                <div th:if="${request.status.name() == 'REFUNDED' and request.refundProofImageUrl != null}"
+                                    class="mt-3">
+                                    <h6 class="text-success"><i class="fas fa-check-circle me-2"></i>Chứng Từ Hoàn Tiền
+                                    </h6>
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <img th:src="${request.refundProofImageUrl}" alt="Refund Proof"
+                                                class="img-fluid rounded" style="max-width: 400px; cursor: pointer;"
+                                                onclick="window.open(this.src, '_blank')">
+                                            <div class="mt-2">
+                                                <small class="text-muted">Click để xem ảnh kích thước đầy đủ</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mt-3">
                                     <a th:href="'https://tracking.ghn.dev/?order_code=' + ${request.ghnOrderCode}"
                                         target="_blank" class="btn btn-primary btn-sm">

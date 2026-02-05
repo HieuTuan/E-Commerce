@@ -26,20 +26,21 @@ public enum ReturnStatus {
     public boolean isFinalState() {
         return this == REFUNDED || this == REFUND_REJECTED || this == RETURN_FAILED;
     }
-    
+
     /**
      * Get valid next statuses for state machine transitions
      */
     public ReturnStatus[] getValidNextStatuses() {
         return switch (this) {
-            case REFUND_REQUESTED -> new ReturnStatus[]{RETURN_APPROVED, REFUND_REJECTED};
-            case RETURN_APPROVED -> new ReturnStatus[]{RETURNING};
-            case RETURNING -> new ReturnStatus[]{RETURN_RECEIVED, RETURN_FAILED};
-            case RETURN_RECEIVED -> new ReturnStatus[]{REFUNDED};
-            case REFUNDED, REFUND_REJECTED, RETURN_FAILED -> new ReturnStatus[]{}; // Final states
+            case REFUND_REQUESTED -> new ReturnStatus[] { RETURN_APPROVED, REFUND_REJECTED };
+            case RETURN_APPROVED -> new ReturnStatus[] { RETURNING, RETURN_RECEIVED }; // Allow direct receipt
+                                                                                       // confirmation
+            case RETURNING -> new ReturnStatus[] { RETURN_RECEIVED, RETURN_FAILED };
+            case RETURN_RECEIVED -> new ReturnStatus[] { REFUNDED };
+            case REFUNDED, REFUND_REJECTED, RETURN_FAILED -> new ReturnStatus[] {}; // Final states
         };
     }
-    
+
     /**
      * Check if transition to new status is valid
      */

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -33,7 +35,7 @@
             <span th:text="${success}">Success message</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        
+
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
             <i class="fas fa-exclamation-circle me-2"></i>
             <span th:text="${error}">Error message</span>
@@ -64,63 +66,73 @@
                             <div class="col-md-6">
                                 <h6>Order Information</h6>
                                 <p class="mb-1">
-                                    <strong>Order ID:</strong> 
-                                    <a th:href="@{/admin/orders/{id}(id=${report.orderId})}" class="text-decoration-none">
+                                    <strong>Order ID:</strong>
+                                    <a th:href="@{/staff/orders/{id}(id=${report.orderId})}"
+                                        class="text-decoration-none">
                                         <span th:text="${report.orderId}">Order ID</span>
                                     </a>
                                 </p>
                                 <p class="mb-1">
-                                    <strong>Customer:</strong> <span th:text="${report.customerEmail}">Customer Email</span>
+                                    <strong>Customer:</strong> <span th:text="${report.customerEmail}">Customer
+                                        Email</span>
                                 </p>
                             </div>
                             <div class="col-md-6">
                                 <h6>Report Information</h6>
                                 <p class="mb-1">
-                                    <strong>Issue Type:</strong> 
+                                    <strong>Issue Type:</strong>
                                     <span class="badge bg-info" th:text="${report.issueType}">Issue Type</span>
                                 </p>
                                 <p class="mb-1">
-                                    <strong>Reported At:</strong> 
-                                    <span th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                    <strong>Reported At:</strong>
+                                    <span
+                                        th:text="${#temporals.format(report.reportedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3" th:if="${report.description}">
                             <h6>Description</h6>
                             <div class="alert alert-light">
                                 <p class="mb-0" th:text="${report.description}">Description</p>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <h6>Current Status</h6>
-                            <span class="badge fs-6" 
-                                  th:classappend="${report.status.name() == 'PENDING' ? 'bg-warning' : 
+                            <span class="badge fs-6" th:classappend="${report.status.name() == 'PENDING' ? 'bg-warning' : 
                                                    report.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-danger'}"
-                                  th:text="${report.status.displayName}">Status</span>
+                                th:text="${report.status.displayName}">Status</span>
                         </div>
-                        
+
+                        <!-- Admin Response Section - Prominently displayed -->
+                        <div th:if="${report.adminNotes}" class="mb-3">
+                            <h6 th:text="${report.status.name() == 'RESOLVED' ? 'Lý do chấp nhận' : 'Lý do từ chối'}">
+                                Admin Response</h6>
+                            <div th:classappend="${report.status.name() == 'RESOLVED' ? 'alert-success' : 'alert-danger'}"
+                                class="alert">
+                                <i th:class="${report.status.name() == 'RESOLVED' ? 'fas fa-check-circle' : 'fas fa-times-circle'}"
+                                    class="me-2"></i>
+                                <strong
+                                    th:text="${report.status.name() == 'RESOLVED' ? 'Đã chấp nhận:' : 'Đã từ chối:'}">Status:</strong>
+                                <p class="mb-0 mt-2" th:utext="${report.adminNotes}">Admin Notes</p>
+                            </div>
+                        </div>
+
                         <div th:if="${report.resolvedAt}" class="mb-3">
-                            <h6>Resolution Information</h6>
+                            <h6>Thông tin xử lý</h6>
                             <p class="mb-1">
-                                <strong>Resolved At:</strong> 
+                                <strong>Thời gian xử lý:</strong>
                                 <span th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
                             </p>
                             <p class="mb-1" th:if="${report.resolvedBy}">
-                                <strong>Resolved By:</strong> <span th:text="${report.resolvedBy}">Admin</span>
+                                <strong>Người xử lý:</strong> <span th:text="${report.resolvedBy}">Admin</span>
                             </p>
-                            <div th:if="${report.adminNotes}">
-                                <strong>Admin Notes:</strong>
-                                <div class="alert alert-info mt-2">
-                                    <p class="mb-0" th:text="${report.adminNotes}">Admin Notes</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-4">
                 <!-- Actions Card -->
                 <div class="card">
@@ -129,14 +141,12 @@
                     </div>
                     <div class="card-body">
                         <div th:if="${report.status.name() == 'PENDING'}">
-                            <button type="button" class="btn btn-success w-100 mb-2" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#resolveModal">
+                            <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal"
+                                data-bs-target="#resolveModal">
                                 <i class="fas fa-check me-2"></i>Giải quyết báo cáo
                             </button>
-                            <button type="button" class="btn btn-danger w-100" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#rejectModal">
+                            <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal">
                                 <i class="fas fa-times me-2"></i>Từ chối báo cáo
                             </button>
                         </div>
@@ -146,15 +156,15 @@
                                 Báo cáo này đã được xử lý.
                             </div>
                         </div>
-                        
+
                         <hr>
-                        
+
                         <a th:href="@{/admin/delivery-issues}" class="btn btn-outline-secondary w-100">
                             <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
                         </a>
                     </div>
                 </div>
-                
+
                 <!-- Order Quick Info -->
                 <div class="card mt-3" th:if="${report.order}">
                     <div class="card-header">
@@ -162,11 +172,13 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-1">
-                            <strong>Order Number:</strong> <span th:text="${report.order.orderNumber}">Order Number</span>
+                            <strong>Order Number:</strong> <span th:text="${report.order.orderNumber}">Order
+                                Number</span>
                         </p>
                         <p class="mb-1">
-                            <strong>Total Amount:</strong> 
-                            <span th:text="${#numbers.formatInteger(report.order.totalAmount, 3, 'POINT')}">Amount</span>đ
+                            <strong>Total Amount:</strong>
+                            <span
+                                th:text="${#numbers.formatInteger(report.order.totalAmount, 3, 'POINT')}">Amount</span>đ
                         </p>
                         <p class="mb-1">
                             <strong>Customer:</strong> <span th:text="${report.order.customerName}">Customer</span>
@@ -174,9 +186,9 @@
                         <p class="mb-0">
                             <strong>Phone:</strong> <span th:text="${report.order.customerPhone}">Phone</span>
                         </p>
-                        
-                        <a th:href="@{/admin/orders/{id}(id=${report.order.id})}" 
-                           class="btn btn-outline-primary btn-sm w-100 mt-2">
+
+                        <a th:href="@{/staff/orders/{id}(id=${report.order.id})}"
+                            class="btn btn-outline-primary btn-sm w-100 mt-2">
                             <i class="fas fa-eye me-1"></i>View Full Order
                         </a>
                     </div>
@@ -195,19 +207,21 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post">
+                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post"
+                    accept-charset="UTF-8">
                     <div class="modal-body">
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            Xác nhận giải quyết báo cáo này. Trạng thái đơn hàng sẽ được cập nhật về bình thường và khách hàng sẽ nhận được email thông báo.
+                            Xác nhận giải quyết báo cáo này. Trạng thái đơn hàng sẽ được cập nhật về bình thường và
+                            khách hàng sẽ nhận được email thông báo.
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="resolveNotes" class="form-label">Ghi chú (tùy chọn):</label>
                             <textarea class="form-control" id="resolveNotes" name="adminNotes" rows="3"
-                                      placeholder="Nhập ghi chú về cách giải quyết vấn đề..."></textarea>
+                                placeholder="Nhập ghi chú về cách giải quyết vấn đề..."></textarea>
                         </div>
-                        
+
                         <input type="hidden" name="status" value="RESOLVED">
                     </div>
                     <div class="modal-footer">
@@ -231,19 +245,22 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post">
+                <form th:action="@{/admin/delivery-issues/{id}/update-status(id=${report.id})}" method="post"
+                    accept-charset="UTF-8">
                     <div class="modal-body">
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Từ chối báo cáo này. Vui lòng nhập lý do từ chối để khách hàng hiểu rõ. Khách hàng sẽ nhận được email thông báo.
+                            Từ chối báo cáo này. Vui lòng nhập lý do từ chối để khách hàng hiểu rõ. Khách hàng sẽ nhận
+                            được email thông báo.
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="rejectReason" class="form-label">Lý do từ chối: <span class="text-danger">*</span></label>
+                            <label for="rejectReason" class="form-label">Lý do từ chối: <span
+                                    class="text-danger">*</span></label>
                             <textarea class="form-control" id="rejectReason" name="adminNotes" rows="3" required
-                                      placeholder="Nhập lý do từ chối báo cáo này..."></textarea>
+                                placeholder="Nhập lý do từ chối báo cáo này..."></textarea>
                         </div>
-                        
+
                         <input type="hidden" name="status" value="REJECTED">
                     </div>
                     <div class="modal-footer">
@@ -259,4 +276,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

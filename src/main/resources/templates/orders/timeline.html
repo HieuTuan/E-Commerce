@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +14,7 @@
             position: relative;
             padding: 20px 0;
         }
-        
+
         .timeline::before {
             content: '';
             position: absolute;
@@ -23,13 +24,13 @@
             width: 2px;
             background: #dee2e6;
         }
-        
-        .timeline-item {
+
+        /* .timeline-item {
             position: relative;
             margin-bottom: 30px;
             padding-left: 80px;
-        }
-        
+        } */
+
         .timeline-icon {
             position: absolute;
             left: 15px;
@@ -44,45 +45,159 @@
             font-size: 14px;
             z-index: 1;
         }
-        
-        .timeline-icon.pending { background: #6c757d; }
-        .timeline-icon.confirmed { background: #0d6efd; }
-        .timeline-icon.shipping { background: #fd7e14; }
-        .timeline-icon.delivered { background: #198754; }
-        .timeline-icon.cancelled { background: #dc3545; }
-        .timeline-icon.awaiting_confirmation { background: #ffc107; }
-        
+
+        .timeline-icon.pending {
+            background: #6c757d;
+        }
+
+        .timeline-icon.pending::after {
+            content: '\f017';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.confirmed {
+            background: #0d6efd;
+        }
+
+        .timeline-icon.confirmed::after {
+            content: '\f00c';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.shipping {
+            background: #fd7e14;
+        }
+
+        .timeline-icon.shipping::after {
+            content: '\f0d1';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.awaiting_confirmation {
+            background: #ffc107;
+        }
+
+        .timeline-icon.awaiting_confirmation::after {
+            content: '\f46c';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.delivered {
+            background: #198754;
+        }
+
+        .timeline-icon.delivered::after {
+            content: '\f48b';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.confirmed_by_customer {
+            background: #20c997;
+        }
+
+        .timeline-icon.confirmed_by_customer::after {
+            content: '\f560';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.cancelled {
+            background: #dc3545;
+        }
+
+        .timeline-icon.cancelled::after {
+            content: '\f00d';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        /* Return statuses */
+        .timeline-icon.refund_requested {
+            background: #fd7e14;
+        }
+
+        .timeline-icon.refund_requested::after {
+            content: '\f3e5';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.return_approved {
+            background: #0dcaf0;
+        }
+
+        .timeline-icon.return_approved::after {
+            content: '\f49e';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.returning {
+            background: #6610f2;
+        }
+
+        .timeline-icon.returning::after {
+            content: '\f48b';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.return_received {
+            background: #6f42c1;
+        }
+
+        .timeline-icon.return_received::after {
+            content: '\f493';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
+        .timeline-icon.refunded {
+            background: #198754;
+        }
+
+        .timeline-icon.refunded::after {
+            content: '\f3d1';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+
         .timeline-content {
             background: white;
             border: 1px solid #dee2e6;
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .timeline-header {
             display: flex;
             justify-content: between;
             align-items: center;
             margin-bottom: 10px;
         }
-        
+
         .timeline-status {
             font-weight: bold;
             font-size: 1.1em;
         }
-        
+
         .timeline-time {
             color: #6c757d;
             font-size: 0.9em;
         }
-        
+
         .timeline-user {
             color: #495057;
             font-size: 0.9em;
             margin-top: 5px;
         }
-        
+
         .timeline-notes {
             margin-top: 10px;
             padding: 10px;
@@ -90,16 +205,16 @@
             border-radius: 4px;
             font-style: italic;
         }
-        
+
         @media (max-width: 768px) {
             .timeline::before {
                 left: 20px;
             }
-            
-            .timeline-item {
+
+            /* .timeline-item {
                 padding-left: 60px;
-            }
-            
+            } */
+
             .timeline-icon {
                 left: 5px;
                 width: 25px;
@@ -109,6 +224,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container mt-4">
         <div class="row">
@@ -117,7 +233,7 @@
                     <div class="card-header">
                         <h4 class="mb-0">
                             <i class="fas fa-clock me-2"></i>
-                            Timeline Đơn hàng #<span th:text="${orderId}"></span>
+                            Mốc thời gian đơn hàng: <span th:text="${orderId}"></span>
                         </h4>
                     </div>
                     <div class="card-body">
@@ -130,19 +246,19 @@
                             </span>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        
+
                         <div th:if="${param.confirmed}" class="alert alert-success alert-dismissible fade show">
                             <i class="fas fa-check-circle me-2"></i>
                             Đã xác nhận giao hàng thành công!
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        
+
                         <div th:if="${param.rejected}" class="alert alert-warning alert-dismissible fade show">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             Đã từ chối giao hàng!
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        
+
                         <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show">
                             <i class="fas fa-exclamation-circle me-2"></i>
                             <span th:switch="${param.error}">
@@ -156,65 +272,69 @@
                         <!-- Timeline -->
                         <div class="timeline" th:if="${timeline != null and !timeline.empty}">
                             <div class="timeline-item" th:each="entry : ${timeline}">
-                                <div class="timeline-icon" 
-                                     th:classappend="${entry.status.name().toLowerCase()}">
+                                <div class="timeline-icon" th:classappend="${entry.status.name().toLowerCase()}">
                                 </div>
-                                
+
                                 <div class="timeline-content">
                                     <div class="timeline-header">
-                                        <div class="timeline-status" 
-                                             th:text="${entry.status.displayName}"
-                                             th:attr="data-order-status=${orderId}, data-status=${entry.status.name()}"></div>
-                                        <div class="timeline-time" 
-                                             th:text="${#temporals.format(entry.updatedAt, 'dd/MM/yyyy HH:mm')}"
-                                             th:attr="data-order-timestamp=${orderId}"></div>
+                                        <div class="timeline-status" th:text="${entry.status.displayName}"
+                                            th:attr="data-order-status=${orderId}, data-status=${entry.status.name()}">
+                                        </div>
+                                        <div class="timeline-time"
+                                            th:text="${#temporals.format(entry.updatedAt, 'dd/MM/yyyy HH:mm')}"
+                                            th:attr="data-order-timestamp=${orderId}"></div>
                                     </div>
-                                    
+
                                     <div class="timeline-user" th:if="${entry.updatedBy}">
                                         <i class="fas fa-user me-1"></i>
                                         Cập nhật bởi: <span th:text="${entry.updatedBy}"></span>
                                     </div>
-                                    
+
                                     <div class="timeline-notes" th:if="${entry.notes}">
                                         <i class="fas fa-sticky-note me-1"></i>
-                                        <span th:text="${entry.notes}"></span>
+                                        <span th:utext="${entry.notes}"></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Empty State -->
                         <div th:if="${timeline == null or timeline.empty}" class="text-center py-5">
                             <i class="fas fa-clock fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">Chưa có thông tin timeline</h5>
                             <p class="text-muted">Timeline sẽ được cập nhật khi có thay đổi trạng thái đơn hàng.</p>
                         </div>
-                        
+
                         <!-- Customer Delivery Confirmation -->
-                        <div th:if="${order != null and order.currentStatus.name() == 'AWAITING_CONFIRMATION'}" class="mt-4">
+                        <div th:if="${order != null and order.currentStatus.name() == 'AWAITING_CONFIRMATION'}"
+                            class="mt-4">
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 <strong>Xác nhận giao hàng</strong><br>
-                                Đơn hàng đã được giao đến địa chỉ của bạn. Vui lòng xác nhận việc nhận hàng hoặc báo cáo nếu có vấn đề.
-                                <br><small class="text-muted">Nếu không có phản hồi trong 24 giờ, đơn hàng sẽ được tự động xác nhận.</small>
+                                Đơn hàng đã được giao đến địa chỉ của bạn. Vui lòng xác nhận việc nhận hàng hoặc báo cáo
+                                nếu có vấn đề.
+                                <br><small class="text-muted">Nếu không có phản hồi trong 24 giờ, đơn hàng sẽ được tự
+                                    động xác nhận.</small>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
-                                    <form th:action="@{/orders/{orderId}/confirm-delivery(orderId=${orderId})}" method="post" class="d-inline">
+                                    <form th:action="@{/orders/{orderId}/confirm-delivery(orderId=${orderId})}"
+                                        method="post" class="d-inline">
                                         <button type="submit" class="btn btn-success w-100">
                                             <i class="fas fa-check me-2"></i>Xác nhận đã nhận hàng
                                         </button>
                                     </form>
                                 </div>
                                 <div class="col-md-6">
-                                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal"
+                                        data-bs-target="#rejectModal">
                                         <i class="fas fa-times me-2"></i>Báo cáo vấn đề
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Action Buttons -->
                         <div class="mt-4 text-center">
                             <a href="/orders" class="btn btn-secondary">
@@ -250,8 +370,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="customReason" class="form-label">Chi tiết (tùy chọn):</label>
-                            <textarea class="form-control" id="customReason" name="customReason" rows="3" 
-                                      placeholder="Mô tả chi tiết vấn đề..."></textarea>
+                            <textarea class="form-control" id="customReason" name="customReason" rows="3"
+                                placeholder="Mô tả chi tiết vấn đề..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -265,25 +385,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/order-sync.js"></script>
-    
+
     <!-- Initialize order synchronization -->
     <script th:inline="javascript">
         const orderId = /*[[${orderId}]]*/ null;
-        
+
         // Initialize synchronization when page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             if (orderId) {
                 initOrderSync(orderId);
-                
+
                 // Listen for status changes
-                document.addEventListener('orderStatusChanged', function(event) {
+                document.addEventListener('orderStatusChanged', function (event) {
                     console.log('Order status changed:', event.detail);
                     // Optionally refresh the page or update specific elements
                     location.reload();
                 });
             }
         });
-        
+
         // Legacy auto-refresh function (kept for compatibility)
         function refreshTimeline() {
             if (orderSync) {
@@ -299,4 +419,5 @@
         }
     </script>
 </body>
+
 </html>

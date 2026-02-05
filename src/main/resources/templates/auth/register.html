@@ -19,7 +19,7 @@
                 <div class="card shadow">
                     <div class="card-body p-5">
                         <h3 class="text-center mb-4">
-                            <i class="fas fa-user-plus text-primary"></i> Register
+                            <i class="fas fa-user-plus text-primary"></i> Đăng ký
                         </h3>
 
                         <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
@@ -28,73 +28,74 @@
                             <!-- Personal Information -->
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="fullName" class="form-label">Full Name *</label>
-                                    <input type="text" class="form-control" id="fullName" th:field="*{fullName}" 
-                                           autocomplete="name" required maxlength="100" placeholder="Enter your full name">
+                                    <label for="fullName" class="form-label">Tên đầy đủ *</label>
+                                    <input type="text" class="form-control" id="fullName" th:field="*{fullName}"
+                                        autocomplete="name" required maxlength="100" placeholder="Nhập tên đầy đủ">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="birthDate" class="form-label">Date of Birth *</label>
+                                    <label for="birthDate" class="form-label">Ngày sinh *</label>
                                     <input type="date" class="form-control" id="birthDate" name="birthDate" required>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="phone" class="form-label">Phone Number *</label>
+                                    <label for="phone" class="form-label">Số điện thoại *</label>
                                     <input type="tel" class="form-control" id="phone" th:field="*{phone}"
-                                           autocomplete="tel" required placeholder="Enter phone number" maxlength="10">
+                                        autocomplete="tel" required placeholder="Nhập số điện thoại" maxlength="10">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="email" class="form-label">Email *</label>
                                     <input type="email" class="form-control" id="email" th:field="*{email}"
-                                           autocomplete="email" required placeholder="Enter email address">
+                                        autocomplete="email" required placeholder="Enter email address">
                                 </div>
                             </div>
-                            
+
                             <!-- Password Section -->
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="password" class="form-label">Password *</label>
+                                    <label for="password" class="form-label">Mật khẩu *</label>
                                     <div class="position-relative">
                                         <input type="password" class="form-control" id="password" th:field="*{password}"
-                                               autocomplete="new-password" required minlength="6" placeholder="Enter password"
-                                               style="padding-right: 45px;">
-                                        <button type="button" class="btn position-absolute" 
-                                                style="right: 5px; top: 50%; transform: translateY(-50%); border: none; background: none; z-index: 10; padding: 5px 10px;"
-                                                onclick="togglePassword('password')">
+                                            autocomplete="new-password" required minlength="6"
+                                            placeholder="Nhập mật khẩu" style="padding-right: 45px;">
+                                        <button type="button" class="btn position-absolute"
+                                            style="right: 5px; top: 50%; transform: translateY(-50%); border: none; background: none; z-index: 10; padding: 5px 10px;"
+                                            onclick="togglePassword('password')">
                                             <i class="fas fa-eye text-muted" id="password-icon"></i>
                                         </button>
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu *</label>
                                     <div class="position-relative">
-                                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
-                                               autocomplete="new-password" required minlength="6" placeholder="Confirm password"
-                                               style="padding-right: 45px;">
-                                        <button type="button" class="btn position-absolute" 
-                                                style="right: 5px; top: 50%; transform: translateY(-50%); border: none; background: none; z-index: 10; padding: 5px 10px;"
-                                                onclick="togglePassword('confirmPassword')">
+                                        <input type="password" class="form-control" id="confirmPassword"
+                                            name="confirmPassword" autocomplete="new-password" required minlength="6"
+                                            placeholder="Xác nhận mật khẩu" style="padding-right: 45px;">
+                                        <button type="button" class="btn position-absolute"
+                                            style="right: 5px; top: 50%; transform: translateY(-50%); border: none; background: none; z-index: 10; padding: 5px 10px;"
+                                            onclick="togglePassword('confirmPassword')">
                                             <i class="fas fa-eye text-muted" id="confirmPassword-icon"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-3">
-                                <label for="address" class="form-label">Address</label>
-                                <textarea class="form-control" id="address" th:field="*{address}" 
-                                          autocomplete="street-address" rows="2" placeholder="Enter address (optional)"></textarea>
+                                <label for="address" class="form-label">Địa chỉ:</label>
+                                <textarea class="form-control" id="address" th:field="*{address}"
+                                    autocomplete="street-address" rows="2"
+                                    placeholder="Nhập địa chỉ (tùy chọn)"></textarea>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="fas fa-user-plus"></i> Register
+                                <i class="fas fa-user-plus"></i> Đăng ký
                             </button>
                         </form>
 
                         <div class="text-center">
-                            <p>Already have an account? <a th:href="@{/login}">Login here</a></p>
-                            <a th:href="@{/}" class="text-muted">Back to Home</a>
+                            <p>Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></p>
+                            <a th:href="@{/}" class="text-muted">Trang chủ</a>
                         </div>
                     </div>
                 </div>
@@ -109,7 +110,7 @@
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
             const icon = document.getElementById(fieldId + '-icon');
-            
+
             if (field.type === 'password') {
                 field.type = 'text';
                 icon.classList.remove('fa-eye');
@@ -121,7 +122,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const form = document.querySelector('form');
 
             // Validation functions
@@ -146,19 +147,19 @@
                 if (!value) {
                     return 'Date of birth is required';
                 }
-                
+
                 const birthDate = new Date(value);
                 const today = new Date();
-                
+
                 if (birthDate > today) {
                     return 'Date of birth cannot be in the future';
                 }
-                
+
                 const age = today.getFullYear() - birthDate.getFullYear();
                 const monthDiff = today.getMonth() - birthDate.getMonth();
-                
-                if (age < 15 || (age === 15 && monthDiff < 0) || 
-                   (age === 15 && monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+                if (age < 15 || (age === 15 && monthDiff < 0) ||
+                    (age === 15 && monthDiff === 0 && today.getDate() < birthDate.getDate())) {
                     return 'You must be at least 15 years old';
                 }
                 return null;
@@ -218,13 +219,13 @@
             function showFieldError(fieldId, message) {
                 const field = document.getElementById(fieldId);
                 field.classList.add('is-invalid');
-                
+
                 // Remove existing error message
                 const existingError = field.parentNode.querySelector('.invalid-feedback');
                 if (existingError) {
                     existingError.remove();
                 }
-                
+
                 // Add new error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'invalid-feedback';
@@ -235,7 +236,7 @@
             function clearFieldError(fieldId) {
                 const field = document.getElementById(fieldId);
                 field.classList.remove('is-invalid');
-                
+
                 const existingError = field.parentNode.querySelector('.invalid-feedback');
                 if (existingError) {
                     existingError.remove();
@@ -243,9 +244,9 @@
             }
 
             // Form submission validation
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function (e) {
                 let isValid = true;
-                
+
                 // Clear all previous errors
                 ['fullName', 'birthDate', 'phone', 'email', 'password', 'confirmPassword'].forEach(fieldId => {
                     clearFieldError(fieldId);
@@ -294,7 +295,7 @@
                 if (!isValid) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     // Scroll to first error
                     const firstError = document.querySelector('.is-invalid');
                     if (firstError) {

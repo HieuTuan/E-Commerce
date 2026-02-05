@@ -164,10 +164,10 @@
                         </div>
 
                         <!-- Rejection Reason (if rejected) -->
-                        <div th:if="${returnRequest.status.name() == 'REFUND_REJECTED' and returnRequest.rejectionReason}"
+                        <div th:if="${returnRequest.status.name() == 'REFUND_REJECTED' and returnRequest.rejectionReason != null}"
                             class="mt-3">
                             <strong>Lý do từ chối:</strong>
-                            <div class="alert alert-danger mt-2" th:text="${returnRequest.rejectionReason}">
+                            <div class="alert alert-danger mt-2" th:utext="${returnRequest.rejectionReason}">
                                 Sản phẩm không đủ điều kiện hoàn trả
                             </div>
                         </div>
@@ -185,13 +185,17 @@
                                 <p><strong>Mã đơn hàng:</strong> <span
                                         th:text="${returnRequest.order.orderNumber}">ORD001</span></p>
                                 <p><strong>Tổng tiền:</strong> <span
-                                        th:text="${#numbers.formatCurrency(returnRequest.order.totalAmount)}">500,000
-                                        VND</span></p>
+                                        th:text="${#numbers.formatInteger(returnRequest.order.totalAmount, 0, 'COMMA')} + 'đ'">500,000
+                                        đ</span></p>
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Ngày đặt:</strong> <span
                                         th:text="${#temporals.format(returnRequest.order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024
                                         10:00</span></p>
+                                <p><strong>Trạng thái thanh toán:</strong>
+                                    <span class="badge bg-info"
+                                        th:text="${returnRequest.order.paymentStatus}">PAID</span>
+                                </p>
                                 <p><strong>Trạng thái đơn hàng:</strong>
                                     <span class="badge bg-info" th:text="${returnRequest.order.status}">DELIVERED</span>
                                 </p>
@@ -248,18 +252,18 @@
                             </button>
                         </div>
 
-                        <!-- Returning Status Actions -->
-                        <div th:if="${returnRequest.status.name() == 'RETURNING'}">
+                        <!-- Approved Status - Show Confirm Receipt Button -->
+                        <div th:if="${returnRequest.status.name() == 'RETURN_APPROVED'}">
                             <button type="button" class="btn btn-primary w-100 mb-2"
                                 th:onclick="'confirmReceipt(' + ${returnRequest.id} + ')'">
                                 <i class="fas fa-box me-2"></i>Xác Nhận Nhận Hàng
                             </button>
                         </div>
 
-                        <!-- Received Status Actions -->
+                        <!-- Received Status - Show Refund Button -->
                         <div th:if="${returnRequest.status.name() == 'RETURN_RECEIVED'}">
-                            <button type="button" class="btn btn-success w-100 mb-2"
-                                th:onclick="'completeRefund(' + ${returnRequest.id} + ')'">
+                            <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal"
+                                data-bs-target="#refundModal">
                                 <i class="fas fa-money-bill-wave me-2"></i>Hoàn Tiền
                             </button>
                         </div>
@@ -297,95 +301,81 @@
                     </div>
                 </div>
 
+
+
+
                 <!-- GHN Shipping Information -->
                 <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Thông Tin Vận Chuyển GHN</h5>
-                    </div>
-                    <div class="card-body">
-                        <div th:if="${returnRequest.ghnOrderCode}">
-                            <p><strong>Mã đơn GHN:</strong> <code
-                                    th:text="${returnRequest.ghnOrderCode}">GHN123456</code></p>
-                            <p><strong>Mã tracking:</strong> <code
-                                    th:text="${returnRequest.ghnTrackingNumber ?: 'Chưa có'}">TRK123456</code></p>
-                            <p><strong>Phí vận chuyển:</strong>
-                                <span th:if="${returnRequest.ghnFee}"
-                                    th:text="${#numbers.formatCurrency(returnRequest.ghnFee)}"
-                                    class="badge bg-info">25,000 VND</span>
-                                <span th:unless="${returnRequest.ghnFee}" class="text-muted">Chưa tính</span>
-                            </p>
-                        </div>
-                        <div th:unless="${returnRequest.ghnOrderCode}">
-                            <div th:if="${ghnFee != null && ghnFee.code == 200}">
-                                <div class="alert alert-warning">
-                                    <strong>Phí vận chuyển của đơn hàng:</strong>
-                                    <span th:text="${#numbers.formatCurrency(ghnFee.data.total)}">25,000 VND</span>
-                                    <br><small>Phí này sẽ được áp dụng khi tạo đơn vận chuyển</small>
-                                </div>
-                            </div>
-                            <div th:unless="${ghnFee}">
-                                <button type="button" class="btn btn-outline-info btn-sm" onclick="calculateGHNFee()">
-                                    <i class="fas fa-calculator me-2"></i>Tính Phí Vận Chuyển
-                                </button>
-                                <div id="ghn-fee-result" class="mt-2"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- GHN Shipping Information -->
-                <div th:if="${returnRequest.ghnOrderCode}" class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Thông Tin Vận Chuyển GHN</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>Mã vận đơn:</strong> <span th:text="${returnRequest.ghnOrderCode}">GHN123456</span>
-                        </p>
-                        <p th:if="${returnRequest.ghnTrackingNumber}">
-                            <strong>Mã theo dõi:</strong> <span
-                                th:text="${returnRequest.ghnTrackingNumber}">TRK123456</span>
-                        </p>
-                        <p th:if="${returnRequest.ghnStatus}">
-                            <strong>Trạng thái GHN:</strong> <span th:text="${returnRequest.ghnStatus}">Đang vận
-                                chuyển</span>
-                        </p>
-                        <p th:if="${returnRequest.ghnFee}">
-                            <strong>Phí vận chuyển:</strong> <span
-                                th:text="${#numbers.formatInteger(returnRequest.ghnFee, 0, 'COMMA')} + ' VND'">30,000
-                                VND</span>
-                        </p>
-                        <p th:if="${returnRequest.pickupTime}">
-                            <strong>Thời gian lấy hàng:</strong>
-                            <span
-                                th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
-                                10:00</span>
-                        </p>
-                        <p th:if="${returnRequest.deliveryTime}">
-                            <strong>Thời gian giao hàng:</strong>
-                            <span
-                                th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
-                                15:00</span>
-                        </p>
-                        <div class="mt-3">
-                            <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}"
-                                target="_blank" class="btn btn-primary btn-sm">
-                                <i class="fas fa-external-link-alt me-2"></i>Theo dõi trên GHN
-                            </a>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Mã vận đơn:</strong> <span
+                                        th:text="${returnRequest.ghnOrderCode ?: 'Chưa có'}">GHN123456</span></p>
+                                <p>
+                                    <strong>Mã theo dõi:</strong> <span
+                                        th:text="${returnRequest.ghnTrackingNumber ?: 'Chưa có'}">TRK123456</span>
+                                </p>
+                                <p>
+                                    <strong>Trạng thái GHN:</strong>
+                                    <span class="badge"
+                                        th:classappend="${returnRequest.ghnStatus != null ? 'bg-info' : 'bg-secondary'}"
+                                        th:text="${returnRequest.ghnStatus ?: 'Chưa có'}">Đang vận chuyển</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>
+                                    <strong>Phí vận chuyển:</strong>
+                                    <span th:if="${returnRequest.ghnFee != null}"
+                                        th:text="${#numbers.formatInteger(returnRequest.ghnFee, 0, 'COMMA')} + ' đ'">30,000
+                                        đ</span>
+                                    <span th:unless="${returnRequest.ghnFee != null}" class="text-muted">Chưa có</span>
+                                </p>
+                                <p>
+                                    <strong>Thời gian lấy hàng:</strong>
+                                    <span th:if="${returnRequest.pickupTime != null}"
+                                        th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        10:00</span>
+                                    <span th:unless="${returnRequest.pickupTime != null}" class="text-muted">Chưa
+                                        có</span>
+                                </p>
+                                <p>
+                                    <strong>Thời gian giao hàng:</strong>
+                                    <span th:if="${returnRequest.deliveryTime != null}"
+                                        th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                        15:00</span>
+                                    <span th:unless="${returnRequest.deliveryTime != null}" class="text-muted">Chưa
+                                        có</span>
+                                </p>
+                            </div>
+                        </div>
 
-                            <!-- Print Shipping Label Button -->
-                            <button type="button" class="btn btn-success btn-sm ms-2"
-                                th:onclick="'printGHNLabel(\'' + ${returnRequest.ghnOrderCode} + '\')'">
-                                <i class="fas fa-print me-2"></i>In Nhãn Vận Chuyển
-                            </button>
+                        <div class="mt-3 border-top pt-3">
+                            <div class="d-flex gap-2">
+                                <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}"
+                                    target="_blank" class="btn btn-primary btn-sm"
+                                    style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    <i class="fas fa-external-link-alt me-1"></i>Theo dõi GHN
+                                </a>
+
+                                <!-- Print Shipping Label Button -->
+                                <button type="button" class="btn btn-success btn-sm"
+                                    th:data-order-code="${returnRequest.ghnOrderCode}"
+                                    onclick="printGHNLabel(this.dataset.orderCode)"
+                                    style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    <i class="fas fa-print me-1"></i>In Nhãn
+                                </button>
+                            </div>
                         </div>
 
                         <!-- QR Code for Shipping Label -->
-                        <div class="mt-4 text-center">
+                        <div class="mt-4 text-center border-top pt-3">
                             <h6 class="mb-3">Mã QR Vận Đơn</h6>
-                            <div class="qr-code-container p-3 bg-light rounded d-inline-block">
-                                <img th:src="'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + ${returnRequest.ghnOrderCode}"
-                                    alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                            <div class="qr-code-container p-3 bg-light rounded d-inline-block border">
+                                <img th:src="'https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=' + ${returnRequest.ghnOrderCode}"
+                                    alt="QR Code" class="img-fluid" style="max-width: 150px;">
                                 <div class="mt-2 small text-muted">
                                     Quét mã để tra cứu nhanh
                                 </div>
@@ -393,119 +383,140 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Evidence Video -->
-                <div th:if="${returnRequest.evidenceVideoUrl}" class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-video me-2"></i>Video Bằng Chứng</h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Enhanced video with multiple format support -->
-                        <video id="evidence-video" controls class="w-100" style="max-height: 300px; max-width: 100%;"
-                            preload="metadata" onloadstart="handleVideoLoadStart(this)" onerror="handleVideoError(this)"
-                            oncanplay="handleVideoCanPlay(this)">
+            <!-- Evidence Video -->
+            <div th:if="${returnRequest.evidenceVideoUrl}" class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-video me-2"></i>Video Bằng Chứng</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Enhanced video with multiple format support -->
+                    <video id="evidence-video" controls class="w-100" style="max-height: 300px; max-width: 100%;"
+                        preload="metadata" onloadstart="handleVideoLoadStart(this)" onerror="handleVideoError(this)"
+                        oncanplay="handleVideoCanPlay(this)">
 
-                            <!-- Multiple source formats for better compatibility -->
-                            <source th:src="${returnRequest.evidenceVideoUrl}" type="video/mp4">
-                            <source th:src="${returnRequest.evidenceVideoUrl}" type="video/webm">
-                            <source th:src="${returnRequest.evidenceVideoUrl}" type="video/ogg">
+                        <!-- Multiple source formats for better compatibility -->
+                        <source th:src="${returnRequest.evidenceVideoUrl}" type="video/mp4">
+                        <source th:src="${returnRequest.evidenceVideoUrl}" type="video/webm">
+                        <source th:src="${returnRequest.evidenceVideoUrl}" type="video/ogg">
 
-                            <!-- Fallback content for unsupported browsers -->
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Trình duyệt của bạn không hỗ trợ phát video HTML5.
-                                <br>
-                                <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
-                                    class="btn btn-sm btn-outline-primary mt-2">
-                                    <i class="fas fa-download me-2"></i>Tải video về để xem
-                                </a>
-                            </div>
-                        </video>
-
-                        <!-- Loading indicator -->
-                        <div id="video-loading" class="text-center mt-2" style="display: none;">
-                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                            Đang tải video...
-                        </div>
-
-                        <!-- Error display area -->
-                        <div id="video-error" class="alert alert-danger mt-2" style="display: none;">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            <span id="video-error-message">Không thể tải video</span>
+                        <!-- Fallback content for unsupported browsers -->
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Trình duyệt của bạn không hỗ trợ phát video HTML5.
                             <br>
-                            <div class="mt-2">
-                                <button onclick="retryVideo()" class="btn btn-sm btn-outline-light me-2">
-                                    <i class="fas fa-redo me-2"></i>Thử lại
-                                </button>
-                                <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
-                                    class="btn btn-sm btn-outline-light">
-                                    <i class="fas fa-external-link-alt me-2"></i>Mở video trong tab mới
-                                </a>
-                            </div>
+                            <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
+                                class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="fas fa-download me-2"></i>Tải video về để xem
+                            </a>
                         </div>
+                    </video>
 
-                        <!-- Video metadata display -->
-                        <div id="video-metadata" class="mt-2" style="display: none;">
+                    <!-- Loading indicator -->
+                    <div id="video-loading" class="text-center mt-2" style="display: none;">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        Đang tải video...
+                    </div>
+
+                    <!-- Error display area -->
+                    <div id="video-error" class="alert alert-danger mt-2" style="display: none;">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span id="video-error-message">Không thể tải video</span>
+                        <br>
+                        <div class="mt-2">
+                            <button onclick="retryVideo()" class="btn btn-sm btn-outline-light me-2">
+                                <i class="fas fa-redo me-2"></i>Thử lại
+                            </button>
+                            <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
+                                class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-external-link-alt me-2"></i>Mở video trong tab mới
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Video metadata display -->
+                    <div id="video-metadata" class="mt-2" style="display: none;">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="video-duration"></span>
+                            <span id="video-dimensions"></span>
+                        </small>
+                    </div>
+
+                    <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
+                        class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="fas fa-external-link-alt me-2"></i>Mở trong tab mới
+                    </a>
+                </div>
+            </div>
+
+            <!-- Refund Proof Preview - Show if image exists (for all statuses) -->
+            <div th:if="${returnRequest.refundProofImageUrl != null}" class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Chứng Từ Hoàn Tiền Đã Upload</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <img th:src="${returnRequest.refundProofImageUrl}" alt="Refund Proof"
+                            class="img-fluid rounded border shadow" style="max-width: 500px; cursor: pointer;"
+                            onclick="window.open(this.src, '_blank')">
+                        <div class="mt-3">
                             <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <span id="video-duration"></span>
-                                <span id="video-dimensions"></span>
+                                <i class="fas fa-info-circle me-1"></i>Click ảnh để xem kích thước đầy đủ
                             </small>
                         </div>
-
-                        <a th:href="${returnRequest.evidenceVideoUrl}" target="_blank"
-                            class="btn btn-outline-primary btn-sm mt-2">
-                            <i class="fas fa-external-link-alt me-2"></i>Mở trong tab mới
-                        </a>
-                    </div>
-                </div>
-
-                <!-- GHN Tracking Information -->
-                <div th:if="${returnRequest.ghnOrderCode}" class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Thông Tin Vận Chuyển GHN</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Mã vận đơn:</strong> <span th:text="${returnRequest.ghnOrderCode}">-</span>
-                                </p>
-                                <p th:if="${returnRequest.ghnTrackingNumber}">
-                                    <strong>Mã theo dõi:</strong> <span
-                                        th:text="${returnRequest.ghnTrackingNumber}">-</span>
-                                </p>
-                                <p th:if="${returnRequest.ghnStatus}">
-                                    <strong>Trạng thái:</strong> <span th:text="${returnRequest.ghnStatus}">-</span>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p th:if="${returnRequest.pickupTime}">
-                                    <strong>Thời gian lấy hàng:</strong>
-                                    <span
-                                        th:text="${#temporals.format(returnRequest.pickupTime, 'dd/MM/yyyy HH:mm')}">-</span>
-                                </p>
-                                <p th:if="${returnRequest.deliveryTime}">
-                                    <strong>Thời gian giao hàng:</strong>
-                                    <span
-                                        th:text="${#temporals.format(returnRequest.deliveryTime, 'dd/MM/yyyy HH:mm')}">-</span>
-                                </p>
-                                <p th:if="${returnRequest.ghnFee}">
-                                    <strong>Phí vận chuyển:</strong>
-                                    <span
-                                        th:text="${#numbers.formatDecimal(returnRequest.ghnFee, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">-</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <a th:href="'https://tracking.ghn.dev/?order_code=' + ${returnRequest.ghnOrderCode}"
-                                target="_blank" class="btn btn-primary btn-sm">
-                                <i class="fas fa-external-link-alt me-2"></i>Theo dõi trên GHN
-                            </a>
+                        <div class="mt-2">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Đã hoàn tiền thành công
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Refund Proof Upload Section - Allow upload for RETURN_RECEIVED (initial) and REFUNDED (update) -->
+            <div th:if="${returnRequest.status.name() == 'RETURN_RECEIVED' or returnRequest.status.name() == 'REFUNDED'}"
+                class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>
+                        <span
+                            th:text="${returnRequest.refundProofImageUrl == null ? 'Upload Chứng Từ Hoàn Tiền' : 'Cập Nhật Chứng Từ Hoàn Tiền'}">Upload
+                            Chứng Từ</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Current proof if exists -->
+                    <div th:if="${returnRequest.refundProofImageUrl}" class="mb-3">
+                        <h6>Chứng từ đã upload:</h6>
+                        <img th:src="${returnRequest.refundProofImageUrl}" alt="Refund Proof" class="img-fluid"
+                            style="max-width: 400px;">
+                    </div>
+
+                    <!-- Upload form -->
+                    <form th:action="@{/staff/returns/{id}/upload-refund-proof(id=${returnRequest.id})}" method="post"
+                        enctype="multipart/form-data" class="mt-3">
+                        <div class="mb-3">
+                            <label for="refundProofFileStandalone" class="form-label">
+                                <i class="fas fa-image me-2"></i>Chọn ảnh chuyển khoản:
+                            </label>
+                            <input type="file" class="form-control" id="refundProofFileStandalone" name="file"
+                                accept="image/*" required>
+                            <div class="form-text">Định dạng: JPG, PNG, JPEG. Kích thước tối đa: 5MB</div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload me-2"></i>
+                            <span
+                                th:text="${returnRequest.refundProofImageUrl == null ? 'Upload Chứng Từ' : 'Cập Nhật Chứng Từ'}">Upload</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+
         </div>
+    </div>
     </div>
 
     <!-- Reject Modal -->
@@ -529,6 +540,101 @@
                         <button type="submit" class="btn btn-danger">Từ chối</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Modal -->
+    <div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="refundModalLabel">
+                        <i class="fas fa-money-bill-wave me-2"></i>Xử Lý Hoàn Tiền
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Customer Bank Info -->
+                    <div class="card mb-3 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-university me-2"></i>Thông Tin Ngân Hàng Khách Hàng</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Ngân hàng:</strong> <span
+                                            th:text="${returnRequest.bankInfo.bankName}">ACB</span></p>
+                                    <p><strong>Số tài khoản:</strong>
+                                        <code class="fs-5"
+                                            th:text="${returnRequest.bankInfo.accountNumber}">123456789</code>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Chủ tài khoản:</strong>
+                                        <span class="text-uppercase fw-bold"
+                                            th:text="${returnRequest.bankInfo.accountHolderName}">NGUYEN VAN A</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Số tiền cần hoàn:</strong>
+                                <span class="fs-5 fw-bold text-danger"
+                                    th:text="${#numbers.formatInteger(returnRequest.order.totalAmount, 0, 'COMMA')} + ' đ'">1,500,000
+                                    đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Refund Proof -->
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-upload me-2"></i>Tải lên chứng từ chuyển khoản</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Show existing proof if any -->
+                            <div th:if="${returnRequest.refundProofImageUrl}" class="mb-3">
+                                <h6 class="text-success">Đã upload chứng từ:</h6>
+                                <img th:src="${returnRequest.refundProofImageUrl}" alt="Refund Proof"
+                                    class="img-fluid rounded border" style="max-width: 300px;">
+                            </div>
+
+                            <!-- Upload Form -->
+                            <form th:action="@{/staff/returns/{id}/upload-refund-proof(id=${returnRequest.id})}"
+                                method="post" enctype="multipart/form-data" id="refundProofForm">
+                                <div class="mb-3">
+                                    <label for="refundProofFileModal" class="form-label">
+                                        <i class="fas fa-image me-2"></i>Chọn ảnh chuyển khoản thành công:
+                                    </label>
+                                    <input type="file" class="form-control" id="refundProofFileModal" name="file"
+                                        accept="image/*" required>
+                                    <div class="form-text">
+                                        Định dạng: JPG, PNG, JPEG. Kích thước tối đa: 5MB
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Lưu ý:</strong> Vui lòng chuyển khoản cho khách hàng trước khi upload chứng
+                                    từ và xác nhận hoàn tiền.
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-check-circle me-2"></i>Tải ảnh lên
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Đóng
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -593,9 +699,9 @@
                     // Display result
                     resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>Phí vận chuyển GHN:</strong> ${new Intl.NumberFormat('vi-VN').format(data.total)} VND
-                            <br><small>Bao gồm: Phí dịch vụ ${new Intl.NumberFormat('vi-VN').format(data.serviceFee)} VND, 
-                            Phí bảo hiểm ${new Intl.NumberFormat('vi-VN').format(data.insuranceFee)} VND</small>
+                            <strong>Phí vận chuyển GHN:</strong> ${new Intl.NumberFormat('vi-VN').format(data.total)} đ
+                            <br><small>Bao gồm: Phí dịch vụ ${new Intl.NumberFormat('vi-VN').format(data.serviceFee)} đ, 
+                            Phí bảo hiểm ${new Intl.NumberFormat('vi-VN').format(data.insuranceFee)} đ</small>
                         </div>
                     `;
 

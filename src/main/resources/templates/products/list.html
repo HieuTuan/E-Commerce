@@ -14,81 +14,18 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
             min-height: 100vh !important;
         }
-        
-        .customer-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            padding: 15px 0 !important;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2) !important;
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 1000 !important;
-        }
-        
-        .customer-header .container {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-        }
-        
-        .customer-header .navbar-brand {
-            font-size: 1.6rem !important;
-            font-weight: 700 !important;
-            color: white !important;
-            text-decoration: none !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-        }
-        
-        .customer-header .navbar-brand i {
-            font-size: 1.4rem !important;
-        }
-        
-        .customer-header .navbar-nav {
-            display: flex !important;
-            align-items: center !important;
-            gap: 15px !important;
-        }
-        
-        .customer-header .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
-            font-weight: 600 !important;
-            padding: 10px 15px !important;
-            border-radius: 8px !important;
-            transition: all 0.3s ease !important;
-            text-decoration: none !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-        }
-        
-        .customer-header .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.2) !important;
-            color: white !important;
-            transform: translateY(-1px) !important;
-        }
-        
-        .customer-header .cart-count {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
-            color: white !important;
-            font-size: 0.7rem !important;
-            font-weight: 700 !important;
-            padding: 3px 6px !important;
-            border-radius: 10px !important;
-            min-width: 18px !important;
-            text-align: center !important;
-        }
-        
+
+
         .hero-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
             color: white !important;
-            padding: 70px 0 !important;
+            padding: 40px 0 !important;
             text-align: center !important;
-            margin-bottom: 40px !important;
+            margin-bottom: 30px !important;
             position: relative !important;
             overflow: hidden !important;
         }
-        
+
         .hero-section::before {
             content: '' !important;
             position: absolute !important;
@@ -97,30 +34,30 @@
             right: 0 !important;
             bottom: 0 !important;
             background: rgba(255, 255, 255, 0.05) !important;
-            background-image: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), 
-                              radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%) !important;
+            background-image: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%) !important;
         }
-        
+
         .hero-section .container {
             position: relative !important;
             z-index: 2 !important;
         }
-        
+
         .hero-section h1 {
-            font-size: 2.8rem !important;
+            font-size: 2.2rem !important;
             font-weight: 700 !important;
-            margin-bottom: 20px !important;
+            margin-bottom: 10px !important;
             color: white !important;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
         }
-        
+
         .hero-section p {
-            font-size: 1.2rem !important;
+            font-size: 1.1rem !important;
             margin-bottom: 0 !important;
             opacity: 0.95 !important;
             font-weight: 400 !important;
         }
-        
+
         .filters-section {
             background: white !important;
             border-radius: 15px !important;
@@ -129,7 +66,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
             border: 1px solid rgba(102, 126, 234, 0.1) !important;
         }
-        
+
         .product-grid {
             display: grid !important;
             grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)) !important;
@@ -137,7 +74,7 @@
             margin-bottom: 40px !important;
             padding: 10px 0 !important;
         }
-        
+
         .product-card {
             background: white !important;
             border-radius: 15px !important;
@@ -147,31 +84,31 @@
             border: 1px solid rgba(102, 126, 234, 0.1) !important;
             position: relative !important;
         }
-        
+
         .product-card:hover {
             transform: translateY(-8px) scale(1.02) !important;
             box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15) !important;
             border-color: rgba(102, 126, 234, 0.2) !important;
         }
-        
+
         .product-card .product-image {
             height: 220px !important;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
             position: relative !important;
             overflow: hidden !important;
         }
-        
+
         .product-card .product-image img {
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
             transition: transform 0.4s ease !important;
         }
-        
+
         .product-card:hover .product-image img {
             transform: scale(1.08) !important;
         }
-        
+
         .product-card .product-badge {
             position: absolute !important;
             top: 12px !important;
@@ -187,7 +124,7 @@
             box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3) !important;
             z-index: 2 !important;
         }
-        
+
         .product-card .product-actions {
             position: absolute !important;
             top: 12px !important;
@@ -196,11 +133,11 @@
             transition: all 0.3s ease !important;
             z-index: 2 !important;
         }
-        
+
         .product-card:hover .product-actions {
             opacity: 1 !important;
         }
-        
+
         .product-card .product-actions .btn {
             width: 40px !important;
             height: 40px !important;
@@ -212,17 +149,17 @@
             transition: all 0.3s ease !important;
             backdrop-filter: blur(10px) !important;
         }
-        
+
         .product-card .product-actions .btn:hover {
             background: white !important;
             transform: scale(1.1) !important;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
         }
-        
+
         .product-card .product-info {
             padding: 20px !important;
         }
-        
+
         .product-card .product-title {
             font-size: 1.2rem !important;
             font-weight: 700 !important;
@@ -234,7 +171,7 @@
             -webkit-box-orient: vertical !important;
             overflow: hidden !important;
         }
-        
+
         .product-card .product-description {
             color: #7f8c8d !important;
             font-size: 0.9rem !important;
@@ -245,7 +182,7 @@
             -webkit-box-orient: vertical !important;
             overflow: hidden !important;
         }
-        
+
         .category-badge {
             background: linear-gradient(135deg, #e9ecef, #f8f9fa) !important;
             color: #495057 !important;
@@ -256,7 +193,7 @@
             border: 1px solid #dee2e6 !important;
             display: inline-block !important;
         }
-        
+
         .product-card .product-price {
             margin: 15px 0 !important;
             padding: 12px 0 !important;
@@ -264,14 +201,14 @@
             border-bottom: 2px solid #f8f9fa !important;
             text-align: center !important;
         }
-        
+
         .product-card .price-current {
             font-size: 1.4rem !important;
             font-weight: 800 !important;
             color: #e74c3c !important;
             text-shadow: 0 1px 3px rgba(231, 76, 60, 0.2) !important;
         }
-        
+
         .stock-status {
             display: flex !important;
             align-items: center !important;
@@ -282,19 +219,19 @@
             font-size: 0.85rem !important;
             font-weight: 600 !important;
         }
-        
+
         .stock-status.in-stock {
             background: linear-gradient(135deg, #d4edda, #c3e6cb) !important;
             color: #155724 !important;
             border: 1px solid #c3e6cb !important;
         }
-        
+
         .stock-status.out-of-stock {
             background: linear-gradient(135deg, #f8d7da, #f5c6cb) !important;
             color: #721c24 !important;
             border: 1px solid #f5c6cb !important;
         }
-        
+
         .product-card .add-to-cart {
             width: 100% !important;
             padding: 12px 15px !important;
@@ -310,7 +247,7 @@
             position: relative !important;
             overflow: hidden !important;
         }
-        
+
         .product-card .add-to-cart::before {
             content: '' !important;
             position: absolute !important;
@@ -321,17 +258,17 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
             transition: left 0.5s !important;
         }
-        
+
         .product-card .add-to-cart:hover::before {
             left: 100% !important;
         }
-        
+
         .product-card .add-to-cart:hover {
             background: linear-gradient(135deg, #764ba2, #667eea) !important;
             transform: translateY(-2px) !important;
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3) !important;
         }
-        
+
         .product-count {
             background: linear-gradient(135deg, #e9ecef, #f8f9fa) !important;
             padding: 10px 16px !important;
@@ -341,7 +278,7 @@
             font-size: 0.9rem !important;
             border: 1px solid #dee2e6 !important;
         }
-        
+
         .empty-state {
             text-align: center !important;
             padding: 60px 30px !important;
@@ -351,24 +288,24 @@
             margin: 30px 0 !important;
             border: 1px solid rgba(102, 126, 234, 0.1) !important;
         }
-        
+
         .empty-state i {
             color: #bdc3c7 !important;
             margin-bottom: 25px !important;
         }
-        
+
         .empty-state h4 {
             color: #6c757d !important;
             font-weight: 600 !important;
             margin-bottom: 12px !important;
         }
-        
+
         .empty-state p {
             color: #adb5bd !important;
             margin-bottom: 25px !important;
             font-size: 1.05rem !important;
         }
-        
+
         .empty-state .btn {
             padding: 12px 25px !important;
             font-weight: 600 !important;
@@ -378,7 +315,7 @@
             text-transform: uppercase !important;
             letter-spacing: 0.5px !important;
         }
-        
+
         .scroll-to-top {
             position: fixed !important;
             bottom: 25px !important;
@@ -400,31 +337,31 @@
             z-index: 1000 !important;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
         }
-        
+
         .scroll-to-top.show {
             opacity: 1 !important;
             visibility: visible !important;
         }
-        
+
         .scroll-to-top:hover {
             transform: translateY(-3px) scale(1.05) !important;
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
         }
-        
+
         /* Search Form */
         .search-form .input-group {
             border-radius: 10px !important;
             overflow: hidden !important;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
         }
-        
+
         .search-form .input-group-text {
             background: white !important;
             border: 2px solid #e9ecef !important;
             border-right: none !important;
             padding: 12px 16px !important;
         }
-        
+
         .search-form .form-control {
             border: 2px solid #e9ecef !important;
             border-left: none !important;
@@ -432,12 +369,12 @@
             padding: 12px 16px !important;
             font-size: 1rem !important;
         }
-        
+
         .search-form .form-control:focus {
             border-color: #667eea !important;
             box-shadow: none !important;
         }
-        
+
         .search-form .btn {
             padding: 12px 20px !important;
             font-weight: 600 !important;
@@ -445,11 +382,11 @@
             border: none !important;
             border-radius: 0 10px 10px 0 !important;
         }
-        
+
         .search-form .btn:hover {
             background: linear-gradient(135deg, #764ba2, #667eea) !important;
         }
-        
+
         .form-select {
             border: 2px solid #e9ecef !important;
             border-radius: 10px !important;
@@ -457,162 +394,162 @@
             font-size: 1rem !important;
             transition: all 0.3s ease !important;
         }
-        
+
         .form-select:focus {
             border-color: #667eea !important;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
         }
-        
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .product-grid {
                 grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)) !important;
                 gap: 20px !important;
             }
-            
+
             .hero-section h1 {
                 font-size: 2.5rem !important;
             }
         }
-        
+
         @media (max-width: 992px) {
             .product-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
                 gap: 20px !important;
             }
-            
+
             .hero-section {
                 padding: 60px 0 !important;
             }
-            
+
             .hero-section h1 {
                 font-size: 2.2rem !important;
             }
-            
+
             .filters-section {
                 padding: 20px !important;
             }
         }
-        
+
         @media (max-width: 768px) {
             .hero-section {
                 padding: 50px 0 !important;
                 margin-bottom: 30px !important;
             }
-            
+
             .hero-section h1 {
                 font-size: 2rem !important;
             }
-            
+
             .hero-section p {
                 font-size: 1.1rem !important;
             }
-            
+
             .product-grid {
                 grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
                 gap: 18px !important;
             }
-            
+
             .product-card .product-info {
                 padding: 18px !important;
             }
-            
+
             .filters-section {
                 padding: 18px !important;
             }
-            
+
             .customer-header .container {
                 flex-direction: column !important;
                 gap: 12px !important;
             }
-            
+
             .customer-header .navbar-brand {
                 font-size: 1.5rem !important;
             }
-            
+
             .customer-header .navbar-nav {
                 gap: 10px !important;
             }
-            
+
             .search-form .input-group-text,
             .search-form .form-control,
             .search-form .btn {
                 padding: 10px 14px !important;
             }
         }
-        
+
         @media (max-width: 576px) {
             .hero-section {
                 padding: 40px 0 !important;
             }
-            
+
             .hero-section h1 {
                 font-size: 1.8rem !important;
             }
-            
+
             .hero-section p {
                 font-size: 1rem !important;
             }
-            
+
             .product-grid {
                 grid-template-columns: 1fr !important;
                 gap: 15px !important;
             }
-            
+
             .product-card .product-info {
                 padding: 15px !important;
             }
-            
+
             .product-card .product-title {
                 font-size: 1.1rem !important;
             }
-            
+
             .product-card .price-current {
                 font-size: 1.3rem !important;
             }
-            
+
             .filters-section {
                 padding: 15px !important;
             }
-            
+
             .search-form .input-group {
                 flex-direction: column !important;
                 border-radius: 10px !important;
             }
-            
+
             .search-form .input-group-text,
             .search-form .form-control {
                 border-radius: 10px !important;
                 border: 2px solid #e9ecef !important;
                 margin-bottom: 8px !important;
             }
-            
+
             .search-form .btn {
                 border-radius: 10px !important;
                 width: 100% !important;
             }
-            
+
             .customer-header .navbar-brand {
                 font-size: 1.4rem !important;
             }
-            
+
             .customer-header .navbar-nav .nav-link {
                 padding: 8px 12px !important;
                 font-size: 0.9rem !important;
             }
-            
+
             .empty-state {
                 padding: 40px 15px !important;
             }
-            
+
             .empty-state h4 {
                 font-size: 1.2rem !important;
             }
-            
+
             .empty-state p {
                 font-size: 0.95rem !important;
             }
-            
+
             .scroll-to-top {
                 bottom: 20px !important;
                 right: 20px !important;
@@ -623,19 +560,51 @@
     </style>
 </head>
 
-<body class="customer-wrapper">
+<body class="customer-wrapper landing-page">
     <!-- Navigation -->
-    <nav class="customer-header">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" th:href="@{/}"><i class="fas fa-shopping-bag"></i> E-Commerce</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" th:href="@{/}" sec:authorize="isAuthenticated()">
-                    <i class="fas fa-home"></i> Trang chủ
-                </a>
-                <a class="nav-link cart-link" th:href="@{/cart}" sec:authorize="isAuthenticated()">
-                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
-                    <span class="badge bg-light text-dark ms-1 cart-count" style="font-size: 0.7em;" th:text="${cartItemCount ?: 0}">0</span>
-                </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link cart-link" th:href="@{/cart}">
+                            <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                            <span class="badge bg-light text-dark ms-1 cart-count" style="font-size: 0.7em;"
+                                th:text="${cartItemCount ?: 0}">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">Đăng nhập</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">Đăng ký</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/orders}">Đơn hàng</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/admin}">Quản trị</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link text-white">
+                                <i class="fas fa-sign-out-alt"></i> Đăng xuất (<span sec:authentication="name"></span>)
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
@@ -643,13 +612,7 @@
     <!-- Main Content -->
     <div class="customer-main">
         <div class="container">
-            <!-- Page Header -->
-            <div class="hero-section">
-                <div class="container">
-                    <h1 class="display-3 mb-4">Sản phẩm của chúng tôi</h1>
-                    <p class="lead">Khám phá những sản phẩm tuyệt vời với chất lượng cao và giá cả cạnh tranh</p>
-                </div>
-            </div>
+
 
             <!-- Search and Filter Section -->
             <div class="filters-section mb-5">
@@ -660,8 +623,8 @@
                                 <span class="input-group-text">
                                     <i class="fas fa-search text-muted"></i>
                                 </span>
-                                <input type="text" name="search" class="form-control"
-                                    placeholder="Tìm kiếm sản phẩm..." th:value="${search}">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm..."
+                                    th:value="${search}">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-search me-2"></i> Tìm kiếm
                                 </button>
@@ -697,74 +660,82 @@
                 <div class="product-card fade-in" th:each="product : ${products}">
                     <div class="product-image">
                         <img th:src="${product.primaryImage != null ? product.primaryImage.mediumUrl : '/images/no-image.svg'}"
-                            alt="Product" 
+                            alt="Product"
                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzZjNzU3ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlIEF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
-                        
+
                         <!-- Product Badge -->
                         <div class="product-badge" th:if="${product.featured}">
                             <i class="fas fa-star me-1"></i>Nổi bật
                         </div>
-                        
+
                         <!-- Product Actions -->
                         <div class="product-actions">
-                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-sm btn-light rounded-circle" title="Xem nhanh">
+                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-sm btn-light rounded-circle"
+                                title="Xem nhanh">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </div>
                     </div>
-                    
+
                     <div class="product-info">
-                        <div class="product-title" th:text="${product.name}">Product Name</div>
-                        <div class="product-description" th:text="${#strings.abbreviate(product.description, 80)}">Description</div>
-                        
+                        <div class="product-title" th:text="${product.name}">Tên sản phẩm</div>
+                        <div class="product-description" th:text="${#strings.abbreviate(product.description, 80)}">
+                            Mô tả sản phẩm</div>
+
                         <!-- Category Badge -->
                         <div class="mb-3" th:if="${product.category != null}">
                             <span class="category-badge">
-                                <i class="fas fa-tag me-1"></i><span th:text="${product.category.name}">Category</span>
+                                <i class="fas fa-tag me-1"></i><span th:text="${product.category.name}">Danh mục</span>
                             </span>
                         </div>
-                        
+
                         <!-- Price -->
                         <div class="product-price">
                             <div class="price-current">
                                 <span th:text="${#numbers.formatInteger(product.price, 3, 'POINT')}"></span>đ
                             </div>
                         </div>
-                        
+
                         <!-- Stock Status -->
-                        <div class="stock-status mb-3" th:classappend="${product.stockQuantity > 0 ? 'in-stock' : 'out-of-stock'}">
+                        <div class="stock-status mb-3"
+                            th:classappend="${product.stockQuantity > 0 ? 'in-stock' : 'out-of-stock'}">
                             <i class="fas fa-box me-2"></i>
-                            <span th:if="${product.stockQuantity > 0}" 
-                                  th:text="${product.stockQuantity} + ' có sẵn'"></span>
+                            <span th:if="${product.stockQuantity > 0}"
+                                th:text="${product.stockQuantity} + ' có sẵn'"></span>
                             <span th:if="${product.stockQuantity <= 0}">Hết hàng</span>
                         </div>
-                        
+
                         <!-- Action Buttons -->
-                        <div class="d-flex gap-2">
+                        <div class="d-flex w-100 gap-1">
                             <a th:href="@{/products/{id}(id=${product.id})}"
-                                class="btn btn-outline-primary flex-grow-1">
-                                <i class="fas fa-info-circle me-2"></i> Chi tiết
+                                class="btn btn-outline-primary btn-sm flex-fill d-flex align-items-center justify-content-center text-nowrap">
+                                <i class="fas fa-eye me-1"></i> Chi tiết
                             </a>
-                            
-                            <!-- Authenticated users - Add to cart or Out of stock -->
+
+                            <!-- Authenticated users - Add to cart -->
                             <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()"
-                                class="flex-grow-1 add-to-cart-form" th:if="${product.stockQuantity > 0}">
+                                class="flex-fill add-to-cart-form" th:if="${product.stockQuantity > 0}">
                                 <input type="hidden" name="productId" th:value="${product.id}">
                                 <input type="hidden" name="quantity" value="1">
                                 <input type="hidden" name="returnUrl" value="/products">
-                                <button type="submit" class="add-to-cart">
-                                    <i class="fas fa-cart-plus me-2"></i> Thêm vào giỏ
+                                <button type="submit"
+                                    class="btn btn-primary btn-sm w-100 h-100 d-flex align-items-center justify-content-center btn-add-to-cart text-nowrap">
+                                    <i class="fas fa-cart-plus me-1"></i> Thêm vào giỏ
                                 </button>
                             </form>
-                            
-                            <button class="btn btn-secondary flex-grow-1" disabled
-                                    sec:authorize="isAuthenticated()" th:if="${product.stockQuantity <= 0}">
-                                <i class="fas fa-times-circle me-2"></i> Hết hàng
+
+                            <!-- Out of stock for Authenticated users -->
+                            <button
+                                class="btn btn-secondary btn-sm flex-fill d-flex align-items-center justify-content-center text-nowrap"
+                                disabled th:if="${product.stockQuantity <= 0}" sec:authorize="isAuthenticated()">
+                                <i class="fas fa-times-circle me-1"></i> Hết Hàng
                             </button>
-                            
+
                             <!-- Guest users - Login button -->
-                            <a th:href="@{/login}" class="btn btn-info flex-grow-1" sec:authorize="!isAuthenticated()">
-                                <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập để mua
+                            <a th:href="@{/login}"
+                                class="btn btn-info btn-sm flex-fill d-flex align-items-center justify-content-center text-nowrap"
+                                sec:authorize="!isAuthenticated()">
+                                <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
                             </a>
                         </div>
                     </div>
@@ -792,14 +763,14 @@
     <script src="/js/cart-animation.js"></script>
     <script>
         // Simplified product page interactions
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Simple fade-in animation for product cards
             const observerOptions = {
                 threshold: 0.1,
                 rootMargin: '0px 0px -20px 0px'
             };
-            
-            const observer = new IntersectionObserver(function(entries) {
+
+            const observer = new IntersectionObserver(function (entries) {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.style.opacity = '1';
@@ -808,7 +779,7 @@
                     }
                 });
             }, observerOptions);
-            
+
             // Observe product cards with simple animation
             document.querySelectorAll('.product-card').forEach((card, index) => {
                 card.style.opacity = '0';
@@ -817,52 +788,36 @@
                 card.style.transitionDelay = `${index * 0.05}s`;
                 observer.observe(card);
             });
-            
+
             // Search functionality
             const searchInput = document.querySelector('input[name="search"]');
             if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
+                searchInput.addEventListener('keypress', function (e) {
                     if (e.key === 'Enter') {
                         this.closest('form').submit();
                     }
                 });
             }
-            
-            // Scroll to top functionality
-            const scrollToTopBtn = document.getElementById('scrollToTop');
+
             if (scrollToTopBtn) {
-                window.addEventListener('scroll', function() {
+                window.addEventListener('scroll', function () {
                     if (window.pageYOffset > 200) {
                         scrollToTopBtn.classList.add('show');
                     } else {
                         scrollToTopBtn.classList.remove('show');
                     }
                 });
-                
-                scrollToTopBtn.addEventListener('click', function() {
+
+                scrollToTopBtn.addEventListener('click', function () {
                     window.scrollTo({
                         top: 0,
                         behavior: 'smooth'
                     });
                 });
             }
-            
-            // Simple add to cart loading state
-            document.querySelectorAll('.add-to-cart').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    const originalText = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang thêm...';
-                    this.disabled = true;
-                    
-                    // Reset after 2 seconds (for demo)
-                    setTimeout(() => {
-                        this.innerHTML = originalText;
-                        this.disabled = false;
-                    }, 2000);
-                });
-            });
         });
     </script>
+    <script th:src="@{/js/cart-animation.js}"></script>
 </body>
 
 </html>
