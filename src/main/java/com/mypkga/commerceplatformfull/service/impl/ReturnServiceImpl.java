@@ -440,4 +440,61 @@ public class ReturnServiceImpl implements ReturnService {
 
         return historyRepository.findByReturnRequestIdOrderByCreatedAtDesc(returnRequestId);
     }
+
+    @Override
+    public List<ReturnRequest> getAllReturnRequests(ReturnStatus status, org.springframework.data.domain.Sort sort) {
+        if (status != null) {
+            return returnRequestRepository.findByStatus(status, sort);
+        }
+        return returnRequestRepository.findAll(sort);
+    }
+
+    @Override
+    @Transactional
+    public ReturnRequest uploadRefundProofAndComplete(Long requestId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        ReturnRequest returnRequest = returnRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Return request not found"));
+
+        if (file != null && !file.isEmpty()) {
+            String fileName = "refund-proof-" + requestId + "-" + System.currentTimeMillis() +
+                    getFileExtension(file.getOriginalFilename());
+
+            // Define upload directory path
+            String uploadDir = "src/main/resources/static/uploads/refund-proofs/";
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+
+            // Create directory if it doesn't exist
+            if (!java.nio.file.Files.exists(uploadPath)) {
+                java.nio.file.Files.createDirectories(uploadPath);
+            }
+
+            // Save file to disk
+            java.nio.file.Path filePath = uploadPath.resolve(fileName);
+            java.nio.file.Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            // URL path for accessing the file
+            String imageUrl = "/uploads/refund-proofs/" + fileName;
+
+            // Update return request with proof image
+            returnRequest.setRefundProofImageUrl(imageUrl);
+
+            // Update return request status to REFUNDED
+            returnRequest.setStatus(ReturnStatus.REFUNDED);
+
+            // Update order status to CANCELLED
+            returnRequest.getOrder().setStatus(OrderStatus.CANCELLED);
+
+            returnRequest = returnRequestRepository.save(returnRequest);
+            
+            log.info("Refund proof uploaded and refund completed for request {}", requestId);
+        }
+
+        return returnRequest;
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null) return "";
+        int lastDot = filename.lastIndexOf('.');
+        return lastDot > 0 ? filename.substring(lastDot) : "";
+    }
 }

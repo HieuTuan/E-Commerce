@@ -1,8 +1,6 @@
 package com.mypkga.commerceplatformfull.controller;
 
 import com.mypkga.commerceplatformfull.entity.*;
-import com.mypkga.commerceplatformfull.repository.CategoryRepository;
-import com.mypkga.commerceplatformfull.repository.ProductImageRepository;
 import com.mypkga.commerceplatformfull.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,9 +25,9 @@ public class StaffController {
     private final OrderService orderService;
     private final ProductService productService;
     private final UserService userService;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final CloudinaryImageService cloudinaryImageService; // Changed to CloudinaryImageService
-    private final ProductImageRepository productImageRepository;
+    private final ProductImageService productImageService;
 
     @GetMapping("")
     public String staffHome() {
@@ -145,7 +143,7 @@ public class StaffController {
         }
 
         model.addAttribute("products", products);
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("search", search);
         model.addAttribute("categoryId", categoryId);
 
@@ -155,7 +153,7 @@ public class StaffController {
     @GetMapping("/products/new")
     public String newProductForm(Model model) {
         model.addAttribute("product", new Product());
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "staff/product-form";
     }
 
@@ -164,7 +162,7 @@ public class StaffController {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         model.addAttribute("product", product);
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "staff/product-form";
     }
 
@@ -175,7 +173,7 @@ public class StaffController {
                              @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
                              RedirectAttributes redirectAttributes) {
         try {
-            Category category = categoryRepository.findById(categoryId)
+            Category category = categoryService.getCategoryById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
 
@@ -236,7 +234,7 @@ public class StaffController {
         try {
             Product product = productService.getProductById(id).orElse(null);
             if (product != null) {
-                List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+                List<ProductImage> productImages = productImageService.getImagesByProductId(id);
                 for (ProductImage productImage : productImages) {
                     // Images are stored in Cloudinary, deletion handled by cascade delete
                     // Just delete the database records (handled by cascade delete)
@@ -256,12 +254,12 @@ public class StaffController {
                                    @PathVariable Long imageId,
                                    RedirectAttributes redirectAttributes) {
         try {
-            ProductImage productImage = productImageRepository.findById(imageId)
+            ProductImage productImage = productImageService.getImageById(imageId)
                     .orElseThrow(() -> new RuntimeException("Image not found"));
 
             // Images are stored in Cloudinary, deletion handled by CloudinaryImageService
             // Just delete the database record
-            productImageRepository.delete(productImage);
+            productImageService.deleteImage(imageId);
             redirectAttributes.addFlashAttribute("success", "Xóa ảnh thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa ảnh: " + e.getMessage());
@@ -274,15 +272,7 @@ public class StaffController {
                                 @PathVariable Long imageId,
                                 RedirectAttributes redirectAttributes) {
         try {
-            List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
-            productImages.forEach(img -> img.setIsPrimary(false));
-            productImageRepository.saveAll(productImages);
-
-            ProductImage primaryImage = productImageRepository.findById(imageId)
-                    .orElseThrow(() -> new RuntimeException("Image not found"));
-            primaryImage.setIsPrimary(true);
-            productImageRepository.save(primaryImage);
-
+            productImageService.setPrimaryImage(productId, imageId);
             redirectAttributes.addFlashAttribute("success", "Đặt ảnh chính thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi đặt ảnh chính: " + e.getMessage());
@@ -292,7 +282,7 @@ public class StaffController {
 
     @GetMapping("/categories")
     public String manageCategories(Model model) {
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "staff/categories";
     }
 

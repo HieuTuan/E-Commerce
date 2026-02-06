@@ -8,13 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * File Storage Configuration
- * Configures the appropriate file storage service based on app.file-storage.type property
- * Supports: local, cloudinary
- * 
- * Note: CloudinaryFileServiceImpl is auto-configured via @Service annotation
- */
+
 @Configuration
 @Slf4j
 public class FileStorageConfig {

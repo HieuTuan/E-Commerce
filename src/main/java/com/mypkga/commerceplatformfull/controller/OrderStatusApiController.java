@@ -8,11 +8,11 @@ import com.mypkga.commerceplatformfull.dto.CustomerConfirmationRequest;
 import com.mypkga.commerceplatformfull.dto.CustomerConfirmationResponse;
 import com.mypkga.commerceplatformfull.entity.OrderStatus;
 import com.mypkga.commerceplatformfull.exception.ErrorResponse;
+import com.mypkga.commerceplatformfull.service.UserService;
 import com.mypkga.commerceplatformfull.service.orderstatus.OrderStatusManager;
 import com.mypkga.commerceplatformfull.service.orderstatus.StatusOption;
 import com.mypkga.commerceplatformfull.service.orderstatus.UIIntegrationService;
 import com.mypkga.commerceplatformfull.service.orderstatus.UpdateResult;
-import com.mypkga.commerceplatformfull.repository.UserRepository;
 import com.mypkga.commerceplatformfull.entity.User;
 import com.mypkga.commerceplatformfull.util.ErrorResponseUtil;
 import jakarta.validation.Valid;
@@ -38,20 +38,8 @@ public class OrderStatusApiController {
 
     private final OrderStatusManager orderStatusManager;
     private final UIIntegrationService uiIntegrationService;
-    private final UserRepository userRepository;
+    private final UserService uerService;
 
-    /**
-     * Update order status with validation
-     * <p>
-     * PUT /api/orders/{id}/status
-     *
-     * @param orderId        The ID of the order to update
-     * @param request        The status update request containing new status and optional notes
-     * @param authentication Current user authentication
-     * @return ResponseEntity with update result or error details
-     * <p>
-     * Requirements: 4.3 - Status update with validation
-     */
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> updateOrderStatus(
@@ -348,7 +336,7 @@ public class OrderStatusApiController {
             String username = authentication.getName();
             
             // Look up the user by username to get the customer ID
-            User user = userRepository.findByUsername(username).orElse(null);
+            User user = uerService.findByUsername(username).orElse(null);
             if (user == null) {
                 log.warn("User not found for username: {}", username);
                 ErrorResponse errorResponse = ErrorResponseUtil.createErrorResponse(

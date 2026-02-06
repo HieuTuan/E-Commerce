@@ -46,4 +46,9 @@ public interface OrderService {
     void updateDeliveryIssueFlag(Long orderId, boolean hasIssue);
     
     boolean hasDeliveryIssue(Long orderId);
+    
+    // Return controller methods
+    Order getOrderByIdWithOwnershipCheck(Long orderId, Long userId);
+    
+    boolean orderHasReturnRequest(Long orderId);
 }

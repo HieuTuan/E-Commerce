@@ -6,25 +6,9 @@ import com.mypkga.commerceplatformfull.entity.ReturnRequestHistory;
 
 import java.util.List;
 
-/**
- * Service interface for managing return requests and the complete return workflow.
- * This service handles the core business logic for return processing including
- * eligibility validation, request creation, status transitions, and integration
- * with file upload and return code generation services.
- */
 public interface ReturnService {
     
-    /**
-     * Create a new return request for an order.
-     * This method performs eligibility validation, uploads evidence video,
-     * generates return code, and updates order status transactionally.
-     * 
-     * @param orderId the ID of the order to create a return request for
-     * @param dto the return request data including reason, description, video, and bank info
-     * @return the created ReturnRequest entity
-     * @throws com.mypkga.commerceplatformfull.exception.ReturnNotEligibleException if order is not eligible
-     * @throws com.mypkga.commerceplatformfull.exception.VideoUploadException if video upload fails
-     */
+
     ReturnRequest createReturnRequest(Long orderId, CreateReturnRequestDto dto);
     
     /**
@@ -35,48 +19,16 @@ public interface ReturnService {
      */
     List<ReturnRequest> getPendingReturnRequests();
     
-    /**
-     * Approve a return request by authorized staff.
-     * Updates status to RETURN_APPROVED, changes order status, and sends notification email.
-     * 
-     * @param requestId the ID of the return request to approve
-     * @param staffId the ID of the staff member approving the request
-     * @return the updated ReturnRequest entity
-     * @throws com.mypkga.commerceplatformfull.exception.InvalidReturnStatusException if status transition is invalid
-     */
+
     ReturnRequest approveReturnRequest(Long requestId, Long staffId);
     
-    /**
-     * Reject a return request by authorized staff.
-     * Updates status to REFUND_REJECTED, reverts order status to DELIVERED, and sends notification email.
-     * 
-     * @param requestId the ID of the return request to reject
-     * @param reason the reason for rejection
-     * @param staffId the ID of the staff member rejecting the request
-     * @return the updated ReturnRequest entity
-     * @throws com.mypkga.commerceplatformfull.exception.InvalidReturnStatusException if status transition is invalid
-     */
+
     ReturnRequest rejectReturnRequest(Long requestId, String reason, Long staffId);
     
-    /**
-     * Confirm shipping when return code is scanned at post office.
-     * Updates status to RETURNING when customer drops off the item.
-     * 
-     * @param returnCode the return code scanned at pickup
-     * @return the updated ReturnRequest entity
-     * @throws IllegalArgumentException if return code is invalid or not found
-     */
+
     ReturnRequest confirmShipping(String returnCode);
     
-    /**
-     * Confirm receipt of returned item at warehouse.
-     * Updates status to RETURN_RECEIVED when staff confirm physical receipt.
-     * 
-     * @param requestId the ID of the return request
-     * @param staffId the ID of the staff member confirming receipt
-     * @return the updated ReturnRequest entity
-     * @throws com.mypkga.commerceplatformfull.exception.InvalidReturnStatusException if status transition is invalid
-     */
+
     ReturnRequest confirmReceipt(Long requestId, Long staffId);
     
     /**
@@ -157,4 +109,24 @@ public interface ReturnService {
      * @throws IllegalArgumentException if return code is invalid or not found
      */
     ReturnRequest confirmPackageReceiptWithPhoto(String returnCode, org.springframework.web.multipart.MultipartFile receiptPhoto);
+    
+    /**
+     * Get all return requests with optional status filter.
+     * 
+     * @param status the status to filter by (null for all)
+     * @param sort the sort order
+     * @return list of return requests
+     */
+    List<ReturnRequest> getAllReturnRequests(com.mypkga.commerceplatformfull.entity.ReturnStatus status, org.springframework.data.domain.Sort sort);
+    
+    /**
+     * Update return request with refund proof image and complete refund.
+     * 
+     * @param requestId the ID of the return request
+     * @param file the refund proof image file
+     * @return the updated ReturnRequest entity
+     * @throws IllegalArgumentException if return request is not found
+     * @throws java.io.IOException if file upload fails
+     */
+    ReturnRequest uploadRefundProofAndComplete(Long requestId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
 }
