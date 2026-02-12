@@ -139,6 +139,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Page<Order> getAllOrders(Pageable pageable) {
+        return orderRepository.findAllByOrderByCreatedDateDesc(pageable);
+    }
+
+    @Override
     @Transactional
     public Order updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
@@ -369,11 +374,11 @@ public class OrderServiceImpl implements OrderService {
     public Order getOrderByIdWithOwnershipCheck(Long orderId, Long userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        
+
         if (!order.getUser().getId().equals(userId)) {
             throw new RuntimeException("Access denied");
         }
-        
+
         return order;
     }
 

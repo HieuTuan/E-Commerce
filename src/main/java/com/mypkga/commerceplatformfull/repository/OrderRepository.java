@@ -32,6 +32,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findAllByOrderByCreatedDateDesc();
 
+    Page<Order> findAllByOrderByCreatedDateDesc(Pageable pageable);
+
     // Staff workflow methods
     Page<Order> findByStatusOrderByCreatedDateDesc(OrderStatus status, Pageable pageable);
 

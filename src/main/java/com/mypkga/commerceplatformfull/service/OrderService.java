@@ -22,6 +22,8 @@ public interface OrderService {
 
     List<Order> getAllOrders();
 
+    Page<Order> getAllOrders(Pageable pageable);
+
     Order updateOrderStatus(Long orderId, OrderStatus status);
 
     Order updatePaymentStatus(Long orderId, Order.PaymentStatus status);
@@ -29,26 +31,26 @@ public interface OrderService {
     void cancelOrder(Long orderId);
 
     String generateOrderNumber();
-    
+
     // Staff workflow methods
     Page<Order> getOrdersByStatus(OrderStatus status, Pageable pageable);
-    
+
     long countOrdersByStatus(OrderStatus status);
-    
+
     List<Order> getRecentOrders(int limit);
 
     // Fix method for existing COD orders
     void fixExistingCODOrders();
-    
+
     // Delivery issue methods
     List<Order> getOrdersWithDeliveryIssues();
-    
+
     void updateDeliveryIssueFlag(Long orderId, boolean hasIssue);
-    
+
     boolean hasDeliveryIssue(Long orderId);
-    
+
     // Return controller methods
     Order getOrderByIdWithOwnershipCheck(Long orderId, Long userId);
-    
+
     boolean orderHasReturnRequest(Long orderId);
 }

@@ -165,9 +165,10 @@
                         <nav th:if="${products.totalPages > 1}" aria-label="Product pagination">
                             <ul class="pagination justify-content-center">
                                 <li class="page-item" th:classappend="${products.first} ? 'disabled'">
-                                    <!-- <a class="page-link" th:href="@{/staff/products(page=${products.number - 1}, size=${products.size})}">
+                                    <a class="page-link"
+                                        th:href="@{/staff/products(page=${products.number - 1}, size=${products.size})}">
                                         <i class="fas fa-chevron-left"></i>
-                                    </a> -->
+                                    </a>
                                 </li>
 
                                 <li th:each="pageNum : ${#numbers.sequence(0, products.totalPages - 1)}"

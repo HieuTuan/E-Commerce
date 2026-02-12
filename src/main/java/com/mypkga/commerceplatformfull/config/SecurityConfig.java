@@ -30,6 +30,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                         .requestMatchers("/", "/home", "/products/**", "/register", "/login").permitAll()
+                        .requestMatchers("/forgot-password/**", "/forgot-password-otp/**", "/verify-reset-otp/**",
+                                "/reset-password-otp/**", "/verify-email/**", "/reset-password/**")
+                        .permitAll()
+                        .requestMatchers("/api/resend-otp/**", "/api/otp-status/**", "/api/resend-reset-otp/**",
+                                "/api/reset-otp-status/**")
+                        .permitAll()
                         .requestMatchers("/checkout/**", "/cart/**").permitAll() // Allow cart and checkout access
                         .requestMatchers("/staff/**").hasAnyRole("STAFF", "MODERATOR", "ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
