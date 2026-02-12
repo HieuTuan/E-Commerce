@@ -5,6 +5,7 @@ import com.mypkga.commerceplatformfull.entity.Product;
 import com.mypkga.commerceplatformfull.entity.User;
 import com.mypkga.commerceplatformfull.repository.CategoryRepository;
 import com.mypkga.commerceplatformfull.service.CartService;
+import com.mypkga.commerceplatformfull.service.CategoryService;
 import com.mypkga.commerceplatformfull.service.ProductService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final CartService cartService;
     private final UserService userService;
 
@@ -56,7 +57,7 @@ public class ProductController {
         }
 
         model.addAttribute("products", products);
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("search", search);
         model.addAttribute("categoryId", categoryId);
 

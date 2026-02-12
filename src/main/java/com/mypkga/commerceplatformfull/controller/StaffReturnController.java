@@ -4,7 +4,6 @@ import com.mypkga.commerceplatformfull.dto.ghn.GHNFeeResponse;
 import com.mypkga.commerceplatformfull.entity.ReturnRequest;
 import com.mypkga.commerceplatformfull.entity.ReturnRequestHistory;
 import com.mypkga.commerceplatformfull.entity.User;
-import com.mypkga.commerceplatformfull.repository.ReturnRequestRepository;
 import com.mypkga.commerceplatformfull.service.ReturnService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import com.mypkga.commerceplatformfull.service.EmailService;
@@ -13,12 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -33,14 +26,13 @@ import java.util.List;
  */
 @Controller
 @RequestMapping("/staff/returns")
-@PreAuthorize("hasRole('STAFF') or hasRole('MODERATOR') or hasRole('ADMIN')")
+@PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
 @RequiredArgsConstructor
 @Slf4j
 public class StaffReturnController {
 
     private final ReturnService returnService;
     private final UserService userService;
-    private final ReturnRequestRepository returnRequestRepository;
     private final EmailService emailService;
     private final GHNReturnService ghnReturnService;
 
@@ -79,13 +71,13 @@ public class StaffReturnController {
                 try {
                     com.mypkga.commerceplatformfull.entity.ReturnStatus returnStatus = com.mypkga.commerceplatformfull.entity.ReturnStatus
                             .valueOf(status);
-                    returnRequests = returnRequestRepository.findByStatus(returnStatus, sort);
+                    returnRequests = returnService.getAllReturnRequests(returnStatus, sort);
                 } catch (IllegalArgumentException e) {
                     // Invalid status, fallback to all
-                    returnRequests = returnRequestRepository.findAll(sort);
+                    returnRequests = returnService.getAllReturnRequests(null, sort);
                 }
             } else {
-                returnRequests = returnRequestRepository.findAll(sort);
+                returnRequests = returnService.getAllReturnRequests(null, sort);
             }
 
             model.addAttribute("returnRequests", returnRequests);
@@ -106,8 +98,7 @@ public class StaffReturnController {
     @GetMapping("/{requestId}")
     public String showReturnRequestDetail(@PathVariable Long requestId, Model model) {
         try {
-            ReturnRequest returnRequest = returnRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new IllegalArgumentException("Return request not found"));
+            ReturnRequest returnRequest = returnService.findById(requestId);
 
             // Get return request history
             List<ReturnRequestHistory> history = returnService.getReturnRequestHistory(requestId);
@@ -146,8 +137,7 @@ public class StaffReturnController {
     @ResponseBody
     public ResponseEntity<?> getGHNShippingFee(@PathVariable Long requestId) {
         try {
-            ReturnRequest returnRequest = returnRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new IllegalArgumentException("Return request not found"));
+            ReturnRequest returnRequest = returnService.findById(requestId);
 
             GHNFeeResponse feeResponse = ghnReturnService.calculateReturnShippingFee(returnRequest);
 
@@ -284,53 +274,15 @@ public class StaffReturnController {
             @RequestParam("file") MultipartFile file,
             RedirectAttributes redirectAttributes) {
         try {
-            ReturnRequest returnRequest = returnRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new IllegalArgumentException("Return request not found"));
-
-            // Save file to disk
-            if (!file.isEmpty()) {
-                try {
-                    String fileName = "refund-proof-" + requestId + "-" + System.currentTimeMillis() +
-                            getFileExtension(file.getOriginalFilename());
-
-                    // Define upload directory path
-                    String uploadDir = "src/main/resources/static/uploads/refund-proofs/";
-                    Path uploadPath = Paths.get(uploadDir);
-
-                    // Create directory if it doesn't exist
-                    if (!Files.exists(uploadPath)) {
-                        Files.createDirectories(uploadPath);
-                    }
-
-                    // Save file to disk
-                    Path filePath = uploadPath.resolve(fileName);
-                    Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-                    // URL path for accessing the file
-                    String imageUrl = "/uploads/refund-proofs/" + fileName;
-
-                    // Update return request with proof image
-                    returnRequest.setRefundProofImageUrl(imageUrl);
-
-                    // Update return request status to REFUNDED
-                    returnRequest.setStatus(com.mypkga.commerceplatformfull.entity.ReturnStatus.REFUNDED);
-
-                    // Update order status to CANCELLED
-                    returnRequest.getOrder().setStatus(com.mypkga.commerceplatformfull.entity.OrderStatus.CANCELLED);
-
-                    returnRequestRepository.save(returnRequest);
-
-                    redirectAttributes.addFlashAttribute("success",
-                            "✅ Đã upload chứng từ và hoàn tiền thành công! Đơn hàng đã chuyển sang trạng thái HỦY.");
-
-                } catch (IOException e) {
-                    log.error("Error saving file for request {}: {}", requestId, e.getMessage());
-                    redirectAttributes.addFlashAttribute("error",
-                            "Lỗi khi lưu file: " + e.getMessage());
-                }
-            } else {
+            if (file.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Vui lòng chọn file ảnh!");
+                return "redirect:/staff/returns/" + requestId;
             }
+
+            returnService.uploadRefundProofAndComplete(requestId, file);
+
+            redirectAttributes.addFlashAttribute("success",
+                    "✅ Đã upload chứng từ và hoàn tiền thành công! Đơn hàng đã chuyển sang trạng thái HỦY.");
 
         } catch (Exception e) {
             log.error("Error uploading refund proof for request {}: {}", requestId, e.getMessage());
@@ -339,13 +291,6 @@ public class StaffReturnController {
         }
 
         return "redirect:/staff/returns/" + requestId;
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null)
-            return "";
-        int lastDot = filename.lastIndexOf('.');
-        return lastDot > 0 ? filename.substring(lastDot) : "";
     }
 
     private User getCurrentUser(Authentication authentication) {

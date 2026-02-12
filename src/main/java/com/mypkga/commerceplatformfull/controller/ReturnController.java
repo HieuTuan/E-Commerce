@@ -4,7 +4,7 @@ import com.mypkga.commerceplatformfull.dto.*;
 import com.mypkga.commerceplatformfull.entity.PostOffice;
 import com.mypkga.commerceplatformfull.entity.ReturnRequest;
 import com.mypkga.commerceplatformfull.entity.User;
-import com.mypkga.commerceplatformfull.repository.PostOfficeRepository;
+import com.mypkga.commerceplatformfull.service.PostOfficeService;
 import com.mypkga.commerceplatformfull.service.ReturnEligibilityService;
 import com.mypkga.commerceplatformfull.service.ReturnService;
 import com.mypkga.commerceplatformfull.service.UserService;
@@ -20,12 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * REST Controller for customer return operations.
- * Handles return request creation, eligibility checks, and post office lookups.
- * 
- * Requirements: 1.1, 1.3, 2.8
- */
 @RestController
 @RequestMapping("/api/returns")
 @PreAuthorize("hasRole('CUSTOMER')")
@@ -35,17 +29,9 @@ public class ReturnController {
     
     private final ReturnService returnService;
     private final ReturnEligibilityService eligibilityService;
-    private final PostOfficeRepository postOfficeRepository;
+    private final PostOfficeService postOfficeService;
     private final UserService userService;
-    
-    /**
-     * Create a new return request for an order.
-     * 
-     * @param orderId the ID of the order to create a return request for
-     * @param dto the return request data
-     * @param authentication current user authentication
-     * @return the created return request
-     */
+
     @PostMapping(value = "/orders/{orderId}", consumes = "multipart/form-data")
     public ResponseEntity<ReturnRequestDto> createReturnRequest(
             @PathVariable Long orderId,
@@ -127,24 +113,10 @@ public class ReturnController {
         log.debug("Getting post offices with address filter: {}", address);
         
         try {
-            List<PostOffice> postOffices;
+            // Use service to search post offices with fallback logic
+            List<PostOffice> postOffices = postOfficeService.searchPostOffices(address);
             
-            if (address != null && !address.trim().isEmpty()) {
-                // Search by address
-                postOffices = postOfficeRepository.findByAddressContainingIgnoreCase(address.trim());
-                
-                // If no results by address, try by city/area
-                if (postOffices.isEmpty()) {
-                    postOffices = postOfficeRepository.findByCityContainingIgnoreCase(address.trim());
-                }
-                
-                log.debug("Found {} post offices matching address filter '{}'", 
-                        postOffices.size(), address);
-            } else {
-                // Get all active post offices
-                postOffices = postOfficeRepository.findByActiveTrue();
-                log.debug("Retrieved {} active post offices", postOffices.size());
-            }
+            log.debug("Found {} post offices matching search criteria", postOffices.size());
             
             List<PostOfficeDto> postOfficeDtos = postOffices.stream()
                     .map(PostOfficeDto::from)

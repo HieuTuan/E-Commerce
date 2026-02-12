@@ -4,8 +4,8 @@ import com.mypkga.commerceplatformfull.dto.CreateReturnRequestDto;
 import com.mypkga.commerceplatformfull.entity.Order;
 import com.mypkga.commerceplatformfull.entity.ReturnRequest;
 import com.mypkga.commerceplatformfull.entity.User;
-import com.mypkga.commerceplatformfull.repository.OrderRepository;
-import com.mypkga.commerceplatformfull.repository.PostOfficeRepository;
+import com.mypkga.commerceplatformfull.service.OrderService;
+import com.mypkga.commerceplatformfull.service.PostOfficeService;
 import com.mypkga.commerceplatformfull.service.ReturnEligibilityService;
 import com.mypkga.commerceplatformfull.service.ReturnService;
 import com.mypkga.commerceplatformfull.service.UserService;
@@ -36,8 +36,8 @@ public class ReturnWebController {
     
     private final ReturnService returnService;
     private final ReturnEligibilityService eligibilityService;
-    private final PostOfficeRepository postOfficeRepository;
-    private final OrderRepository orderRepository;
+    private final PostOfficeService postOfficeService;
+    private final OrderService orderService;
     private final UserService userService;
     
     /**
@@ -49,16 +49,11 @@ public class ReturnWebController {
         try {
             User currentUser = getCurrentUser(authentication);
             
-            // Get order and verify ownership
-            Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-            
-            if (!order.getUser().getId().equals(currentUser.getId())) {
-                throw new RuntimeException("Access denied");
-            }
+            // Get order and verify ownership using OrderService
+            Order order = orderService.getOrderByIdWithOwnershipCheck(orderId, currentUser.getId());
             
             // Check if order already has a return request
-            if (order.hasReturnRequest()) {
+            if (orderService.orderHasReturnRequest(orderId)) {
                 log.info("Order {} already has return request, redirecting to my-requests", orderId);
                 return "redirect:/returns/my-requests?existing=true";
             }
@@ -78,7 +73,7 @@ public class ReturnWebController {
             
             model.addAttribute("order", order);
             model.addAttribute("remainingHours", remainingHours);
-            model.addAttribute("postOffices", postOfficeRepository.findByActiveTrue());
+            model.addAttribute("postOffices", postOfficeService.getActivePostOffices());
             
             return "returns/request-form";
             

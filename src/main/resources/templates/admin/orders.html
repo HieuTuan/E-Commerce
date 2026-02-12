@@ -192,8 +192,17 @@
                                             </span>
                                         </div>
 
+                                        <!-- Show disabled message for cancelled or returned orders -->
+                                        <div
+                                            th:if="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'RETURN_RECEIVED'}">
+                                            <span class="text-muted small">
+                                                <i class="fas fa-ban me-1"></i>Cancelled
+                                            </span>
+                                        </div>
+
                                         <!-- Show dropdown for other statuses -->
-                                        <form th:if="${order.currentStatus.name() != 'CONFIRMED_BY_CUSTOMER'}"
+                                        <form
+                                            th:if="${order.currentStatus.name() != 'CONFIRMED_BY_CUSTOMER' && order.currentStatus.name() != 'CANCELLED' && order.currentStatus.name() != 'RETURN_RECEIVED'}"
                                             th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"
                                             class="d-inline">
                                             <select name="status" class="form-select form-select-sm"
@@ -201,22 +210,21 @@
                                                 onchange="confirmStatusChange(this, '[[${order.currentStatus.name()}]]')">
                                                 <option value="PENDING"
                                                     th:selected="${order.currentStatus.name() == 'PENDING'}"
-                                                    th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                                    th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
                                                     PENDING</option>
                                                 <option value="CONFIRMED"
                                                     th:selected="${order.currentStatus.name() == 'CONFIRMED'}"
-                                                    th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                                    th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
                                                     CONFIRMED</option>
                                                 <option value="SHIPPING"
                                                     th:selected="${order.currentStatus.name() == 'SHIPPING'}"
-                                                    th:disabled="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'DELIVERED'}">
+                                                    th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
                                                     SHIPPING</option>
                                                 <option value="DELIVERED"
                                                     th:selected="${order.currentStatus.name() == 'DELIVERED'}">
                                                     DELIVERED</option>
                                                 <option value="CANCELLED"
-                                                    th:selected="${order.currentStatus.name() == 'CANCELLED'}"
-                                                    th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
+                                                    th:selected="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'RETURN_RECEIVED'}">
                                                     CANCELLED</option>
                                             </select>
                                         </form>

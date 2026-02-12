@@ -19,45 +19,46 @@
                 <div class="card shadow">
                     <div class="card-body p-5">
                         <h3 class="text-center mb-4">
-                            <i class="fas fa-shopping-bag text-primary"></i> Login
+                            <i class="fas fa-shopping-bag text-primary"></i> Đăng nhập
                         </h3>
 
                         <div th:if="${param.error}" class="alert alert-danger">
-                            Invalid email or password
+                            Email hoặc mật khẩu không đúng
                         </div>
                         <div th:if="${param.logout}" class="alert alert-success">
-                            You have been logged out successfully
+                            Bạn đã đăng xuất thành công
                         </div>
                         <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
                         <form th:action="@{/login}" method="post" autocomplete="on">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="username" name="username" 
-                                       autocomplete="email" required autofocus placeholder="Enter your email">
+                                <input type="email" class="form-control" id="username" name="username"
+                                    autocomplete="email" required autofocus placeholder="Nhập email">
                             </div>
                             <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
+                                <label for="password" class="form-label">Mật khẩu</label>
                                 <div class="position-relative">
-                                    <input type="password" class="form-control" id="password" name="password" 
-                                           autocomplete="current-password" required placeholder="Enter your password">
-                                    <button type="button" class="btn btn-outline-secondary position-absolute end-0 top-0 h-100 px-3 password-toggle" 
-                                            style="border-left: none; z-index: 10;" data-target="password">
+                                    <input type="password" class="form-control" id="password" name="password"
+                                        autocomplete="current-password" required placeholder="Nhập mật khẩu">
+                                    <button type="button"
+                                        class="btn btn-outline-secondary position-absolute end-0 top-0 h-100 px-3 password-toggle"
+                                        style="border-left: none; z-index: 10;" data-target="password">
                                         <i class="fas fa-eye password-icon" id="password-icon"></i>
                                     </button>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="fas fa-sign-in-alt"></i> Login
+                                <i class="fas fa-sign-in-alt"></i> Đăng nhập
                             </button>
                         </form>
 
                         <div class="text-center">
-                            <p class="mb-2"><a th:href="@{/forgot-password-otp}" class="text-decoration-none">
-                                <i class="fas fa-key me-1"></i>Forgot Password?
-                            </a></p>
-                            <p>Don't have an account? <a th:href="@{/register}">Register here</a></p>
-                            <a th:href="@{/}" class="text-muted">Back to Home</a>
+                            <p class="mb-2"><a th:href="@{/forgot-password}" class="text-decoration-none">
+                                    <i class="fas fa-key me-1"></i>Quên mật khẩu
+                                </a></p>
+                            <p>Không có tài khoản? <a th:href="@{/register}">Đăng kí ở đây</a></p>
+                            <a th:href="@{/}" class="text-muted">Quay lại trang chủ</a>
                         </div>
                     </div>
                 </div>

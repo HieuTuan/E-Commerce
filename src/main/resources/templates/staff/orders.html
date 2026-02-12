@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -42,16 +44,19 @@
                     <div class="col-md-6">
                         <form method="get" th:action="@{/staff/orders}">
                             <div class="input-group">
-                                <select name="status" class="form-select">
-                                    <option value="PENDING" th:selected="${currentStatus == 'PENDING'}">Chờ Xử Lý</option>
-                                    <option value="PROCESSING" th:selected="${currentStatus == 'PROCESSING'}">Đang Xử Lý</option>
-                                    <option value="SHIPPED" th:selected="${currentStatus == 'SHIPPED'}">Đã Giao</option>
-                                    <option value="DELIVERED" th:selected="${currentStatus == 'DELIVERED'}">Hoàn Thành</option>
-                                    <option value="CANCELLED" th:selected="${currentStatus == 'CANCELLED'}">Đã Hủy</option>
+                                <select name="status" class="form-select" onchange="this.form.submit()">
+                                    <option value="" th:selected="${currentStatus == null || currentStatus == ''}">ALL
+                                    </option>
+                                    <option value="PENDING" th:selected="${currentStatus == 'PENDING'}">PENDING</option>
+                                    <option value="CONFIRMED" th:selected="${currentStatus == 'CONFIRMED'}">CONFIRMED
+                                    </option>
+                                    <option value="SHIPPING" th:selected="${currentStatus == 'SHIPPING'}">SHIPPING
+                                    </option>
+                                    <option value="DELIVERED" th:selected="${currentStatus == 'DELIVERED'}">DELIVERED
+                                    </option>
+                                    <option value="CANCELLED" th:selected="${currentStatus == 'CANCELLED'}">CANCELLED
+                                    </option>
                                 </select>
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-filter"></i> Lọc
-                                </button>
                             </div>
                         </form>
                     </div>
@@ -74,27 +79,77 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="order : ${orders}">
-                                        <td th:text="${order.id}">#001</td>
+                                        <td th:text="${order.orderNumber}">#ORD-20260212-0001</td>
                                         <td th:text="${order.user.fullName}">Nguyễn Văn A</td>
-                                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">22/01/2026 10:30</td>
+                                        <td th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">
+                                            22/01/2026 10:30</td>
                                         <td th:text="${#numbers.formatCurrency(order.totalAmount)}">1,500,000 ₫</td>
                                         <td>
-                                            <span class="badge" 
-                                                  th:classappend="${order.status.name() == 'PENDING'} ? 'bg-warning' : 
-                                                                 ${order.status.name() == 'PROCESSING'} ? 'bg-info' : 
-                                                                 ${order.status.name() == 'SHIPPED'} ? 'bg-primary' : 
-                                                                 ${order.status.name() == 'DELIVERED'} ? 'bg-success' : 'bg-danger'"
-                                                  th:text="${order.status.name() == 'PENDING'} ? 'Chờ Xử Lý' : 
-                                                           ${order.status.name() == 'PROCESSING'} ? 'Đang Xử Lý' : 
-                                                           ${order.status.name() == 'SHIPPED'} ? 'Đã Giao' : 
-                                                           ${order.status.name() == 'DELIVERED'} ? 'Hoàn Thành' : 'Đã Hủy'">
-                                                Chờ Xử Lý
+                                            <span class="badge"
+                                                th:classappend="${order.currentStatus.name() == 'PENDING' ? 'bg-warning' : (order.currentStatus.name() == 'CONFIRMED' ? 'bg-info' : (order.currentStatus.name() == 'SHIPPING' ? 'bg-primary' : (order.currentStatus.name() == 'DELIVERED' ? 'bg-success' : (order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER' ? 'bg-success' : 'bg-danger'))))}"
+                                                th:text="${order.currentStatus.name()}">
+                                                PENDING
                                             </span>
                                         </td>
                                         <td>
-                                            <a th:href="@{/staff/orders/{id}(id=${order.id})}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> Xem
-                                            </a>
+                                            <!-- Show disabled message for confirmed by customer orders -->
+                                            <div th:if="${order.currentStatus.name() == 'CONFIRMED_BY_CUSTOMER'}"
+                                                class="d-flex align-items-center gap-2">
+                                                <span class="text-muted small" style="width: 150px;">
+                                                    <i class="fas fa-lock me-1"></i>Đã Khóa
+                                                </span>
+                                                <a th:href="@{/staff/orders/{id}(id=${order.id})}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Xem
+                                                </a>
+                                            </div>
+
+                                            <!-- Show disabled message for cancelled or returned orders -->
+                                            <div th:if="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'RETURN_RECEIVED'}"
+                                                class="d-flex align-items-center gap-2">
+                                                <span class="text-muted small" style="width: 150px;">
+                                                    <i class="fas fa-ban me-1"></i>Đã Hủy
+                                                </span>
+                                                <a th:href="@{/staff/orders/{id}(id=${order.id})}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Xem
+                                                </a>
+                                            </div>
+
+                                            <!-- Show dropdown and view button for other statuses -->
+                                            <div th:if="${order.currentStatus.name() != 'CONFIRMED_BY_CUSTOMER' && order.currentStatus.name() != 'CANCELLED' && order.currentStatus.name() != 'RETURN_RECEIVED'}"
+                                                class="d-flex align-items-center gap-2">
+                                                <form th:action="@{/staff/orders/{id}/update-status(id=${order.id})}"
+                                                    method="post" class="d-inline">
+                                                    <select name="status" class="form-select form-select-sm"
+                                                        style="width: 150px; font-size: 0.8rem;"
+                                                        onchange="confirmStatusChange(this, '[[${order.currentStatus.name()}]]')">
+                                                        <option value="PENDING"
+                                                            th:selected="${order.currentStatus.name() == 'PENDING'}"
+                                                            th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
+                                                            PENDING</option>
+                                                        <option value="CONFIRMED"
+                                                            th:selected="${order.currentStatus.name() == 'CONFIRMED'}"
+                                                            th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
+                                                            CONFIRMED</option>
+                                                        <option value="SHIPPING"
+                                                            th:selected="${order.currentStatus.name() == 'SHIPPING'}"
+                                                            th:disabled="${order.currentStatus.name() == 'DELIVERED'}">
+                                                            SHIPPING</option>
+                                                        <option value="DELIVERED"
+                                                            th:selected="${order.currentStatus.name() == 'DELIVERED'}">
+                                                            DELIVERED</option>
+                                                        <option value="CANCELLED"
+                                                            th:selected="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'RETURN_RECEIVED'}">
+                                                            CANCELLED</option>
+                                                    </select>
+                                                </form>
+
+                                                <a th:href="@{/staff/orders/{id}(id=${order.id})}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Xem
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${orders.empty}">
@@ -108,14 +163,17 @@
                         <nav th:if="${orders.totalPages > 1}">
                             <ul class="pagination justify-content-center">
                                 <li class="page-item" th:classappend="${orders.first} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/staff/orders(status=${currentStatus}, page=${orders.number - 1})}">Trước</a>
+                                    <a class="page-link"
+                                        th:href="@{/staff/orders(status=${currentStatus}, page=${orders.number - 1})}">Trước</a>
                                 </li>
                                 <li class="page-item" th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}"
                                     th:classappend="${i == orders.number} ? 'active'">
-                                    <a class="page-link" th:href="@{/staff/orders(status=${currentStatus}, page=${i})}" th:text="${i + 1}">1</a>
+                                    <a class="page-link" th:href="@{/staff/orders(status=${currentStatus}, page=${i})}"
+                                        th:text="${i + 1}">1</a>
                                 </li>
                                 <li class="page-item" th:classappend="${orders.last} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/staff/orders(status=${currentStatus}, page=${orders.number + 1})}">Sau</a>
+                                    <a class="page-link"
+                                        th:href="@{/staff/orders(status=${currentStatus}, page=${orders.number + 1})}">Sau</a>
                                 </li>
                             </ul>
                         </nav>
@@ -126,5 +184,60 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmStatusChange(selectElement, currentStatus) {
+            const newStatus = selectElement.value;
+            const form = selectElement.closest('form');
+
+            // Check if trying to go backwards (except for cancellation)
+            if (currentStatus === 'DELIVERED' && newStatus !== 'DELIVERED') {
+                alert('Không thể thay đổi trạng thái của đơn hàng đã giao!');
+                selectElement.value = currentStatus;
+                return;
+            }
+
+            if (currentStatus === 'CANCELLED' && newStatus !== 'CANCELLED') {
+                alert('Không thể thay đổi trạng thái của đơn hàng đã hủy!');
+                selectElement.value = currentStatus;
+                return;
+            }
+
+            if (currentStatus === 'CONFIRMED_BY_CUSTOMER' && newStatus !== 'CONFIRMED_BY_CUSTOMER') {
+                alert('Không thể thay đổi trạng thái của đơn hàng đã được khách hàng xác nhận!');
+                selectElement.value = currentStatus;
+                return;
+            }
+
+            // Confirm status change
+            let confirmMessage = '';
+            switch (newStatus) {
+                case 'CONFIRMED':
+                    confirmMessage = 'Xác nhận thay đổi trạng thái đơn hàng sang "ĐÃ XÁC NHẬN"?';
+                    break;
+                case 'SHIPPING':
+                    confirmMessage = 'Xác nhận đơn hàng đã được giao cho đơn vị vận chuyển?';
+                    break;
+                case 'DELIVERED':
+                    confirmMessage = 'Xác nhận đơn hàng đã được giao thành công?';
+                    break;
+                case 'CANCELLED':
+                    confirmMessage = 'Xác nhận hủy đơn hàng này? Hành động này không thể hoàn tác!';
+                    break;
+                case 'PENDING':
+                    confirmMessage = 'Xác nhận thay đổi trạng thái đơn hàng sang "CHỜ XỬ LÝ"?';
+                    break;
+                default:
+                    confirmMessage = 'Xác nhận thay đổi trạng thái đơn hàng?';
+            }
+
+            if (confirm(confirmMessage)) {
+                form.submit();
+            } else {
+                // Reset to original value if cancelled
+                selectElement.value = currentStatus;
+            }
+        }
+    </script>
 </body>
+
 </html>

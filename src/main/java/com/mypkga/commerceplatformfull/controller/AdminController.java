@@ -1,8 +1,6 @@
 package com.mypkga.commerceplatformfull.controller;
 
 import com.mypkga.commerceplatformfull.entity.*;
-import com.mypkga.commerceplatformfull.repository.CategoryRepository;
-import com.mypkga.commerceplatformfull.repository.ProductImageRepository;
 import com.mypkga.commerceplatformfull.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,11 +19,11 @@ import java.util.List;
 public class AdminController {
 
     private final ProductService productService;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final OrderService orderService;
     private final UserService userService;
     private final CloudinaryImageService cloudinaryImageService; // Changed to CloudinaryImageService
-    private final ProductImageRepository productImageRepository;
+    private final ProductImageService productImageService;
     private final RoleService roleService;
     private final DeliveryIssueReportService deliveryIssueReportService;
 
@@ -42,14 +40,14 @@ public class AdminController {
     @GetMapping("/products")
     public String manageProducts(Model model) {
         model.addAttribute("products", productService.getAllProducts());
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/products";
     }
 
     @GetMapping("/products/new")
     public String newProductForm(Model model) {
         model.addAttribute("product", new Product());
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/product-form";
     }
 
@@ -60,7 +58,7 @@ public class AdminController {
             @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
             RedirectAttributes redirectAttributes) {
         try {
-            Category category = categoryRepository.findById(categoryId)
+            Category category = categoryService.getCategoryById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
 
@@ -121,7 +119,7 @@ public class AdminController {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         model.addAttribute("product", product);
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/product-form";
     }
 
@@ -132,7 +130,7 @@ public class AdminController {
             Product product = productService.getProductById(id).orElse(null);
             if (product != null) {
                 // Delete associated product images and their files
-                List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+                List<ProductImage> productImages = productImageService.getImagesByProductId(id);
                 for (ProductImage productImage : productImages) {
                     // Images are stored in Cloudinary, deletion handled by cascade delete
                     // Just delete the database records (handled by cascade delete)
@@ -178,12 +176,12 @@ public class AdminController {
                                    @PathVariable Long imageId,
                                    RedirectAttributes redirectAttributes) {
         try {
-            ProductImage productImage = productImageRepository.findById(imageId)
+            ProductImage productImage = productImageService.getImageById(imageId)
                     .orElseThrow(() -> new RuntimeException("Image not found"));
             
             // Images are stored in Cloudinary, deletion handled by CloudinaryImageService
             // Just delete the database record
-            productImageRepository.delete(productImage);
+            productImageService.deleteImage(imageId);
             redirectAttributes.addFlashAttribute("success", "Image deleted successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error deleting image: " + e.getMessage());
@@ -196,16 +194,8 @@ public class AdminController {
                                 @PathVariable Long imageId,
                                 RedirectAttributes redirectAttributes) {
         try {
-            // Remove primary flag from all images of this product
-            List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
-            productImages.forEach(img -> img.setIsPrimary(false));
-            productImageRepository.saveAll(productImages);
-            
-            // Set new primary image
-            ProductImage primaryImage = productImageRepository.findById(imageId)
-                    .orElseThrow(() -> new RuntimeException("Image not found"));
-            primaryImage.setIsPrimary(true);
-            productImageRepository.save(primaryImage);
+            // Use service to handle the primary image logic
+            productImageService.setPrimaryImage(productId, imageId);
             
             redirectAttributes.addFlashAttribute("success", "Primary image updated successfully!");
         } catch (Exception e) {
@@ -260,7 +250,7 @@ public class AdminController {
 
     @GetMapping("/categories")
     public String manageCategories(Model model) {
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/categories";
     }
 
@@ -273,7 +263,7 @@ public class AdminController {
     @PostMapping("/categories/save")
     public String saveCategory(@ModelAttribute Category category, RedirectAttributes redirectAttributes) {
         try {
-            categoryRepository.save(category);
+            categoryService.saveCategory(category);
             redirectAttributes.addFlashAttribute("success",
                 category.getId() == null ? "Category created successfully!" : "Category updated successfully!");
         } catch (Exception e) {
@@ -284,7 +274,7 @@ public class AdminController {
 
     @GetMapping("/categories/edit/{id}")
     public String editCategoryForm(@PathVariable Long id, Model model) {
-        Category category = categoryRepository.findById(id)
+        Category category = categoryService.getCategoryById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
         model.addAttribute("category", category);
         return "admin/category-form";
@@ -293,7 +283,7 @@ public class AdminController {
     @PostMapping("/categories/delete/{id}")
     public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            categoryRepository.deleteById(id);
+            categoryService.deleteCategory(id);
             redirectAttributes.addFlashAttribute("success", "Category deleted successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error deleting category: " + e.getMessage());

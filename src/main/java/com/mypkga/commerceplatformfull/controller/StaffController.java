@@ -1,8 +1,6 @@
 package com.mypkga.commerceplatformfull.controller;
 
 import com.mypkga.commerceplatformfull.entity.*;
-import com.mypkga.commerceplatformfull.repository.CategoryRepository;
-import com.mypkga.commerceplatformfull.repository.ProductImageRepository;
 import com.mypkga.commerceplatformfull.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,9 +25,9 @@ public class StaffController {
     private final OrderService orderService;
     private final ProductService productService;
     private final UserService userService;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final CloudinaryImageService cloudinaryImageService; // Changed to CloudinaryImageService
-    private final ProductImageRepository productImageRepository;
+    private final ProductImageService productImageService;
 
     @GetMapping("")
     public String staffHome() {
@@ -42,23 +40,30 @@ public class StaffController {
         model.addAttribute("pendingOrders", orderService.countOrdersByStatus(OrderStatus.PENDING));
         model.addAttribute("totalProducts", productService.countAllProducts());
         model.addAttribute("recentOrders", orderService.getRecentOrders(5));
-        
+
         return "staff/dashboard";
     }
 
     @GetMapping("/orders")
     public String manageOrders(Model model,
-                              @RequestParam(defaultValue = "PENDING") String status,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "10") int size) {
-        
-        OrderStatus orderStatus = OrderStatus.valueOf(status);
-        Page<Order> orders = orderService.getOrdersByStatus(orderStatus, PageRequest.of(page, size));
-        
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Order> orders;
+
+        // If status is null or empty, show all orders
+        if (status == null || status.isEmpty()) {
+            orders = orderService.getAllOrders(PageRequest.of(page, size));
+        } else {
+            OrderStatus orderStatus = OrderStatus.valueOf(status);
+            orders = orderService.getOrdersByStatus(orderStatus, PageRequest.of(page, size));
+        }
+
         model.addAttribute("orders", orders);
         model.addAttribute("currentStatus", status);
         model.addAttribute("statuses", OrderStatus.values());
-        
+
         return "staff/orders";
     }
 
@@ -66,46 +71,46 @@ public class StaffController {
     public String viewOrderDetail(@PathVariable Long id, Model model) {
         Order order = orderService.getOrderById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        
+
         model.addAttribute("order", order);
         return "staff/order-detail";
     }
 
     @PostMapping("/orders/{id}/update-status")
     public String updateOrderStatus(@PathVariable Long id,
-                                   @RequestParam String status,
-                                   Authentication authentication,
-                                   RedirectAttributes redirectAttributes) {
+            @RequestParam String status,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         try {
             OrderStatus newStatus = OrderStatus.valueOf(status);
-            
+
             orderService.updateOrderStatus(id, newStatus);
-            
-            redirectAttributes.addFlashAttribute("success", 
-                "Order status updated to " + newStatus + " successfully!");
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Order status updated to " + newStatus + " successfully!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Failed to update order status: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error",
+                    "Failed to update order status: " + e.getMessage());
         }
-        
+
         return "redirect:/staff/orders";
     }
 
     @PostMapping("/orders/{id}/assign-delivery")
     public String assignDelivery(@PathVariable Long id,
-                                Authentication authentication,
-                                RedirectAttributes redirectAttributes) {
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         try {
             // Logic để assign delivery (có thể mở rộng sau)
             orderService.updateOrderStatus(id, OrderStatus.PENDING);
-            
-            redirectAttributes.addFlashAttribute("success", 
-                "Delivery assigned successfully!");
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Delivery assigned successfully!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Failed to assign delivery: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error",
+                    "Failed to assign delivery: " + e.getMessage());
         }
-        
+
         return "redirect:/staff/orders/" + id;
     }
 
@@ -118,10 +123,10 @@ public class StaffController {
 
     @GetMapping("/products")
     public String viewProducts(Model model,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "10") int size,
-                              @RequestParam(required = false) String search,
-                              @RequestParam(required = false) Long categoryId) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId) {
 
         Page<Product> products;
         Pageable pageable = PageRequest.of(page, size);
@@ -145,7 +150,7 @@ public class StaffController {
         }
 
         model.addAttribute("products", products);
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("search", search);
         model.addAttribute("categoryId", categoryId);
 
@@ -155,7 +160,7 @@ public class StaffController {
     @GetMapping("/products/new")
     public String newProductForm(Model model) {
         model.addAttribute("product", new Product());
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "staff/product-form";
     }
 
@@ -164,18 +169,18 @@ public class StaffController {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         model.addAttribute("product", product);
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "staff/product-form";
     }
 
     @PostMapping("/products/save")
     public String saveProduct(@ModelAttribute Product product,
-                             @RequestParam Long categoryId,
-                             @RequestParam(value = "imageFiles", required = false) MultipartFile[] imageFiles,
-                             @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
-                             RedirectAttributes redirectAttributes) {
+            @RequestParam Long categoryId,
+            @RequestParam(value = "imageFiles", required = false) MultipartFile[] imageFiles,
+            @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
+            RedirectAttributes redirectAttributes) {
         try {
-            Category category = categoryRepository.findById(categoryId)
+            Category category = categoryService.getCategoryById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
 
@@ -195,9 +200,10 @@ public class StaffController {
                         try {
                             // Save image to Cloudinary
                             ProductImage savedImage = cloudinaryImageService.saveImageToCloudinary(
-                                imageFile, savedProduct, displayOrder, displayOrder == 0);
-                            
-                            System.out.println("Saved ProductImage with ID: " + savedImage.getId() + " for Product ID: " + savedProduct.getId());
+                                    imageFile, savedProduct, displayOrder, displayOrder == 0);
+
+                            System.out.println("Saved ProductImage with ID: " + savedImage.getId() + " for Product ID: "
+                                    + savedProduct.getId());
                             displayOrder++;
                         } catch (Exception e) {
                             System.err.println("Error saving ProductImage: " + e.getMessage());
@@ -214,9 +220,10 @@ public class StaffController {
                 try {
                     // Save video to Cloudinary
                     ProductImage savedVideo = cloudinaryImageService.saveVideoToCloudinary(
-                        videoFile, savedProduct, 999);
-                    
-                    System.out.println("Saved Video ProductImage with ID: " + savedVideo.getId() + " for Product ID: " + savedProduct.getId());
+                            videoFile, savedProduct, 999);
+
+                    System.out.println("Saved Video ProductImage with ID: " + savedVideo.getId() + " for Product ID: "
+                            + savedProduct.getId());
                 } catch (Exception e) {
                     redirectAttributes.addFlashAttribute("error", "Lỗi khi tải video lên: " + e.getMessage());
                     return "redirect:/staff/products";
@@ -224,7 +231,7 @@ public class StaffController {
             }
 
             redirectAttributes.addFlashAttribute("success",
-                product.getId() == null ? "Tạo sản phẩm thành công!" : "Cập nhật sản phẩm thành công!");
+                    product.getId() == null ? "Tạo sản phẩm thành công!" : "Cập nhật sản phẩm thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi lưu sản phẩm: " + e.getMessage());
         }
@@ -236,7 +243,7 @@ public class StaffController {
         try {
             Product product = productService.getProductById(id).orElse(null);
             if (product != null) {
-                List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+                List<ProductImage> productImages = productImageService.getImagesByProductId(id);
                 for (ProductImage productImage : productImages) {
                     // Images are stored in Cloudinary, deletion handled by cascade delete
                     // Just delete the database records (handled by cascade delete)
@@ -253,15 +260,15 @@ public class StaffController {
 
     @PostMapping("/products/{productId}/images/{imageId}/delete")
     public String deleteProductImage(@PathVariable Long productId,
-                                   @PathVariable Long imageId,
-                                   RedirectAttributes redirectAttributes) {
+            @PathVariable Long imageId,
+            RedirectAttributes redirectAttributes) {
         try {
-            ProductImage productImage = productImageRepository.findById(imageId)
+            ProductImage productImage = productImageService.getImageById(imageId)
                     .orElseThrow(() -> new RuntimeException("Image not found"));
 
             // Images are stored in Cloudinary, deletion handled by CloudinaryImageService
             // Just delete the database record
-            productImageRepository.delete(productImage);
+            productImageService.deleteImage(imageId);
             redirectAttributes.addFlashAttribute("success", "Xóa ảnh thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa ảnh: " + e.getMessage());
@@ -271,18 +278,10 @@ public class StaffController {
 
     @PostMapping("/products/{productId}/images/{imageId}/set-primary")
     public String setPrimaryImage(@PathVariable Long productId,
-                                @PathVariable Long imageId,
-                                RedirectAttributes redirectAttributes) {
+            @PathVariable Long imageId,
+            RedirectAttributes redirectAttributes) {
         try {
-            List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
-            productImages.forEach(img -> img.setIsPrimary(false));
-            productImageRepository.saveAll(productImages);
-
-            ProductImage primaryImage = productImageRepository.findById(imageId)
-                    .orElseThrow(() -> new RuntimeException("Image not found"));
-            primaryImage.setIsPrimary(true);
-            productImageRepository.save(primaryImage);
-
+            productImageService.setPrimaryImage(productId, imageId);
             redirectAttributes.addFlashAttribute("success", "Đặt ảnh chính thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi đặt ảnh chính: " + e.getMessage());
@@ -292,10 +291,9 @@ public class StaffController {
 
     @GetMapping("/categories")
     public String manageCategories(Model model) {
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "staff/categories";
     }
-
 
     private User getCurrentUser(Authentication authentication) {
         // authentication.getName() returns email (from CustomUserDetailsService)
