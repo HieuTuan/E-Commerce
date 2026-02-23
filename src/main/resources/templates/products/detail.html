@@ -302,11 +302,13 @@
                 <div class="mb-3">
                     <span class="text-warning">
                         <i class="fas fa-star"
-                            th:each="i : ${#numbers.sequence(1, product.averageRating.intValue())}"></i>
+                            th:if="${(averageRating != null ? averageRating.intValue() : 0) > 0}"
+                            th:each="i : ${#numbers.sequence(1, (averageRating != null ? averageRating.intValue() : 0))}"></i>
                         <i class="far fa-star"
-                            th:each="i : ${#numbers.sequence(product.averageRating.intValue() + 1, 5)}"></i>
+                            th:if="${(averageRating != null ? averageRating.intValue() : 0) < 5}"
+                            th:each="i : ${#numbers.sequence((averageRating != null ? averageRating.intValue() : 0) + 1, 5)}"></i>
                     </span>
-                    <span class="text-muted">(<span th:text="${product.reviewCount}">0</span> reviews)</span>
+                    <span class="text-muted">(<span th:text="${reviewCount}">0</span> reviews)</span>
                 </div>
 
                 <!-- Price -->
@@ -371,13 +373,14 @@
         <!-- Product Reviews Section -->
         <div class="row mt-5">
             <div class="col-12">
-                <h3 class="mb-4">Đánh giá sản phẩm</h3>
+                <h3 id="reviews" class="mb-4">Đánh giá sản phẩm</h3>
 
                 <!-- Review Form (for authenticated users) -->
                 <div sec:authorize="isAuthenticated()" class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">Viết đánh giá</h5>
-                        <form>
+                        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+                        <form th:action="@{/products/{id}/reviews(id=${product.id})}" method="post">
                             <div class="mb-3">
                                 <label class="form-label">Đánh giá</label>
                                 <div>
@@ -390,26 +393,39 @@
                                         <label class="btn btn-outline-warning" for="rating3">3 ⭐</label>
                                         <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
                                         <label class="btn btn-outline-warning" for="rating4">4 ⭐</label>
-                                        <input type="radio" class="btn-check" name="rating" id="rating5" value="5"
-                                            checked>
+                                        <input type="radio" class="btn-check" name="rating" id="rating5" value="5" checked>
                                         <label class="btn btn-outline-warning" for="rating5">5 ⭐</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label for="comment" class="form-label">Your Review</label>
-                                <textarea class="form-control" id="comment" rows="3"
-                                    placeholder="Share your experience with this product..."></textarea>
+                                <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Share your experience with this product..."></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">Submit Review</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Existing Reviews (placeholder) -->
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm
-                    này!
+                <!-- Existing Reviews List -->
+                <div th:if="${#lists.isEmpty(reviews)}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!
+                </div>
+
+                <div th:if="${!#lists.isEmpty(reviews)}" class="list-group">
+                    <div class="list-group-item" th:each="rev : ${reviews}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <span class="text-warning">
+                                    <i class="fas fa-star" th:each="i : ${#numbers.sequence(1, rev.rating)}"></i>
+                                    <i class="far fa-star" th:if="${rev.rating < 5}" th:each="i : ${#numbers.sequence(rev.rating + 1, 5)}"></i>
+                                </span>
+                            </h6>
+                            <small class="text-muted" th:text="${#temporals.format(rev.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2026 12:00</small>
+                        </div>
+                        <p class="mb-1" th:text="${rev.comment}">Nội dung đánh giá...</p>
+                        <small class="text-muted">Bởi <span th:text="${rev.user != null ? rev.user.fullName : 'Người dùng'}">User</span></small>
+                    </div>
                 </div>
             </div>
         </div>

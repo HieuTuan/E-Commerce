@@ -3,7 +3,7 @@ package com.mypkga.commerceplatformfull.controller;
 import com.mypkga.commerceplatformfull.entity.Cart;
 import com.mypkga.commerceplatformfull.entity.Product;
 import com.mypkga.commerceplatformfull.entity.User;
-import com.mypkga.commerceplatformfull.repository.CategoryRepository;
+import com.mypkga.commerceplatformfull.repository.ReviewRepository;
 import com.mypkga.commerceplatformfull.service.CartService;
 import com.mypkga.commerceplatformfull.service.CategoryService;
 import com.mypkga.commerceplatformfull.service.ProductService;
@@ -26,6 +26,7 @@ public class ProductController {
     private final CategoryService categoryService;
     private final CartService cartService;
     private final UserService userService;
+    private final ReviewRepository reviewRepository;
 
     @GetMapping("/products")
     public String productList(@RequestParam(required = false) String search,
@@ -69,7 +70,16 @@ public class ProductController {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Load approved reviews and calculate average/count
+        var reviews = reviewRepository.findByProductIdAndApprovedTrueOrderByCreatedDateDesc(id);
+        Double averageRating = reviewRepository.getAverageRatingByProductId(id);
+        if (averageRating == null) averageRating = 0.0;
+        Long reviewCount = reviewRepository.countByProductIdAndApprovedTrue(id);
+
         model.addAttribute("product", product);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("averageRating", averageRating);
+        model.addAttribute("reviewCount", reviewCount);
         return "products/detail";
     }
 }
