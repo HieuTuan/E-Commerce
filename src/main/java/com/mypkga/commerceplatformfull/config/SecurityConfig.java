@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/staff/**").hasAnyRole("STAFF", "MODERATOR", "ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                         .requestMatchers("/api/ghn/**").permitAll() // Allow GHN webhooks and master data APIs
+                        .requestMatchers("/api/chatbot/**").permitAll() // Allow public access to chatbot API
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")

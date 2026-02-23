@@ -430,14 +430,14 @@
         const productImages = [];
 
         /*[# th:each="image : ${product.sortedImages}"]*/
-        /*[# th:if="${!image.isVideo}"]*/
+        /*[# th:if="${image.isVideo == null || !image.isVideo}"]*/
         productImages.push({
             type: 'image',
             largeUrl: /*[[${image.largeUrl}]]*/,
             thumbnailUrl: /*[[${image.thumbnailUrl}]]*/
         });
         /*[/]*/
-        /*[# th:if="${image.isVideo}"]*/
+        /*[# th:if="${image.isVideo != null && image.isVideo}"]*/
         productImages.push({
             type: 'video',
             videoUrl: /*[[${image.videoUrl}]]*/,

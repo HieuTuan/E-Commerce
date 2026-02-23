@@ -35,6 +35,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findTop10ByOrderByCreatedDateDesc();
     
+    List<Product> findTop5ByOrderByCreatedDateDesc();
+    
     // Eager load product images to fix display issues
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.productImages")
     List<Product> findAllWithImages();

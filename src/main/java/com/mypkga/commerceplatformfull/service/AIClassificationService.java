@@ -22,13 +22,13 @@ import java.util.Map;
 @Slf4j
 public class AIClassificationService {
 
-    @Value("${openai.api-key}")
+    @Value("${groq.api-key}")
     private String apiKey;
 
-    @Value("${openai.api-url}")
+    @Value("${groq.api-url}")
     private String apiUrl;
 
-    @Value("${openai.model}")
+    @Value("${groq.model}")
     private String model;
 
     private static final Map<String, String[]> CATEGORY_KEYWORDS = new HashMap<>() {

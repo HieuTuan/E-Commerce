@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chatbot UI</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chatbot CSS -->
+    <link href="chatbot.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Test Giao Diện Chatbot</h1>
+        <p class="text-center text-muted">Nhấn vào biểu tượng chatbot ở góc dưới phải để bắt đầu trò chuyện</p>
+        
+        <!-- Sample content -->
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Chào mừng đến với cửa hàng!</h5>
+                        <p class="card-text">Đây là trang demo để test giao diện chatbot AI Shopping Assistant.</p>
+                        <p class="card-text">Chatbot hỗ trợ:</p>
+                        <ul>
+                            <li>🔍 Tìm kiếm sản phẩm</li>
+                            <li>💰 So sánh giá cả</li>
+                            <li>📦 Thông tin vận chuyển</li>
+                            <li>💳 Hướng dẫn thanh toán</li>
+                            <li>🔄 Chính sách đổi trả</li>
+                        </ul>
+                        <hr>
+                        <h6>Thử các câu lệnh:</h6>
+                        <ul>
+                            <li>"Tìm laptop gaming 20 triệu"</li>
+                            <li>"Sản phẩm nổi bật"</li>
+                            <li>"Thông tin giao hàng"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <!-- Chatbot Icon -->
+    <div class="chatbot-icon" id="chatbotIcon">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <div class="chatbot-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="chatbot-info">
+                <h6>AI Shopping Assistant</h6>
+                <span>Trợ lý mua sắm thông minh</span>
+            </div>
+            <button class="btn-close-chatbot" id="closeChatbot">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    👋 Xin chào! Tôi là trợ lý mua sắm thông minh của cửa hàng. 
+                    Tôi có thể giúp bạn tìm sản phẩm, tư vấn mua sắm và giải đáp thắc mắc. 
+                    Bạn cần tôi hỗ trợ gì hôm nay? 😊
+                </div>
+            </div>
+        </div>
+
+        <div class="chatbot-input-container">
+            <input type="text" class="chatbot-input" id="chatbotInput" 
+                   placeholder="Nhập câu hỏi của bạn...">
+            <button class="btn-send-message" id="sendMessage">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chatbot JS -->
+    <script>
+        // Mock data for testing
+        const mockResponses = {
+            "tìm laptop gaming 20 triệu": "🔍 Bạn đang tìm kiếm laptop gaming với giá khoảng 20 triệu?\n\nTôi có một số gợi ý phù hợp với nhu cầu của bạn:\n\n• • ASUS ROG Strix G15• • (19.5 triệu VNĐ)\n- Màn hình: 15,6 inch, Full HD\n- Chip: Intel Core i5, 10th Gen\n- RAM: 8GB DDR4\n- Card đồ họa: NVIDIA GeForce GTX 1650\n- Ổ cứng: 512GB SSD\n\n• • MSI Gaming Laptop• • (18.9 triệu VNĐ)\n- Màn hình: 15,6 inch, Full HD\n- Chip: Intel Core i5, 10th Gen\n- RAM: 8GB DDR4\n- Card đồ họa: NVIDIA GeForce GTX 1650\n- Ổ cứng: 512GB SSD\n\n💡 **Lưu ý:** Nhấn vào sản phẩm để xem chi tiết và thêm vào giỏ hàng! 🛒\n\n📞 **Liên hệ tư vấn:** 1900-1234 | 📧 support@shop.com",
+            "sản phẩm nổi bật": "⭐ **Sản phẩm nổi bật hôm nay:**\n\n🔥 iPhone 15 Pro Max - 29.9 triệu VNĐ\n🔥 Samsung Galaxy S24 Ultra - 28.5 triệu VNĐ\n🔥 ASUS ROG Strix G15 - 19.5 triệu VNĐ\n🔥 MacBook Air M3 - 27.9 triệu VNĐ\n🔥 Dell XPS 13 - 23.9 triệu VNĐ\n\n✨ Những sản phẩm này đang được khách hàng yêu thích nhất!",
+            "thông tin giao hàng": "🚚 **Thông tin vận chuyển:**\n\n• Miễn phí ship: Đơn hàng từ 500.000 VNĐ trở lên\n• Giao hàng tiêu chuẩn: 3-5 ngày làm việc\n• Giao hàng nhanh: Có phụ thu (1-2 ngày)\n\n📍 Bạn muốn kiểm tra thời gian giao hàng đến địa chỉ cụ thể không?",
+            "default": "🤔 Tôi chưa hiểu rõ yêu cầu của bạn. Bạn có thể nói rõ hơn không?\n\n💡 **Gợi ý:** Hãy thử hỏi về:\n• Tìm sản phẩm: \"Tìm laptop gaming\"\n• Sản phẩm nổi bật: \"Sản phẩm nổi bật\"\n• Chính sách: \"Thông tin giao hàng\""
+        };
+
+        // Get elements
+        const chatbotIcon = document.getElementById('chatbotIcon');
+        const chatbotContainer = document.getElementById('chatbotContainer');
+        const closeChatbot = document.getElementById('closeChatbot');
+        const chatbotInput = document.getElementById('chatbotInput');
+        const sendMessage = document.getElementById('sendMessage');
+        const chatbotMessages = document.getElementById('chatbotMessages');
+
+        // Show/hide chatbot
+        chatbotIcon.addEventListener('click', function() {
+            chatbotContainer.style.display = 'flex';
+            chatbotIcon.style.display = 'none';
+            chatbotInput.focus();
+        });
+
+        closeChatbot.addEventListener('click', function() {
+            chatbotContainer.style.display = 'none';
+            chatbotIcon.style.display = 'flex';
+        });
+
+        // Send message
+        function sendUserMessage() {
+            const message = chatbotInput.value.trim();
+            if (message) {
+                addUserMessage(message);
+                chatbotInput.value = '';
+                
+                // Show typing indicator
+                showTypingIndicator();
+                
+                // Simulate bot response after delay
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    const botResponse = getBotResponse(message.toLowerCase());
+                    addBotMessage(botResponse);
+                }, 1500);
+            }
+        }
+
+        sendMessage.addEventListener('click', sendUserMessage);
+        
+        chatbotInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendUserMessage();
+            }
+        });
+
+        // Add user message
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'user-message';
+            messageDiv.innerHTML = `
+                <div class="message-content">${message}</div>
+                <div class="message-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            `;
+            chatbotMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // Add bot message
+        function addBotMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'bot-message';
+            
+            // Format message for HTML display
+            const formattedMessage = formatBotMessage(message);
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">${formattedMessage}</div>
+            `;
+            chatbotMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // Format bot message
+        function formatBotMessage(message) {
+            return message
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>')
+                .replace(/• •/g, '<span class="product-highlight">•</span>')
+                .replace(/🔍|👋|⭐|🚚|💡|🔥|✨|🤔|📞|📧|💳|🛒|📍|🔄|📦|💰/g, '<span class="emoji">$&</span>');
+        }
+
+        // Get bot response
+        function getBotResponse(message) {
+            for (const key in mockResponses) {
+                if (message.includes(key) && key !== 'default') {
+                    return mockResponses[key];
+                }
+            }
+            return mockResponses.default;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'bot-message typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            `;
+            chatbotMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Scroll to bottom
+        function scrollToBottom() {
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        // Auto focus input when container is shown
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && 
+                    mutation.attributeName === 'style' && 
+                    chatbotContainer.style.display === 'flex') {
+                    setTimeout(() => chatbotInput.focus(), 100);
+                }
+            });
+        });
+        observer.observe(chatbotContainer, { attributes: true });
+    </script>
+</body>
+</html>
