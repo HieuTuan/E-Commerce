@@ -262,9 +262,9 @@
                     <!-- Thumbnail Navigation -->
                     <div class="thumbnail-navigation">
                         <!-- Left Arrow -->
-                        <!-- <div class="nav-arrow" id="scrollLeft" onclick="scrollThumbnails('left')">
+                        <div class="nav-arrow" id="scrollLeft" onclick="scrollThumbnails('left')">
                             <i class="fas fa-chevron-left"></i>
-                        </div> -->
+                        </div>
 
                         <!-- Thumbnails Container -->
                         <div class="thumbnail-container" id="thumbnailContainer">
@@ -318,17 +318,17 @@
                 <p class="mb-3">
                     <strong>Availability:</strong>
                     <span th:if="${product.stockQuantity > 0}" class="text-success">
-                        <i class="fas fa-check-circle"></i> In Stock (<span th:text="${product.stockQuantity}">0</span>
-                        available)
+                        <i class="fas fa-check-circle"></i> Tồn kho (<span th:text="${product.stockQuantity}">0</span>
+                        sản phẩm)
                     </span>
                     <span th:if="${product.stockQuantity <= 0}" class="text-danger">
-                        <i class="fas fa-times-circle"></i> Out of Stock
+                        <i class="fas fa-times-circle"></i> Hết hàng
                     </span>
                 </p>
 
                 <!-- Description -->
                 <div class="mb-4">
-                    <h5>Description</h5>
+                    <h5>Mô tả sản phẩm: </h5>
                     <p th:text="${product.description}">Product description goes here...</p>
                 </div>
 
@@ -582,16 +582,20 @@
             const rightArrow = document.getElementById('scrollRight');
 
             // Update arrow states based on current image index
-            if (currentImageIndex <= 0) {
-                leftArrow.classList.add('disabled');
-            } else {
-                leftArrow.classList.remove('disabled');
+            if (leftArrow) {
+                if (currentImageIndex <= 0) {
+                    leftArrow.classList.add('disabled');
+                } else {
+                    leftArrow.classList.remove('disabled');
+                }
             }
 
-            if (currentImageIndex >= productImages.length - 1) {
-                rightArrow.classList.add('disabled');
-            } else {
-                rightArrow.classList.remove('disabled');
+            if (rightArrow) {
+                if (currentImageIndex >= productImages.length - 1) {
+                    rightArrow.classList.add('disabled');
+                } else {
+                    rightArrow.classList.remove('disabled');
+                }
             }
         }
         /*]]>*/
