@@ -179,8 +179,7 @@ public class ChatbotService {
                             response.append("───────────────────\n\n");
                         }
                         
-                        response.append("🏪 [Xem tất cả sản phẩm](/products)\n");
-                        response.append("🔍 [Tìm kiếm nâng cao](/products/search)\n\n");
+                        response.append("🏪 [Xem tất cả sản phẩm](/products)\n\n");
                     } else {
                         response.append("🔄 **Thử các gợi ý khác:**\n");
                         response.append("• Sản phẩm nổi bật\n");
@@ -414,15 +413,18 @@ public class ChatbotService {
     private String formatPrice(BigDecimal price) {
         if (price == null) return "Liên hệ";
         
-        // Convert to VND (assuming price is in USD and 1 USD = 24,000 VND approximately)
-        long vndPrice = Math.round(price.doubleValue() * 24000);
+        // Giá đã là VND, không cần convert
+        long vndPrice = price.longValue();
         
         if (vndPrice >= 1000000) {
             double millions = vndPrice / 1000000.0;
-            return String.format("%.1f triệu VNĐ", millions);
+            return String.format("%.1f triệu đ", millions);
+        } else if (vndPrice >= 1000) {
+            double thousands = vndPrice / 1000.0;
+            return String.format("%.0f nghìn đ", thousands);
         } else {
             NumberFormat formatter = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-            return formatter.format(vndPrice) + " VNĐ";
+            return formatter.format(vndPrice) + " đ";
         }
     }
 

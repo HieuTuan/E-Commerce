@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const chatbotSend = document.getElementById('chatbot-send');
     const chatbotInput = document.getElementById('chatbot-input-field');
     const chatbotMessages = document.getElementById('chatbot-messages');
-    
+
     let isTyping = false;
 
     if (chatbotToggle) {
@@ -48,13 +48,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 sendMessage();
             }
         });
-        
+
         // Auto-focus when window opens
-        chatbotInput.addEventListener('focus', function() {
+        chatbotInput.addEventListener('focus', function () {
             this.style.borderColor = '#0d6efd';
         });
-        
-        chatbotInput.addEventListener('blur', function() {
+
+        chatbotInput.addEventListener('blur', function () {
             this.style.borderColor = '#e9ecef';
         });
     }
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 hideTypingIndicator();
                 // Support both { response: ... } and { reply: ... }
                 const botText = (data && (data.response || data.reply)) ? (data.response || data.reply) : 'Xin lỗi, tôi không thể xử lý yêu cầu này lúc này.';
-                
+
                 // Simulate typing delay for better UX
                 setTimeout(() => {
                     addMessage(botText, 'bot-message');
@@ -108,14 +108,14 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => {
                 hideTypingIndicator();
                 console.error('Error:', error);
-                
+
                 let errorMessage = 'Xin lỗi, đã xảy ra lỗi. Vui lòng thử lại sau.';
                 if (error.name === 'AbortError') {
                     errorMessage = 'Yêu cầu hết thời gian chờ. Vui lòng thử lại.';
                 } else if (error.message.includes('HTTP')) {
                     errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
                 }
-                
+
                 setTimeout(() => {
                     addMessage(errorMessage, 'bot-message');
                     enableInput();
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.className = 'message ' + className;
 
         const messagePara = document.createElement('p');
-        
+
         // Format text with line breaks and basic formatting
         const formattedText = formatBotMessage(text);
         messagePara.innerHTML = formattedText;
@@ -156,55 +156,55 @@ document.addEventListener('DOMContentLoaded', function () {
     function formatBotMessage(text) {
         // Convert line breaks to HTML breaks
         let formatted = text.replace(/\n/g, '<br>');
-        
+
         // Format bullet points
         formatted = formatted.replace(/•\s*/g, '<span style="color: #0d6efd;">•</span> ');
         formatted = formatted.replace(/\*\s*/g, '<span style="color: #0d6efd;">•</span> ');
-        
+
         // Format bold text **text** or __text__
         formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
-        
-        // Format prices (detect number with VND, đ, or triệu)
-        formatted = formatted.replace(/(\d{1,3}(?:\.\d{3})*(?:\,\d+)?)\s*(VND|đ|triệu|tr)/gi, 
-            '<span style="color: #dc3545; font-weight: bold;">$1 $2</span>');
-        
+
+        // Format prices (detect all price formats including nghìn)
+        formatted = formatted.replace(/(\d+(?:[.,]\d+)*)\s*(triệu|nghìn|VND|đ|tr)/gi,
+            '<span class="price">$1 $2</span>');
+
         // Format product detail links  
-        formatted = formatted.replace(/🔍 \[([^\]]+)\]\(([^)]+)\)/g, 
+        formatted = formatted.replace(/🔍 \[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1" style="text-decoration: none; font-size: 12px;">🔍 $1</a>');
-        
+
         // Format add to cart links with product parameter
-        formatted = formatted.replace(/🛒 \[([^\]]+)\]\(\?action=add-to-cart&product=(\d+)\)/g, 
+        formatted = formatted.replace(/🛒 \[([^\]]+)\]\(\?action=add-to-cart&product=(\d+)\)/g,
             '<button onclick="addToCartFromChat($2)" class="btn btn-sm btn-success me-1 mb-1" style="font-size: 12px;">🛒 $1</button>');
-        
+
         // Format category/search links
-        formatted = formatted.replace(/📋 \[([^\]]+)\]\(([^)]+)\)/g, 
+        formatted = formatted.replace(/📋 \[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-info me-1 mb-1" style="text-decoration: none; font-size: 12px;">📋 $1</a>');
-            
+
         // Format price filter links
-        formatted = formatted.replace(/💲 \[([^\]]+)\]\(([^)]+)\)/g, 
+        formatted = formatted.replace(/💲 \[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-warning me-1 mb-1" style="text-decoration: none; font-size: 12px;">💲 $1</a>');
-            
+
         // Format compare links
-        formatted = formatted.replace(/🔄 \[([^\]]+)\]\(([^)]+)\)/g, 
+        formatted = formatted.replace(/🔄 \[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-secondary me-1 mb-1" style="text-decoration: none; font-size: 12px;">🔄 $1</a>');
-            
+
         // Format shop links
-        formatted = formatted.replace(/🏪 \[([^\]]+)\]\(([^)]+)\)/g, 
+        formatted = formatted.replace(/🏪 \[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-primary me-1 mb-1" style="text-decoration: none; font-size: 12px;">🏪 $1</a>');
-        
+
         // Format old style links (backward compatibility)
-        formatted = formatted.replace(/🔗 \[([^\]]+)\]\(([^)]+)\)/g, 
+        formatted = formatted.replace(/🔗 \[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1" style="text-decoration: none; font-size: 12px;">👁️ $1</a>');
-        
+
         // Format old add to cart links
-        formatted = formatted.replace(/🛒 \[([^\]]+)\]\(#add-to-cart-(\d+)\)/g, 
+        formatted = formatted.replace(/🛒 \[([^\]]+)\]\(#add-to-cart-(\d+)\)/g,
             '<button onclick="addToCartFromChat($2)" class="btn btn-sm btn-success me-1 mb-1" style="font-size: 12px;">🛒 $1</button>');
-            
+
         // Handle inline links with | separator
-        formatted = formatted.replace(/🔍 \[([^\]]+)\]\(([^)]+)\) \| 🛒 \[([^\]]+)\]\(\?action=add-to-cart&product=(\d+)\)/g, 
+        formatted = formatted.replace(/🔍 \[([^\]]+)\]\(([^)]+)\) \| 🛒 \[([^\]]+)\]\(\?action=add-to-cart&product=(\d+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1" style="font-size: 12px;">🔍 $1</a> <button onclick="addToCartFromChat($4)" class="btn btn-sm btn-success me-1 mb-1" style="font-size: 12px;">🛒 $3</button>');
-        
+
         return formatted;
     }
 
@@ -212,14 +212,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message typing-indicator';
         typingDiv.id = 'typing-indicator';
-        
+
         const typingDots = document.createElement('div');
         typingDots.className = 'typing-dots';
         typingDots.innerHTML = '<span></span><span></span><span></span>';
-        
+
         typingDiv.appendChild(typingDots);
         chatbotMessages.appendChild(typingDiv);
-        
+
         // Scroll to bottom
         chatbotMessages.scrollTo({
             top: chatbotMessages.scrollHeight,
@@ -235,14 +235,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to add product to cart from chatbot
-    window.addToCartFromChat = function(productId) {
+    window.addToCartFromChat = function (productId) {
         const button = event.target;
         const originalText = button.innerHTML;
-        
+
         // Show loading state
         button.innerHTML = '⏳ Đang thêm...';
         button.disabled = true;
-        
+
         // Directly try to add to cart - let server handle authentication
         fetch('/cart/add', {
             method: 'POST',
@@ -251,53 +251,53 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: `productId=${productId}&quantity=1`
         })
-        .then(response => {
-            if (response.status === 401 || response.status === 403) {
-                // User not authenticated, redirect to login
-                window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
-                return;
-            }
-            
-            if (response.ok) {
-                // Success - update button and cart count
-                button.innerHTML = '✅ Đã thêm';
-                button.style.backgroundColor = '#28a745';
-                
-                // Update cart count in navbar
-                const cartCount = document.querySelector('.cart-count');
-                if (cartCount) {
-                    const currentCount = parseInt(cartCount.textContent) || 0;
-                    cartCount.textContent = currentCount + 1;
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    // User not authenticated, redirect to login
+                    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+                    return;
                 }
-                
-                // Add success message to chat
-                addMessage('✅ Sản phẩm đã được thêm vào giỏ hàng! Bạn có thể tiếp tục mua sắm hoặc [xem giỏ hàng](/cart).', 'bot-message');
-                
+
+                if (response.ok) {
+                    // Success - update button and cart count
+                    button.innerHTML = '✅ Đã thêm';
+                    button.style.backgroundColor = '#28a745';
+
+                    // Update cart count in navbar
+                    const cartCount = document.querySelector('.cart-count');
+                    if (cartCount) {
+                        const currentCount = parseInt(cartCount.textContent) || 0;
+                        cartCount.textContent = currentCount + 1;
+                    }
+
+                    // Add success message to chat
+                    addMessage('✅ Sản phẩm đã được thêm vào giỏ hàng! Bạn có thể tiếp tục mua sắm hoặc [xem giỏ hàng](/cart).', 'bot-message');
+
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                        button.style.backgroundColor = '';
+                    }, 3000);
+                } else {
+                    throw new Error('Không thể thêm sản phẩm vào giỏ hàng');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                button.innerHTML = '❌ Lỗi';
+                button.style.backgroundColor = '#dc3545';
+
+                // Add error message to chat
+                addMessage('❌ Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại.', 'bot-message');
+
                 // Reset button after 3 seconds
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.disabled = false;
                     button.style.backgroundColor = '';
                 }, 3000);
-            } else {
-                throw new Error('Không thể thêm sản phẩm vào giỏ hàng');
-            }
-        })
-        .catch(error => {
-            console.error('Error adding to cart:', error);
-            button.innerHTML = '❌ Lỗi';
-            button.style.backgroundColor = '#dc3545';
-            
-            // Add error message to chat
-            addMessage('❌ Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại.', 'bot-message');
-            
-            // Reset button after 3 seconds
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.disabled = false;
-                button.style.backgroundColor = '';
-            }, 3000);
-        });
+            });
     };
 });
 
