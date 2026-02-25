@@ -72,12 +72,14 @@ public class ReturnServiceImpl implements ReturnService {
         returnRequest.setEvidenceVideoUrl(evidenceVideoUrl);
         returnRequest.setStatus(ReturnStatus.REFUND_REQUESTED);
 
-        // Set bank information
-        RefundBankInfo bankInfo = new RefundBankInfo();
-        bankInfo.setBankName(dto.getBankInfo().getBankName());
-        bankInfo.setAccountNumber(dto.getBankInfo().getAccountNumber());
-        bankInfo.setAccountHolderName(dto.getBankInfo().getAccountHolderName());
-        returnRequest.setBankInfo(bankInfo);
+        // Set bank information (optional - refunds now go to wallet)
+        if (dto.getBankInfo() != null) {
+            RefundBankInfo bankInfo = new RefundBankInfo();
+            bankInfo.setBankName(dto.getBankInfo().getBankName());
+            bankInfo.setAccountNumber(dto.getBankInfo().getAccountNumber());
+            bankInfo.setAccountHolderName(dto.getBankInfo().getAccountHolderName());
+            returnRequest.setBankInfo(bankInfo);
+        }
 
         // Save return request first to get ID for return code generation
         returnRequest = returnRequestRepository.save(returnRequest);
@@ -451,7 +453,8 @@ public class ReturnServiceImpl implements ReturnService {
 
     @Override
     @Transactional
-    public ReturnRequest uploadRefundProofAndComplete(Long requestId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+    public ReturnRequest uploadRefundProofAndComplete(Long requestId,
+            org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
         ReturnRequest returnRequest = returnRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Return request not found"));
 
@@ -470,7 +473,8 @@ public class ReturnServiceImpl implements ReturnService {
 
             // Save file to disk
             java.nio.file.Path filePath = uploadPath.resolve(fileName);
-            java.nio.file.Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            java.nio.file.Files.copy(file.getInputStream(), filePath,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
             // URL path for accessing the file
             String imageUrl = "/uploads/refund-proofs/" + fileName;
@@ -485,7 +489,7 @@ public class ReturnServiceImpl implements ReturnService {
             returnRequest.getOrder().setStatus(OrderStatus.CANCELLED);
 
             returnRequest = returnRequestRepository.save(returnRequest);
-            
+
             log.info("Refund proof uploaded and refund completed for request {}", requestId);
         }
 
@@ -493,7 +497,8 @@ public class ReturnServiceImpl implements ReturnService {
     }
 
     private String getFileExtension(String filename) {
-        if (filename == null) return "";
+        if (filename == null)
+            return "";
         int lastDot = filename.lastIndexOf('.');
         return lastDot > 0 ? filename.substring(lastDot) : "";
     }

@@ -8,6 +8,7 @@ import com.mypkga.commerceplatformfull.service.ReturnService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import com.mypkga.commerceplatformfull.service.EmailService;
 import com.mypkga.commerceplatformfull.service.GHNReturnService;
+import com.mypkga.commerceplatformfull.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class StaffReturnController {
     private final UserService userService;
     private final EmailService emailService;
     private final GHNReturnService ghnReturnService;
+    private final WalletService walletService;
 
     /**
      * Staff return requests dashboard
@@ -245,7 +247,30 @@ public class StaffReturnController {
     }
 
     /**
-     * Complete refund
+     * Show refund processing page
+     */
+    @GetMapping("/{requestId}/refund")
+    public String showRefundProcessPage(@PathVariable Long requestId, Model model) {
+        try {
+            ReturnRequest returnRequest = returnService.findById(requestId);
+            if (!returnRequest.getStatus().name().equals("RETURN_RECEIVED")) {
+                model.addAttribute("error", "Yêu cầu không ở trạng thái có thể hoàn tiền");
+                return "redirect:/staff/returns/" + requestId;
+            }
+            Long customerId = returnRequest.getOrder().getUser().getId();
+            java.math.BigDecimal walletBalance = walletService.getBalance(customerId);
+            model.addAttribute("returnRequest", returnRequest);
+            model.addAttribute("walletBalance", walletBalance);
+            return "staff/returns/refund-process";
+        } catch (Exception e) {
+            log.error("Error showing refund process page for request {}: {}", requestId, e.getMessage());
+            model.addAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/staff/returns/" + requestId;
+        }
+    }
+
+    /**
+     * Complete refund – credits money to customer wallet
      */
     @PostMapping("/{requestId}/refund/complete")
     public String completeRefund(@PathVariable Long requestId,
@@ -255,8 +280,14 @@ public class StaffReturnController {
             User currentStaff = getCurrentUser(authentication);
             ReturnRequest completed = returnService.completeRefund(requestId, currentStaff.getId());
 
+            // Auto-credit the customer's wallet
+            Long customerId = completed.getOrder().getUser().getId();
+            java.math.BigDecimal refundAmount = completed.getOrder().getTotalAmount();
+            String description = "Hoàn tiền đơn hàng #" + completed.getOrder().getOrderNumber();
+            walletService.credit(customerId, refundAmount, description, requestId);
+
             redirectAttributes.addFlashAttribute("success",
-                    "Đã hoàn tiền thành công cho yêu cầu #" + completed.getId());
+                    "✅ Đã hoàn tiền " + String.format("%,.0f", refundAmount) + " đ vào ví của khách hàng!");
 
         } catch (Exception e) {
             log.error("Error completing refund for request {}: {}", requestId, e.getMessage());

@@ -1,7 +1,6 @@
 package com.mypkga.commerceplatformfull.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -53,8 +52,6 @@ public class ReturnRequest {
     private String returnCode;
 
     @Embedded
-    @Valid
-    @NotNull(message = "Bank information is required")
     private RefundBankInfo bankInfo;
 
     // GHN Integration fields

@@ -69,6 +69,10 @@ public class User {
     // Exclude collections from toString to prevent circular reference and
     // performance issues
     @ToString.Exclude
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private com.mypkga.commerceplatformfull.entity.Wallet wallet;
+
+    @ToString.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
 

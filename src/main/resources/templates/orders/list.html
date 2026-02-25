@@ -16,13 +16,38 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" th:href="@{/}"><i class="fas fa-shopping-bag"></i> E-Commerce</a>
-            <div class="navbar-nav ms-auto">
+            <div class="navbar-nav ms-auto align-items-center">
                 <a class="nav-link" th:href="@{/}">Trang chủ</a>
                 <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
                 <a class="nav-link" th:href="@{/cart}">
                     <i class="fas fa-shopping-cart"></i> Giỏ hàng
                 </a>
                 <a class="nav-link active" th:href="@{/orders}">Đơn hàng</a>
+                <a class="nav-link" th:href="@{/returns/my-requests}"><i class="fas fa-undo"></i> Yêu cầu hoàn trả</a>
+                <!-- Settings Dropdown -->
+                <div class="nav-item dropdown ms-2">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="fas fa-cog"></i> Setting
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/customer/returns/wallet}">
+                                <i class="fas fa-wallet me-2 text-success"></i>Ví của tôi
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -31,15 +56,24 @@
         <h2 class="mb-4"><i class="fas fa-receipt"></i> Đơn hàng của tôi</h2>
 
         <div th:if="${orders != null && !orders.isEmpty()}">
+            <!-- Column header row -->
+            <div class="row px-3 mb-1">
+                <div class="col-md-3"><small class="text-muted fw-bold">MÃ ĐƠN HÀNG</small></div>
+                <div class="col-md-3"><small class="text-muted fw-bold">TRẠNG THÁI ĐƠN HÀNG</small></div>
+                <div class="col-md-3"><small class="text-muted fw-bold">TRẠNG THÁI THANH TOÁN</small></div>
+                <div class="col-md-3 text-end"><small class="text-muted fw-bold">THỜI GIAN</small></div>
+            </div>
             <div class="row">
                 <div class="col-12" th:each="order : ${orders}">
                     <div class="card mb-3">
                         <div class="card-header">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
-                                    <strong>Mã đơn hàng: <span th:text="${order.orderNumber}">ORD-001</span></strong>
+                                    <strong><span th:text="${order.orderNumber}">ORD-001</span></strong>
                                 </div>
                                 <div class="col-md-3">
+                                    <div class="opacity-75 small mb-1" style="font-size:0.7rem;">
+                                    </div>
                                     <!-- Show red status with "Khách hàng report" when has delivery issue -->
                                     <div th:if="${order.hasDeliveryIssue()}">
                                         <span class="badge bg-danger">DELIVERED</span>
@@ -72,8 +106,9 @@
                                                 <small th:case="'RETURNING'" class="text-info d-block">
                                                     <i class="fas fa-shipping-fast me-1"></i>Đang trả hàng
                                                 </small>
-                                                <small th:case="'RETURN_RECEIVED'" class="text-primary d-block">
-                                                    <i class="fas fa-box me-1"></i>Đã nhận hàng trả
+                                                <small th:case="'RETURN_RECEIVED'" class="d-block">
+                                                    <i class="fas fa-box me-1" style="color: #bbdefb;"></i>
+                                                    <span style="color: #1976d2;">Đã nhận hàng trả</span>
                                                 </small>
                                                 <small th:case="'REFUNDED'" class="text-success d-block">
                                                     <i class="fas fa-money-bill-wave me-1"></i>Đã hoàn tiền

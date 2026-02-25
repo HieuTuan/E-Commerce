@@ -192,17 +192,26 @@
                                             </span>
                                         </div>
 
-                                        <!-- Show disabled message for cancelled or returned orders -->
-                                        <div
-                                            th:if="${order.currentStatus.name() == 'CANCELLED' || order.currentStatus.name() == 'RETURN_RECEIVED'}">
+                                        <!-- Show disabled message for cancelled or returned/refunded orders -->
+                                        <div th:if="${order.currentStatus.name() == 'CANCELLED'
+                                                || order.currentStatus.name() == 'REFUNDED'
+                                                || order.currentStatus.name() == 'RETURN_RECEIVED'
+                                                || order.currentStatus.name() == 'RETURN_APPROVED'
+                                                || order.currentStatus.name() == 'RETURNING'
+                                                || order.currentStatus.name() == 'REFUND_REQUESTED'}">
                                             <span class="text-muted small">
                                                 <i class="fas fa-ban me-1"></i>Cancelled
                                             </span>
                                         </div>
 
                                         <!-- Show dropdown for other statuses -->
-                                        <form
-                                            th:if="${order.currentStatus.name() != 'CONFIRMED_BY_CUSTOMER' && order.currentStatus.name() != 'CANCELLED' && order.currentStatus.name() != 'RETURN_RECEIVED'}"
+                                        <form th:if="${order.currentStatus.name() != 'CONFIRMED_BY_CUSTOMER'
+                                                && order.currentStatus.name() != 'CANCELLED'
+                                                && order.currentStatus.name() != 'REFUNDED'
+                                                && order.currentStatus.name() != 'RETURN_RECEIVED'
+                                                && order.currentStatus.name() != 'RETURN_APPROVED'
+                                                && order.currentStatus.name() != 'RETURNING'
+                                                && order.currentStatus.name() != 'REFUND_REQUESTED'}"
                                             th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"
                                             class="d-inline">
                                             <select name="status" class="form-select form-select-sm"

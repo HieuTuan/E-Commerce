@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/customer.css}">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -44,11 +46,14 @@
                 <div class="row">
                     <div class="col-md-6">
                         <p><strong>Mã đơn hàng:</strong> <span th:text="${order.orderNumber}">ORD001</span></p>
-                        <p><strong>Tổng tiền:</strong> <span th:text="${#numbers.formatCurrency(order.totalAmount)}">500,000 VND</span></p>
+                        <p><strong>Tổng tiền:</strong> <span
+                                th:text="${#numbers.formatCurrency(order.totalAmount)}">500,000 VND</span></p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Ngày đặt:</strong> <span th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
-                        <p><strong>Thời gian còn lại:</strong> 
+                        <p><strong>Ngày đặt:</strong> <span
+                                th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">01/01/2024
+                                10:00</span></p>
+                        <p><strong>Thời gian còn lại:</strong>
                             <span class="badge bg-warning" th:text="${remainingHours + ' giờ'}">24 giờ</span>
                         </p>
                     </div>
@@ -62,11 +67,13 @@
                 <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Thông Tin Yêu Cầu Hoàn Tiền</h5>
             </div>
             <div class="card-body">
-                <form th:action="@{/returns/orders/{orderId}/submit(orderId=${order.id})}" method="post" enctype="multipart/form-data" id="returnForm">
-                    
+                <form th:action="@{/returns/orders/{orderId}/submit(orderId=${order.id})}" method="post"
+                    enctype="multipart/form-data" id="returnForm">
+
                     <!-- Return Reason -->
                     <div class="mb-3">
-                        <label for="reason" class="form-label">Lý do hoàn tiền <span class="text-danger">*</span></label>
+                        <label for="reason" class="form-label">Lý do hoàn tiền <span
+                                class="text-danger">*</span></label>
                         <select class="form-select" id="reason" name="reason" required>
                             <option value="">Chọn lý do hoàn tiền</option>
                             <option value="DEFECTIVE_ITEM">Sản phẩm bị lỗi</option>
@@ -79,21 +86,24 @@
 
                     <!-- Detailed Description -->
                     <div class="mb-3">
-                        <label for="detailedDescription" class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="detailedDescription" name="detailedDescription" rows="4" 
-                                  minlength="10" maxlength="500" required
-                                  placeholder="Vui lòng mô tả chi tiết vấn đề với sản phẩm (tối thiểu 10 ký tự)"></textarea>
+                        <label for="detailedDescription" class="form-label">Mô tả chi tiết <span
+                                class="text-danger">*</span></label>
+                        <textarea class="form-control" id="detailedDescription" name="detailedDescription" rows="4"
+                            minlength="10" maxlength="500" required
+                            placeholder="Vui lòng mô tả chi tiết vấn đề với sản phẩm (tối thiểu 10 ký tự)"></textarea>
                         <div class="form-text">Tối thiểu 10 ký tự, tối đa 500 ký tự</div>
                     </div>
 
                     <!-- Evidence Video -->
                     <div class="mb-3">
-                        <label for="evidenceVideo" class="form-label">Video bằng chứng <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="evidenceVideo" name="evidenceVideo" 
-                               accept="video/*" required>
+                        <label for="evidenceVideo" class="form-label">Video bằng chứng <span
+                                class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="evidenceVideo" name="evidenceVideo" accept="video/*"
+                            required>
                         <div class="form-text">
                             <i class="fas fa-info-circle me-1"></i>
-                            Vui lòng quay video mở hộp/kiểm tra sản phẩm để làm bằng chứng. Định dạng: MP4, AVI, MOV. Tối đa 50MB.
+                            Vui lòng quay video mở hộp/kiểm tra sản phẩm để làm bằng chứng. Định dạng: MP4, AVI, MOV.
+                            Tối đa 50MB.
                         </div>
                     </div>
 
@@ -105,53 +115,23 @@
                             Hàng hoàn trả sẽ được vận chuyển qua <strong>Giao Hàng Nhanh (GHN)</strong>
                             <br>
                             <small class="text-muted">
-                                Sau khi được duyệt, chúng tôi sẽ tự động tạo đơn vận chuyển và gửi thông tin theo dõi cho bạn.
+                                Sau khi được duyệt, chúng tôi sẽ tự động tạo đơn vận chuyển và gửi thông tin theo dõi
+                                cho bạn.
                             </small>
                         </div>
                     </div>
 
-                    <!-- Bank Information -->
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h6 class="mb-0"><i class="fas fa-university me-2"></i>Thông Tin Tài Khoản Nhận Hoàn Tiền</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="bankName" class="form-label">Tên ngân hàng <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="bankName" name="bankInfo.bankName" required>
-                                            <option value="">Chọn ngân hàng</option>
-                                            <option value="Vietcombank">Vietcombank</option>
-                                            <option value="VietinBank">VietinBank</option>
-                                            <option value="BIDV">BIDV</option>
-                                            <option value="Agribank">Agribank</option>
-                                            <option value="Techcombank">Techcombank</option>
-                                            <option value="MBBank">MBBank</option>
-                                            <option value="ACB">ACB</option>
-                                            <option value="VPBank">VPBank</option>
-                                            <option value="SHB">SHB</option>
-                                            <option value="Sacombank">Sacombank</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="accountNumber" class="form-label">Số tài khoản <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="accountNumber" name="bankInfo.accountNumber" 
-                                               pattern="[0-9]{10,20}" required
-                                               placeholder="Nhập số tài khoản (10-20 chữ số)">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="accountHolderName" class="form-label">Tên chủ tài khoản <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="accountHolderName" name="bankInfo.accountHolderName" 
-                                       pattern="[A-Z\s]+" required style="text-transform: uppercase;"
-                                       placeholder="NGUYEN VAN A (chỉ chữ in hoa, không dấu)">
-                                <div class="form-text">Tên phải viết in hoa, không dấu, đúng như trên thẻ ngân hàng</div>
-                            </div>
-                        </div>
+
+
+                    <!-- Wallet Refund Notice -->
+                    <div class="alert alert-success mb-3">
+                        <i class="fas fa-wallet me-2"></i>
+                        <strong>Hoàn tiền vào ví:</strong> Sau khi yêu cầu được duyệt và xử lý,
+                        số tiền <strong th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + ' đ'">0
+                            đ</strong>
+                        sẽ tự động được cộng vào <strong>ví điện tử</strong> của tài khoản bạn.
+                        <br><small class="text-muted">Xem số dư ví tại <a th:href="@{/customer/returns/wallet}">Ví của
+                                tôi</a></small>
                     </div>
 
                     <!-- Terms and Conditions -->
@@ -159,7 +139,7 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="agreeTerms" required>
                             <label class="form-check-label" for="agreeTerms">
-                                Tôi xác nhận rằng thông tin trên là chính xác và đồng ý với 
+                                Tôi xác nhận rằng thông tin trên là chính xác và đồng ý với
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">điều khoản hoàn tiền</a>
                                 <span class="text-danger">*</span>
                             </label>
@@ -168,11 +148,44 @@
 
                     <!-- Submit Button -->
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="showConfirmModal()">
                             <i class="fas fa-paper-plane me-2"></i>Gửi Yêu Cầu Hoàn Tiền
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-question-circle me-2"></i>Xác Nhận Gửi Yêu Cầu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-wallet me-2"></i>
+                        <strong>Bạn có chắc chắn muốn hoàn tiền không?</strong>
+                    </div>
+                    <p>Tiền hoàn <strong th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + ' đ'"
+                            class="text-danger fs-5">0 đ</strong>
+                        sẽ được cộng vào <strong>ví của tài khoản</strong> của bạn sau khi yêu cầu được xem xét và duyệt
+                        bởi nhân viên.</p>
+                    <ul class="text-muted small">
+                        <li>Yêu cầu sẽ được xem xét trong 1-2 ngày làm việc</li>
+                        <li>Tiền sẽ vào ví ngay sau khi staff xác nhận hoàn tiền</li>
+                        <li>Bạn có thể kiểm tra số dư tại mục Ví của tôi</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="submitReturnForm()">
+                        <i class="fas fa-check me-2"></i>Xác Nhận Gửi
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -192,7 +205,7 @@
                         <li>Sản phẩm phải còn nguyên vẹn, chưa sử dụng</li>
                         <li>Phải có video bằng chứng về tình trạng sản phẩm</li>
                     </ul>
-                    
+
                     <h6>2. Quy trình xử lý:</h6>
                     <ul>
                         <li>Yêu cầu sẽ được xem xét trong 1-2 ngày làm việc</li>
@@ -200,7 +213,7 @@
                         <li>Gửi hàng về bưu điện đã chọn trong vòng 48 giờ</li>
                         <li>Hoàn tiền sẽ được thực hiện sau khi nhận và kiểm tra hàng</li>
                     </ul>
-                    
+
                     <h6>3. Lưu ý:</h6>
                     <ul>
                         <li>Phí vận chuyển trả hàng sẽ do khách hàng chịu</li>
@@ -217,20 +230,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto uppercase account holder name
-        document.getElementById('accountHolderName').addEventListener('input', function(e) {
-            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z\s]/g, '');
-        });
-
-        // Form validation
-        document.getElementById('returnForm').addEventListener('submit', function(e) {
+        function showConfirmModal() {
+            const form = document.getElementById('returnForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
             const video = document.getElementById('evidenceVideo').files[0];
             if (video && video.size > 50 * 1024 * 1024) {
-                e.preventDefault();
                 alert('File video quá lớn. Vui lòng chọn file nhỏ hơn 50MB.');
-                return false;
+                return;
             }
-        });
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        function submitReturnForm() {
+            document.getElementById('returnForm').submit();
+        }
     </script>
+
 </body>
+
 </html>

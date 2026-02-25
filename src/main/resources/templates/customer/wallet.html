@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ví Của Tôi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <style>
+        .wallet-balance-card {
+            background: linear-gradient(135deg, #0e0f11 0%, #a3b4c3 100%);
+            border-radius: 20px;
+            color: white;
+            padding: 2rem;
+        }
+
+        .wallet-balance-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .transaction-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge-refund {
+            background-color: #28a745;
+        }
+
+        .badge-debit {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-store me-2"></i>Cửa Hàng</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" th:href="@{/orders}">Đơn Hàng</a>
+                <a class="nav-link active" th:href="@{/customer/returns/wallet}"><i
+                        class="fas fa-wallet me-1"></i>Ví</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Đăng Xuất</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-wallet me-2"></i>Ví Của Tôi</h2>
+            <a th:href="@{/orders}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Wallet Balance Card -->
+        <div class="wallet-balance-card mb-4 shadow">
+            <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-wallet fa-2x me-3 opacity-75"></i>
+                <div>
+                    <div class="opacity-75 small">Số dư ví:</div>
+                    <div class="wallet-balance-amount" th:text="${#numbers.formatInteger(balance, 0, 'COMMA')} + ' đ'">0
+                        đ</div>
+                </div>
+            </div>
+            <div class="opacity-75 small">
+                <i class="fas fa-info-circle me-1"></i>
+                Số dư được cộng tự động khi yêu cầu hoàn tiền được phê duyệt.
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Lịch Sử Giao Dịch</h5>
+            </div>
+            <div class="card-body p-0">
+                <div th:if="${transactions == null or #lists.isEmpty(transactions)}"
+                    class="text-center py-5 text-muted">
+                    <i class="fas fa-receipt fa-3x mb-3 opacity-50"></i>
+                    <p>Chưa có giao dịch nào</p>
+                </div>
+
+                <table th:if="${transactions != null and !#lists.isEmpty(transactions)}" class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Mô tả</th>
+                            <th>Loại</th>
+                            <th class="text-end">Số tiền</th>
+                            <th class="text-end">Số dư sau</th>
+                            <th class="text-center">Đơn hàng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tx : ${transactions}" class="transaction-row">
+                            <td class="text-nowrap">
+                                <span th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                                <br>
+                                <small class="text-muted"
+                                    th:text="${#temporals.format(tx.createdAt, 'HH:mm')}">10:00</small>
+                            </td>
+                            <td th:text="${tx.description}">Hoàn tiền đơn hàng</td>
+                            <td>
+                                <span th:if="${tx.type.name() == 'REFUND'}" class="badge badge-refund">
+                                    <i class="fas fa-plus me-1"></i>Hoàn tiền
+                                </span>
+                                <span th:if="${tx.type.name() == 'DEBIT'}" class="badge badge-debit">
+                                    <i class="fas fa-minus me-1"></i>Khấu trừ
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold">
+                                <span th:class="${tx.type.name() == 'REFUND' ? 'text-success' : 'text-danger'}"
+                                    th:text="${(tx.type.name() == 'REFUND' ? '+' : '-') + #numbers.formatInteger(tx.amount, 0, 'COMMA')} + ' đ'">
+                                    +0 đ
+                                </span>
+                            </td>
+                            <td class="text-end"
+                                th:text="${#numbers.formatInteger(tx.balanceAfter, 0, 'COMMA')} + ' đ'">0 đ</td>
+                            <td class="text-center">
+                                <a th:if="${tx.relatedReturnRequestId != null}"
+                                    th:href="@{/customer/returns/{id}(id=${tx.relatedReturnRequestId})}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <span th:unless="${tx.relatedReturnRequestId != null}" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

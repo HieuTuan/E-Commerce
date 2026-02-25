@@ -54,12 +54,28 @@
                     <li class="nav-item" sec:authorize="hasRole('STAFF')">
                         <a class="nav-link" th:href="@{/staff}">Nhân viên</a>
                     </li>
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-link nav-link text-white">
-                                <i class="fas fa-sign-out-alt"></i> Đăng xuất (<span sec:authentication="name"></span>)
-                            </button>
-                        </form>
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fas fa-cog"></i>  <span sec:authentication="name"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" th:href="@{/customer/returns/wallet}">
+                                    <i class="fas fa-wallet me-2 text-success"></i>Ví của tôi
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="d-inline">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -109,7 +125,8 @@
                                             <span th:if="${product.stockQuantity > 0}"
                                                 th:text="${product.stockQuantity} + ' in stock'"
                                                 class="text-success fw-bold"></span>
-                                            <span th:if="${product.stockQuantity <= 0}" class="text-danger fw-bold">Hết hàng</span>
+                                            <span th:if="${product.stockQuantity <= 0}" class="text-danger fw-bold">Hết
+                                                hàng</span>
                                         </small>
                                     </div>
                                 </div>
