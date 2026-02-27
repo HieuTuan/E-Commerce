@@ -133,13 +133,13 @@
 
                                             <div class="d-flex flex-wrap gap-2">
                                                 <!-- Confirm shipping button if approved -->
-                                                <button th:if="${request.status.name() == 'RETURN_APPROVED'}"
-                                                    type="button" class="btn btn-sm btn-success"
-                                                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
-                                                    th:data-return-code="${request.returnCode}"
-                                                    onclick="confirmShipping(this.dataset.returnCode)">
-                                                    <i class="fas fa-check"></i> Xác nhận gửi
-                                                </button>
+<!--                                                <button th:if="${request.status.name() == 'RETURN_APPROVED'}"-->
+<!--                                                    type="button" class="btn btn-sm btn-success"-->
+<!--                                                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"-->
+<!--                                                    th:data-return-code="${request.returnCode}"-->
+<!--                                                    onclick="confirmShipping(this.dataset.returnCode)">-->
+<!--                                                    <i class="fas fa-check"></i> Xác nhận gửi-->
+<!--                                                </button>-->
 
                                                 <!-- Show GHN tracking if approved and has order code -->
                                                 <button
@@ -191,9 +191,9 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-truck me-2"></i>Thông Tin Vận Chuyển
-                        </h5>
+                        <h5 class="modal-title text-white">
+                        <i class="fas fa-truck me-2"></i>Thông Tin Vận Chuyển
+                    </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">

@@ -129,7 +129,7 @@
                         <strong>Hoàn tiền vào ví:</strong> Sau khi yêu cầu được duyệt và xử lý,
                         số tiền <strong th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + ' đ'">0
                             đ</strong>
-                        sẽ tự động được cộng vào <strong>ví điện tử</strong> của tài khoản bạn.
+                        sẽ tự động được cộng vào <strong>Ví</strong> của tài khoản bạn.
                         <br><small class="text-muted">Xem số dư ví tại <a th:href="@{/customer/returns/wallet}">Ví của
                                 tôi</a></small>
                     </div>
@@ -162,7 +162,9 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="fas fa-question-circle me-2"></i>Xác Nhận Gửi Yêu Cầu</h5>
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-question-circle me-2"></i>Xác Nhận Gửi Yêu Cầu
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">

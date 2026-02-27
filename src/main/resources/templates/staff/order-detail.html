@@ -126,56 +126,56 @@
                 </div>
 
                 <!-- Order Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Thao Tác Đơn Hàng</h5>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="@{/staff/orders/{id}/update-status(id=${order.id})}" method="post"
-                            class="d-inline">
-                            <div class="row align-items-end">
-                                <div class="col-md-4">
-                                    <label for="status" class="form-label">Cập Nhật Trạng Thái:</label>
-                                    <select name="status" id="status" class="form-select">
-                                        <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ Xử
-                                            Lý</option>
-                                        <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">
-                                            Đang Xử Lý</option>
-                                        <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">Đã
-                                            Giao Vận</option>
-                                        <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã
-                                            Giao Hàng</option>
-                                        <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Đã
-                                            Hủy</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Cập Nhật
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+<!--                <div class="card">-->
+<!--                    <div class="card-header">-->
+<!--                        <h5 class="mb-0">Thao Tác Đơn Hàng</h5>-->
+<!--                    </div>-->
+<!--                    <div class="card-body">-->
+<!--                        <form th:action="@{/staff/orders/{id}/update-status(id=${order.id})}" method="post"-->
+<!--                            class="d-inline">-->
+<!--                            <div class="row align-items-end">-->
+<!--                                <div class="col-md-4">-->
+<!--                                    <label for="status" class="form-label">Cập Nhật Trạng Thái:</label>-->
+<!--                                    <select name="status" id="status" class="form-select">-->
+<!--                                        <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ Xử-->
+<!--                                            Lý</option>-->
+<!--                                        <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">-->
+<!--                                            Đang Xử Lý</option>-->
+<!--                                        <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">Đã-->
+<!--                                            Giao Vận</option>-->
+<!--                                        <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã-->
+<!--                                            Giao Hàng</option>-->
+<!--                                        <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Đã-->
+<!--                                            Hủy</option>-->
+<!--                                    </select>-->
+<!--                                </div>-->
+<!--                                <div class="col-md-3">-->
+<!--                                    <button type="submit" class="btn btn-primary">-->
+<!--                                        <i class="fas fa-save me-2"></i>Cập Nhật-->
+<!--                                    </button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </form>-->
 
-                        <hr>
+<!--                        <hr>-->
 
-                        <!-- <form th:action="@{/staff/orders/{id}/assign-delivery(id=${order.id})}" method="post"
-                            class="mt-3">
-                            <div class="row align-items-end">
-                                <div class="col-md-6">
-                                    <label for="deliveryInfo" class="form-label">Thông Tin Giao Hàng:</label>
-                                    <input type="text" name="deliveryInfo" id="deliveryInfo" class="form-control"
-                                        placeholder="Nhập thông tin giao hàng...">
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-truck me-2"></i>Gán Giao Hàng
-                                    </button>
-                                </div>
-                            </div>
-                        </form> -->
-                    </div>
-                </div>
+<!--                        &lt;!&ndash; <form th:action="@{/staff/orders/{id}/assign-delivery(id=${order.id})}" method="post"-->
+<!--                            class="mt-3">-->
+<!--                            <div class="row align-items-end">-->
+<!--                                <div class="col-md-6">-->
+<!--                                    <label for="deliveryInfo" class="form-label">Thông Tin Giao Hàng:</label>-->
+<!--                                    <input type="text" name="deliveryInfo" id="deliveryInfo" class="form-control"-->
+<!--                                        placeholder="Nhập thông tin giao hàng...">-->
+<!--                                </div>-->
+<!--                                <div class="col-md-3">-->
+<!--                                    <button type="submit" class="btn btn-success">-->
+<!--                                        <i class="fas fa-truck me-2"></i>Gán Giao Hàng-->
+<!--                                    </button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </form> &ndash;&gt;-->
+<!--                    </div>-->
+<!--                </div>-->
             </div>
         </div>
     </div>
