@@ -27,10 +27,10 @@ public class ChatbotController {
     @GetMapping("/auth-status")
     public ResponseEntity<Map<String, Boolean>> getAuthStatus() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAuthenticated = authentication != null && 
-                                 authentication.isAuthenticated() && 
-                                 !authentication.getName().equals("anonymousUser");
-        
+        boolean isAuthenticated = authentication != null &&
+                authentication.isAuthenticated() &&
+                !authentication.getName().equals("anonymousUser");
+
         Map<String, Boolean> response = new HashMap<>();
         response.put("authenticated", isAuthenticated);
         return ResponseEntity.ok(response);
