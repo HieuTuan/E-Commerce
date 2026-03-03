@@ -44,60 +44,40 @@ public class ChatbotService {
         // FORCE rule-based response để tránh AI tạo dữ liệu giả
         // Tạm thời tắt AI để đảm bảo chỉ dùng dữ liệu thực
         return processMessageWithRules(userMessage);
-
+        
         // Uncomment các dòng dưới để bật lại AI
         /*
-         * // Check if API is configured
-         * if (apiKey == null || apiKey.isEmpty()) {
-         * return processMessageWithRules(userMessage);
-         * }
-         * 
-         * try {
-         * return processMessageWithAI(userMessage);
-         * } catch (Exception e) {
-         * log.error("AI chatbot failed, using rule-based response", e);
-         * return processMessageWithRules(userMessage);
-         * }
-         */
+        // Check if API is configured
+        if (apiKey == null || apiKey.isEmpty()) {
+            return processMessageWithRules(userMessage);
+        }
+
+        try {
+            return processMessageWithAI(userMessage);
+        } catch (Exception e) {
+            log.error("AI chatbot failed, using rule-based response", e);
+            return processMessageWithRules(userMessage);
+        }
+        */
     }
 
     private String processMessageWithRules(String userMessage) {
         String msg = userMessage.toLowerCase();
-        
-        // 1. TƯ VẤN MUA HÀNG - Phân tích nhu cầu
-        if (msg.contains("tư vấn") || msg.contains("tu van") || msg.contains("nên mua") || 
-            msg.contains("lựa chọn") || msg.contains("lua chon") || msg.contains("recommend") ||
-            msg.contains("gợi ý") || msg.contains("goi y") || msg.contains("phù hợp") || msg.contains("phu hop")) {
-            return provideBuyingAdvice(msg, userMessage);
-        }
-        
-        // 2. SO SÁNH GIÁ CẢ
-        if (msg.contains("so sánh") || msg.contains("so sanh") || msg.contains("compare") ||
-            msg.contains("khác biệt") || msg.contains("khac biet") || msg.contains("vs") || 
-            msg.contains("giá cả") || msg.contains("gia ca") || msg.contains("price compare")) {
-            return compareProducts(msg, userMessage);
-        }
-        
-        // 3. CHÍNH SÁCH GIAO HÀNG CHI TIẾT
-        if (msg.contains("chính sách giao hàng") || msg.contains("chinh sach giao hang") ||
-            msg.contains("delivery policy") || msg.contains("thời gian giao") || msg.contains("thoi gian giao") ||
-            msg.contains("phí ship") || msg.contains("phi ship") || msg.contains("shipping cost")) {
-            return provideDeliveryPolicy(msg);
+
+        // Xử lý yêu cầu so sánh sản phẩm
+        if (msg.contains("so sánh") || msg.contains("so sanh") || msg.contains("compare") || 
+            msg.contains("comparison") || msg.contains("khác biệt") || msg.contains("khac biet") ||
+            (msg.contains("và") && (msg.contains("asus") || msg.contains("acer") || msg.contains("msi") || 
+            msg.contains("dell") || msg.contains("hp") || msg.contains("lenovo")))) {
+            return handleProductComparison(userMessage);
         }
 
-        // 4. Tìm kiếm sản phẩm - CỤ THỂ VÀ CHÍNH XÁC HỠN
-        if ((msg.contains("tìm") && (msg.contains("laptop") || msg.contains("sản phẩm") || msg.contains("máy"))) ||
-            (msg.contains("tim") && (msg.contains("laptop") || msg.contains("san pham") || msg.contains("may"))) ||
-            (msg.contains("show") && (msg.contains("laptop") || msg.contains("product"))) ||
-            (msg.contains("find") && (msg.contains("laptop") || msg.contains("computer"))) ||
-            (msg.contains("search") && (msg.contains("laptop") || msg.contains("product"))) ||
-            (msg.contains("looking for") && (msg.contains("laptop") || msg.contains("computer"))) ||
-            (msg.contains("muốn") && (msg.contains("laptop") || msg.contains("máy tính"))) ||
-            (msg.contains("cần") && (msg.contains("laptop") || msg.contains("máy tính"))) ||
-            (msg.contains("laptop") && (msg.contains("gaming") || msg.contains("văn phòng") || msg.contains("sinh viên"))) ||
-            (msg.contains("gaming") && msg.length() > 6) ||
-            (msg.matches(".*\\d+\\s*triệu.*") && msg.contains("laptop"))) {
-
+        // Tìm kiếm sản phẩm - hỗ trợ tiếng Việt
+        if (msg.contains("tìm") || msg.contains("tim") || msg.contains("show") || msg.contains("find") || 
+            msg.contains("search") || msg.contains("looking for") || msg.contains("muốn") || 
+            msg.contains("cần") || msg.contains("laptop") || msg.contains("gaming") ||
+            msg.contains("sản phẩm") || msg.contains("san pham")) {
+            
             List<Product> products = searchProductsFromMessage(msg);
             log.info("Search completed. Found {} products for message: '{}'", products.size(), userMessage);
 
@@ -264,7 +244,7 @@ public class ChatbotService {
                             response.append("  ✓ ").append(specs[i]).append("\n");
                         }
                     }
-
+                    
                     // Hiển thị category nếu có
                     if (product.getCategory() != null) {
                         response.append("  📂 **Danh mục:** ").append(product.getCategory().getName());
@@ -273,11 +253,11 @@ public class ChatbotService {
                         }
                         response.append("\n");
                     }
-
+                    
                     // Các action buttons
                     response.append("\n**Hành động:**\n");
                     response.append("🔍 [Xem chi tiết](/products/").append(product.getId()).append(")\n");
-                    response.append("🛒 [Thêm vào giỏ hàng](#add-to-cart-").append(product.getId()).append(")\n");
+                    response.append("<button class='btn btn-sm btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='").append(product.getId()).append("'>🛒 Thêm vào giỏ hàng</button>\n");
                     response.append("───────────────────\n\n");
                 }
 
@@ -300,51 +280,48 @@ public class ChatbotService {
                 response.append("📋 [Xem tất cả sản phẩm](/products)\n");
                 response.append("💬 **Cần hỗ trợ thêm?** Hãy hỏi tôi bất cứ điều gì!");
                 return response.toString();
-
+                
             } else {
                 // Không tìm thấy sản phẩm phù hợp
-                log.warn("No products found for search: '{}', productType: '{}', priceRange: '{}'", userMessage,
-                        productType, priceRange);
-
+                log.warn("No products found for search: '{}', productType: '{}', priceRange: '{}'", userMessage, productType, priceRange);
+                
                 StringBuilder response = new StringBuilder();
                 response.append("😔 Rất tiếc, hiện tại chúng tôi không có ").append(productType);
                 if (!priceRange.isEmpty()) {
                     response.append(" trong tầm giá ").append(priceRange);
                 }
                 response.append(" phù hợp với yêu cầu của bạn.\n\n");
-
+                
                 // Gợi ý sản phẩm có sẵn
                 try {
                     List<Product> alternativeProducts = getAlternativeProducts();
                     log.info("Found {} alternative products", alternativeProducts.size());
-
+                    
                     if (!alternativeProducts.isEmpty()) {
                         response.append("💡 **Sản phẩm có sẵn trong cửa hàng:**\n\n");
-
-                        for (Product product : alternativeProducts.subList(0,
-                                Math.min(3, alternativeProducts.size()))) {
+                        
+                        for (Product product : alternativeProducts.subList(0, Math.min(3, alternativeProducts.size()))) {
                             response.append("🛍️ **").append(product.getName()).append("**\n");
                             response.append("💰 ").append(formatPrice(product.getPrice())).append("\n");
-
+                            
                             if (product.getDescription() != null && !product.getDescription().isEmpty()) {
-                                String shortDesc = product.getDescription().length() > 60
-                                        ? product.getDescription().substring(0, 60) + "..."
-                                        : product.getDescription();
+                                String shortDesc = product.getDescription().length() > 60 ? 
+                                    product.getDescription().substring(0, 60) + "..." : product.getDescription();
                                 response.append("📝 ").append(shortDesc).append("\n");
                             }
-
+                            
                             // Category
                             if (product.getCategory() != null) {
                                 response.append("📂 ").append(product.getCategory().getName()).append("\n");
                             }
-
+                            
                             // Action buttons
                             response.append("🔍 [Chi tiết](/products/").append(product.getId()).append(") | ");
-                            response.append("🛒 [Mua ngay](#add-to-cart-").append(product.getId())
-                                    .append(")\n");
+                            response.append("<button class='btn btn-sm btn-success chatbot-action-btn' data-action='add-to-cart' data-product-id='").append(product.getId())
+                                    .append("'>🛒 Mua ngay</button>\n");
                             response.append("───────────────────\n\n");
                         }
-
+                        
                         response.append("🏪 [Xem tất cả sản phẩm](/products)\n\n");
                     } else {
                         response.append("🔄 **Thử các gợi ý khác:**\n");
@@ -356,57 +333,42 @@ public class ChatbotService {
                     log.error("Error getting alternative products", e);
                     response.append("🔄 **Thử lại với từ khóa khác hoặc liên hệ hỗ trợ: 1900-1234**");
                 }
-
+                
                 return response.toString();
             }
         }
 
-        // FAQ responses - Tiếng Việt (Cải thiện)
-        if (msg.contains("return") || msg.contains("refund") || msg.contains("trả hàng") ||
-                msg.contains("tra hang") || msg.contains("hoàn tiền") || msg.contains("hoan tien")) {
-            return "📋 **Chính sách đổi trả chi tiết:**\n\n" +
-                    "⏰ **Thời gian:**\n" +
-                    "• Laptop: 15 ngày (kể từ ngày nhận hàng)\n" +
-                    "• Phụ kiện: 7 ngày\n" +
-                    "• Sản phẩm lỗi: 12 tháng bảo hành\n\n" +
-                    "✅ **Điều kiện đổi trả:**\n" +
-                    "• Sản phẩm nguyên vẹn, chưa qua sử dụng\n" +
-                    "• Còn đầy đủ hộp, phụ kiện, hóa đơn\n" +
-                    "• Không có vết trầy xước, vỡ hỏng\n\n" +
-                    "💰 **Chi phí:**\n" +
-                    "• Lỗi nhà sản xuất: MIỄN PHÍ\n" +
-                    "• Đổi ý khách hàng: Chịu phí ship 2 chiều\n\n" +
-                    "📞 **Liên hệ:** 1900-1234 hoặc chat với tôi!\n\n" +
-                    "💡 Cần tư vấn đổi trả sản phẩm cụ thể? Hãy nói tên sản phẩm!";
+        // FAQ responses - Tiếng Việt
+        if (msg.contains("return") || msg.contains("refund") || msg.contains("trả hàng") || 
+            msg.contains("tra hang") || msg.contains("hoàn tiền") || msg.contains("hoan tien")) {
+            return "📋 **Chính sách đổi trả:**\n\n" +
+                   "• Thời gian: Trong vòng 30 ngày kể từ ngày mua\n" +
+                   "• Điều kiện: Sản phẩm chưa sử dụng, còn nguyên bao bì\n" +
+                   "• Liên hệ: Vui lòng liên hệ team hỗ trợ để được trợ giúp\n\n" +
+                   "💬 Bạn có cần hỗ trợ thêm về chính sách đổi trả không?";
         }
 
-        if (msg.contains("shipping") || msg.contains("delivery") || msg.contains("giao hàng") ||
-                msg.contains("vận chuyển") || msg.contains("van chuyen")) {
+        if (msg.contains("shipping") || msg.contains("delivery") || msg.contains("giao hàng") || 
+            msg.contains("vận chuyển") || msg.contains("van chuyen")) {
             return "🚚 **Thông tin vận chuyển:**\n\n" +
-                    "• Miễn phí ship: Đơn hàng từ 500.000 VNĐ trở lên\n" +
-                    "• Giao hàng tiêu chuẩn: 3-5 ngày làm việc\n" +
-                    "• Giao hàng nhanh: Có phụ thu (1-2 ngày)\n\n" +
-                    "📍 Bạn muốn kiểm tra thời gian giao hàng đến địa chỉ cụ thể không?";
+                   "• Miễn phí ship: Đơn hàng từ 500.000 VNĐ trở lên\n" +
+                   "• Giao hàng tiêu chuẩn: 3-5 ngày làm việc\n" +
+                   "• Giao hàng nhanh: Có phụ thu (1-2 ngày)\n\n" +
+                   "📍 Bạn muốn kiểm tra thời gian giao hàng đến địa chỉ cụ thể không?";
         }
 
-        if (msg.contains("payment") || msg.contains("pay") || msg.contains("thanh toán") ||
-                msg.contains("thanh toan") || msg.contains("tiền")) {
+        if (msg.contains("payment") || msg.contains("pay") || msg.contains("thanh toán") || 
+            msg.contains("thanh toan") || msg.contains("tiền")) {
             return "💳 **Phương thức thanh toán:**\n\n" +
-                    "• VNPay (Visa, Mastercard, ATM)\n" +
-                    "• Thanh toán khi nhận hàng (COD)\n" +
-                    "• An toàn: Tất cả giao dịch được mã hóa bảo mật\n\n" +
-                    "🔒 Bạn có thắc mắc gì về bảo mật thanh toán không?";
+                   "• VNPay (Visa, Mastercard, ATM)\n" +
+                   "• Thanh toán khi nhận hàng (COD)\n" +
+                   "• An toàn: Tất cả giao dịch được mã hóa bảo mật\n\n" +
+                   "🔒 Bạn có thắc mắc gì về bảo mật thanh toán không?";
         }
 
-        if (msg.contains("recommend") || msg.contains("suggestion") || 
-            (msg.contains("gợi ý") && msg.contains("sản phẩm")) ||
-            (msg.contains("goi y") && msg.contains("san pham")) || 
-            msg.contains("đề xuất") || msg.contains("de xuat") ||
-            msg.contains("sản phẩm nổi bật") || msg.contains("san pham noi bat") ||
-            msg.contains("sản phẩm hot") || msg.contains("san pham hot") ||
-            msg.contains("bán chạy") || msg.contains("ban chay") ||
-            msg.equals("nổi bật") || msg.equals("noi bat") || 
-            msg.equals("hot") || msg.equals("featured")) {
+        if (msg.contains("recommend") || msg.contains("suggestion") || msg.contains("gợi ý") || 
+            msg.contains("goi y") || msg.contains("đề xuất") || msg.contains("de xuat") ||
+            msg.contains("nổi bật") || msg.contains("hot") || msg.contains("bán chạy")) {
             List<Product> featured = productRepository.findByFeaturedTrue();
             if (!featured.isEmpty()) {
                 StringBuilder response = new StringBuilder("⭐ **Sản phẩm nổi bật hôm nay:**\n\n");
@@ -421,57 +383,24 @@ public class ChatbotService {
             }
         }
 
-        // Lời chào và hướng dẫn - PHẢI KIỂM TRA TRƯỚC
-        if (msg.contains("xin chào") || msg.contains("hello") || msg.contains("hi") ||
-                msg.contains("chào") || msg.equals("") || msg.length() <= 3 ||
-                msg.contains("start") || msg.contains("bắt đầu")) {
+        // Lời chào và hướng dẫn
+        if (msg.contains("xin chào") || msg.contains("hello") || msg.contains("hi") || 
+            msg.contains("chào") || msg.length() < 10) {
             return "👋 **Xin chào! Tôi là trợ lý mua sắm thông minh**\n\n" +
-                    "🤖 **Tôi có thể giúp bạn:**\n" +
-                    "• 🔍 **Tìm sản phẩm:** \"Tìm laptop gaming 20 triệu\"\n" +
-                    "• 📊 **So sánh giá:** \"So sánh MSI vs ASUS\"\n" +
-                    "• 🎯 **Tư vấn mua hàng:** \"Laptop nào phù hợp sinh viên?\"\n" +
-                    "• 🚚 **Chính sách giao hàng:** \"Thông tin vận chuyển\"\n" +
-                    "• 💳 **Thanh toán:** \"Phương thức thanh toán\"\n\n" +
-                    "💡 **Ví dụ cụ thể:**\n" +
-                    "• \"Tư vấn laptop gaming dưới 25 triệu\"\n" +
-                    "• \"So sánh laptop Dell vs HP\"\n" +
-                    "• \"Chính sách giao hàng HCM\"\n\n" +
-                    "🚀 **Hãy bắt đầu bằng cách hỏi tôi điều gì đó!**";
+                   "🤖 Tôi có thể giúp bạn:\n" +
+                   "• 🔍 Tìm sản phẩm phù hợp\n" +
+                   "• 💰 So sánh giá cả\n" +
+                   "• 📦 Thông tin vận chuyển\n" +
+                   "• 💳 Hướng dẫn thanh toán\n" +
+                   "• 🔄 Chính sách đổi trả\n\n" +
+                   "💡 **Thử hỏi:** \"Tìm laptop gaming 20 triệu\" hoặc \"Sản phẩm nổi bật\"";
         }
 
-        // Câu hỏi chung không cụ thể
-        if (msg.contains("có gì") || msg.contains("co gi") || msg.contains("show all") || 
-            msg.contains("tất cả") || msg.contains("tat ca") || msg.contains("all products") ||
-            msg.contains("sản phẩm gì") || msg.contains("san pham gi") || msg.equals("?")) {
-            return "🤔 **Tôi có rất nhiều sản phẩm để giới thiệu!**\n\n" +
-                    "💡 **Để tôi tư vấn tốt nhất, hãy cho tôi biết:**\n" +
-                    "• 🎯 **Mục đích:** Gaming, văn phòng, học tập, thiết kế?\n" +
-                    "• 💰 **Ngân sách:** Dưới 15 triệu, 15-25 triệu, trên 25 triệu?\n" +
-                    "• 🏷️ **Thương hiệu ưa thích:** MSI, ASUS, Dell, HP, Lenovo?\n\n" +
-                    "🔥 **Ví dụ câu hỏi cụ thể:**\n" +
-                    "• \"Tư vấn laptop gaming 20 triệu\"\n" +
-                    "• \"Laptop văn phòng Dell dưới 15 triệu\"\n" +
-                    "• \"So sánh MacBook vs ThinkPad\"\n\n" +
-                    "🎊 **Hoặc xem sản phẩm nổi bật:** \"Sản phẩm bán chạy\"";
-        }
-
-        return "🤔 **Tôi chưa hiểu rõ yêu cầu của bạn.**\n\n" +
-                "💡 **Để tôi hỗ trợ tốt nhất, hãy thử:**\n\n" +
-                "🔍 **Tìm kiếm cụ thể:**\n" +
-                "• \"Tìm laptop gaming 20 triệu\"\n" +
-                "• \"Laptop ASUS dưới 15 triệu\"\n" +
-                "• \"MSI Creator cho thiết kế\"\n\n" +
-                "📊 **So sánh sản phẩm:**\n" +
-                "• \"So sánh MSI vs ASUS\"\n" +
-                "• \"MacBook Air vs ThinkPad\"\n\n" +
-                "🎯 **Tư vấn mua hàng:**\n" +
-                "• \"Laptop nào tốt cho sinh viên?\"\n" +
-                "• \"Tư vấn laptop gaming dưới 30 triệu\"\n\n" +
-                "ℹ️ **Thông tin chính sách:**\n" +
-                "• \"Chính sách giao hàng\"\n" +
-                "• \"Phương thức thanh toán\"\n" +
-                "• \"Chính sách đổi trả\"\n\n" +
-                "📞 **Cần hỗ trợ ngay:** 1900-1234";
+        return "🤔 Tôi chưa hiểu rõ yêu cầu của bạn. Bạn có thể nói rõ hơn không?\n\n" +
+               "💡 **Gợi ý:** Hãy thử hỏi về:\n" +
+               "• Tìm sản phẩm: \"Tìm laptop gaming\"\n" +
+               "• Sản phẩm nổi bật: \"Gợi ý sản phẩm\"\n" +
+               "• Chính sách: \"Thông tin giao hàng\"";
     }
 
     private List<Product> searchProductsFromMessage(String message) {
@@ -479,46 +408,34 @@ public class ChatbotService {
         List<Product> results = new ArrayList<>();
         BigDecimal maxPrice = null;
         BigDecimal minPrice = null;
+        BigDecimal priceLimit = null;
+        String lowerMessage = message.toLowerCase();
         String brandKeyword = null;
 
-        String lowerMessage = message.toLowerCase();
-        log.info("Searching for products with message: {}", message);
-
-        // Tìm thương hiệu laptop phổ biến
-        String[] brands = { "msi", "asus", "dell", "hp", "lenovo", "acer", "apple", "macbook", "thinkpad", "gaming",
-                "rog", "predator", "alienware", "surface" };
+        // Detect brand from message
+        String[] brands = {"asus", "acer", "lenovo", "hp", "dell", "msi", "apple", "macbook", "surface", "microsoft", "gigabyte", "alienware", "razer", "origin pc"};
         for (String brand : brands) {
             if (lowerMessage.contains(brand)) {
                 brandKeyword = brand;
-                log.info("Found brand keyword: {}", brand);
                 break;
             }
         }
 
-        // Cải thiện việc tìm giá tiền trong tin nhắn
-        java.util.regex.Pattern pricePattern = java.util.regex.Pattern.compile("(\\d+)\\s*triệu");
-        java.util.regex.Matcher matcher = pricePattern.matcher(lowerMessage);
-        if (matcher.find()) {
-            double priceInMillions = Double.parseDouble(matcher.group(1));
-            // Tạo khoảng giá linh hoạt (± 2 triệu)
-            minPrice = BigDecimal.valueOf(Math.max(0, (priceInMillions - 2) * 1000000));
-            maxPrice = BigDecimal.valueOf((priceInMillions + 2) * 1000000);
-            log.info("Price range: {} - {} VND", minPrice, maxPrice);
-        } else {
-            // Tìm số VNĐ trực tiếp
-            java.util.regex.Pattern vndPattern = java.util.regex.Pattern
-                    .compile("(\\d{1,3}(?:[,.]\\d{3})*)(?:\\s*(?:vnd|đ|dong))?");
-            java.util.regex.Matcher vndMatcher = vndPattern.matcher(lowerMessage);
-            if (vndMatcher.find()) {
-                String priceStr = vndMatcher.group(1).replaceAll("[,.]", "");
-                double priceVND = Double.parseDouble(priceStr);
-                if (priceVND > 1000000) { // Nếu trên 1 triệu
-                    minPrice = BigDecimal.valueOf(priceVND * 0.8); // ± 20%
-                    maxPrice = BigDecimal.valueOf(priceVND * 1.2);
-                    log.info("VND Price range: {} - {} VND", minPrice, maxPrice);
+        // Tìm giá tiền trong tin nhắn (ví dụ: "20 triệu", "500000")
+        for (String word : words) {
+            if (word.matches("\\d+")) {
+                double number = Double.parseDouble(word);
+                if (number > 1000) { // Nếu là số lớn, có thể là giá VNĐ
+                    maxPrice = BigDecimal.valueOf(number / 24000); // Convert VNĐ to USD
+                } else if (number > 0 && message.contains("triệu")) {
+                    maxPrice = BigDecimal.valueOf((number * 1000000) / 24000); // triệu VNĐ to USD
                 }
             }
         }
+        
+        // Set price limit and minimum price
+        priceLimit = maxPrice;
+        minPrice = BigDecimal.ZERO;
 
         // Tìm sản phẩm theo từ khóa và thương hiệu
         Set<Product> uniqueResults = new HashSet<>();
@@ -556,9 +473,36 @@ public class ChatbotService {
                     log.error("Error searching products by ai_category: {}", aiCategory, e);
                 }
             }
+            
+            // ĐỒNG THỜI tìm thêm theo keywords trong tên và mô tả để có nhiều kết quả hơn
+            for (String word : words) {
+                if (word.length() > 2 && !word.matches("\\d+") && !word.equals("triệu") && !word.equals("dưới") && !word.equals("trên")) {
+                    try {
+                        // Tìm trong tên sản phẩm
+                        List<Product> nameMatches = productRepository.findAll().stream()
+                                .filter(p -> p.getName().toLowerCase().contains(word.toLowerCase()))
+                                .collect(Collectors.toList());
+                        uniqueResults.addAll(nameMatches);
+                        
+                        // Tìm trong description - đặc biệt hữu ích cho "office", "văn phòng"
+                        List<Product> descriptionMatches = productRepository.findAll().stream()
+                                .filter(p -> p.getDescription() != null && 
+                                           p.getDescription().toLowerCase().contains(word.toLowerCase()))
+                                .collect(Collectors.toList());
+                        uniqueResults.addAll(descriptionMatches);
+                        
+                        if (!nameMatches.isEmpty() || !descriptionMatches.isEmpty()) {
+                            log.info("Found {} products for keyword '{}' (name: {}, description: {})", 
+                                    nameMatches.size() + descriptionMatches.size(), word, nameMatches.size(), descriptionMatches.size());
+                        }
+                    } catch (Exception e) {
+                        log.error("Error searching for keyword: {}", word, e);
+                    }
+                }
+            }
         }
 
-        // Chỉ tìm theo keyword khi không tìm thấy theo brand và category
+        // Chỉ tìm theo repository search nếu vẫn không có kết quả
         if (uniqueResults.isEmpty()) {
             for (String word : words) {
                 if (word.length() > 2 && !word.matches("\\d+") && !word.equals("triệu") && !word.equals("dưới") && !word.equals("trên")) {
@@ -598,10 +542,9 @@ public class ChatbotService {
         if (minPrice != null && maxPrice != null) {
             final BigDecimal finalMinPrice = minPrice;
             final BigDecimal finalMaxPrice = maxPrice;
+            final BigDecimal finalPriceLimit = priceLimit;
             results = results.stream()
-                    .filter(p -> p.getPrice() != null &&
-                            p.getPrice().compareTo(finalMinPrice) >= 0 &&
-                            p.getPrice().compareTo(finalMaxPrice) <= 0)
+                    .filter(p -> p.getPrice() != null && p.getPrice().compareTo(finalPriceLimit) <= 0)
                     .collect(Collectors.toList());
             log.info("Filtered to {} products within price range", results.size());
             
@@ -929,14 +872,14 @@ public class ChatbotService {
 
             // Tìm sản phẩm liên quan đến tin nhắn của user
             List<Product> relevantProducts = searchProductsFromMessage(userMessage);
-
+            
             StringBuilder productContext = new StringBuilder();
             if (!relevantProducts.isEmpty()) {
                 productContext.append("Sản phẩm liên quan:\n");
                 for (Product p : relevantProducts) {
                     productContext.append("- ").append(p.getName())
                             .append(" (").append(formatPrice(p.getPrice())).append(")\n");
-
+                    
                     // Thêm thông số kỹ thuật
                     if (p.getDescription() != null) {
                         String[] specs = extractSpecs(p.getDescription());
@@ -966,22 +909,21 @@ public class ChatbotService {
             systemMessage.addProperty("role", "system");
             systemMessage.addProperty("content",
                     "Bạn là trợ lý mua sắm thông minh của cửa hàng thương mại điện tử. " +
-                            "BẮT BUỘC phải trả lời bằng tiếng Việt. " +
-                            "QUAN TRỌNG: CHỈ sử dụng thông tin sản phẩm có trong danh sách bên dưới. " +
-                            "TUYỆT ĐỐI KHÔNG tự tạo ra tên sản phẩm, giá cả, hoặc thông số kỹ thuật không có trong dữ liệu.\n"
-                            +
-                            "DANH SÁCH SẢN PHẨM CỬA HÀNG:\n" +
-                            productContext.toString() + "\n" +
-                            "Nếu không có sản phẩm phù hợp trong danh sách trên:\n" +
-                            "- Nói rõ 'Rất tiếc, chúng tôi hiện không có sản phẩm phù hợp'\n" +
-                            "- Chỉ gợi ý các sản phẩm có trong danh sách trên\n" +
-                            "- KHÔNG được tạo ra sản phẩm mới\n\n" +
-                            "Chính sách cửa hàng:\n" +
-                            "- 🚚 Miễn phí vận chuyển đơn hàng trên 500.000đ\n" +
-                            "- 🔄 Đổi trả trong 7 ngày, không cần lý do\n" +
-                            "- 💳 Thanh toán: COD, chuyển khoản, thẻ tín dụng\n" +
-                            "- 🛡️ Bảo hành chính hãng theo quy định nhà sản xuất\n" +
-                            "- 📞 Hỗ trợ 24/7 qua hotline và chat");
+                    "BẮT BUỘC phải trả lời bằng tiếng Việt. " +
+                    "QUAN TRỌNG: CHỈ sử dụng thông tin sản phẩm có trong danh sách bên dưới. " +
+                    "TUYỆT ĐỐI KHÔNG tự tạo ra tên sản phẩm, giá cả, hoặc thông số kỹ thuật không có trong dữ liệu.\n" +
+                    "DANH SÁCH SẢN PHẨM CỬA HÀNG:\n" +
+                    productContext.toString() + "\n" +
+                    "Nếu không có sản phẩm phù hợp trong danh sách trên:\n" +
+                    "- Nói rõ 'Rất tiếc, chúng tôi hiện không có sản phẩm phù hợp'\n" +
+                    "- Chỉ gợi ý các sản phẩm có trong danh sách trên\n" +
+                    "- KHÔNG được tạo ra sản phẩm mới\n\n" +
+                    "Chính sách cửa hàng:\n" +
+                    "- 🚚 Miễn phí vận chuyển đơn hàng trên 500.000đ\n" +
+                    "- 🔄 Đổi trả trong 7 ngày, không cần lý do\n" +
+                    "- 💳 Thanh toán: COD, chuyển khoản, thẻ tín dụng\n" +
+                    "- 🛡️ Bảo hành chính hãng theo quy định nhà sản xuất\n" +
+                    "- 📞 Hỗ trợ 24/7 qua hotline và chat");
             messages.add(systemMessage);
 
             JsonObject userMsg = new JsonObject();
@@ -1021,12 +963,11 @@ public class ChatbotService {
     }
 
     private String formatPrice(BigDecimal price) {
-        if (price == null)
-            return "Liên hệ";
-
+        if (price == null) return "Liên hệ";
+        
         // Giá đã là VND, không cần convert
         long vndPrice = price.longValue();
-
+        
         if (vndPrice >= 1000000) {
             double millions = vndPrice / 1000000.0;
             return String.format("%.1f triệu đ", millions);
@@ -1040,46 +981,19 @@ public class ChatbotService {
     }
 
     private String extractPriceFromMessage(String message) {
-        String lowerMessage = message.toLowerCase();
-
-        // Tìm pattern số + triệu (linh hoạt hơn)
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*triệu");
-        java.util.regex.Matcher matcher = pattern.matcher(lowerMessage);
+        // Tìm số tiền trong tin nhắn
+        if (message.contains("20 triệu") || message.contains("20triệu")) return "khoảng 20 triệu";
+        if (message.contains("15 triệu") || message.contains("15triệu")) return "khoảng 15 triệu";
+        if (message.contains("25 triệu") || message.contains("25triệu")) return "khoảng 25 triệu";
+        if (message.contains("30 triệu") || message.contains("30triệu")) return "khoảng 30 triệu";
+        
+        // Tìm pattern số + triệu
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+)\\s*triệu");
+        java.util.regex.Matcher matcher = pattern.matcher(message);
         if (matcher.find()) {
-            String priceStr = matcher.group(1).replace(",", ".");
-            return "khoảng " + priceStr + " triệu";
+            return "khoảng " + matcher.group(1) + " triệu";
         }
-
-        // Tìm các cụm từ về giá phổ biến
-        if (lowerMessage.contains("dưới 20 triệu") || lowerMessage.contains("< 20 triệu"))
-            return "dưới 20 triệu";
-        if (lowerMessage.contains("trên 25 triệu") || lowerMessage.contains("> 25 triệu"))
-            return "trên 25 triệu";
-        if (lowerMessage.contains("từ 15 đến 20 triệu"))
-            return "15-20 triệu";
-        if (lowerMessage.contains("từ 20 đến 25 triệu"))
-            return "20-25 triệu";
-        if (lowerMessage.contains("từ 25 đến 30 triệu"))
-            return "25-30 triệu";
-
-        // Tìm số VNĐ trực tiếp
-        java.util.regex.Pattern vndPattern = java.util.regex.Pattern
-                .compile("(\\d{1,2})(?:[,.]\\d{3}){2,}\\s*(?:vnd|đ|dong)?");
-        java.util.regex.Matcher vndMatcher = vndPattern.matcher(lowerMessage);
-        if (vndMatcher.find()) {
-            String fullPrice = vndMatcher.group(0);
-            // Chuyển đổi sang triệu để dễ hiểu
-            try {
-                String numberPart = vndMatcher.group(0).replaceAll("[^\\d,.]", "").replace(",", "").replace(".", "");
-                if (numberPart.length() >= 7) { // Từ 1 triệu trở lên
-                    double millions = Double.parseDouble(numberPart) / 1000000.0;
-                    return String.format("khoảng %.1f triệu", millions);
-                }
-            } catch (NumberFormatException e) {
-                log.warn("Could not parse price: {}", fullPrice);
-            }
-        }
-
+        
         return "";
     }
     
@@ -1133,7 +1047,7 @@ public class ChatbotService {
                 
                 // Action buttons
                 advice.append("🔍 [Xem chi tiết](/products/").append(product.getId()).append(") | ");
-                advice.append("🛒 [Thêm vào giỏ](#add-to-cart-").append(product.getId()).append(")\n");
+                advice.append("<button class='btn btn-sm btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='").append(product.getId()).append("'>🛒 Thêm vào giỏ</button>\n");
                 advice.append("───────────────────\n\n");
             }
         } else {
@@ -1151,7 +1065,7 @@ public class ChatbotService {
                         advice.append("🛍️ **").append(product.getName()).append("**\n");
                         advice.append("💰 **Giá:** ").append(formatPrice(product.getPrice())).append("\n");
                         advice.append("🔍 [Xem chi tiết](/products/").append(product.getId()).append(") | ");
-                        advice.append("🛒 [Thêm vào giỏ](#add-to-cart-").append(product.getId()).append(")\n");
+                        advice.append("<button class='btn btn-sm btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='").append(product.getId()).append("'>🛒 Thêm vào giỏ</button>\n");
                         advice.append("───────────────────\n\n");
                     }
                 } else {
@@ -1221,10 +1135,8 @@ public class ChatbotService {
             comparison.append("• **Nếu cần tư vấn:** Liên hệ hotline 1900-1234\n\n");
             
             comparison.append("🔗 **Hành động:**\n");
-            comparison.append("🛒 [Mua ").append(product1.getName()).append("](#add-to-cart-")
-                .append(product1.getId()).append(")\n");
-            comparison.append("🛒 [Mua ").append(product2.getName()).append("](#add-to-cart-")
-                .append(product2.getId()).append(")\n");
+            comparison.append("<button class='btn btn-sm btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='").append(product1.getId()).append("'>🛒 Mua ").append(product1.getName()).append("</button>\n");
+            comparison.append("<button class='btn btn-sm btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='").append(product2.getId()).append("'>🛒 Mua ").append(product2.getName()).append("</button>\n");
             
         } else if (products.size() == 1) {
             comparison.append("📱 Tìm thấy 1 sản phẩm: **").append(products.get(0).getName()).append("**\n\n");
@@ -1314,11 +1226,11 @@ public class ChatbotService {
     private String[] extractSpecs(String description) {
         // Chỉ lấy thông số từ mô tả thực tế trong database
         List<String> specs = new ArrayList<>();
-
+        
         if (description == null || description.isEmpty()) {
             return specs.toArray(new String[0]);
         }
-
+        
         // Lấy thông số từ mô tả thực tế
         if (description.contains("-") || description.contains("•") || description.contains("*")) {
             String[] lines = description.split("[\\n\\r]+");
@@ -1339,7 +1251,7 @@ public class ChatbotService {
                 specs.add(description);
             }
         }
-
+        
         return specs.toArray(new String[0]);
     }
 
@@ -1351,24 +1263,24 @@ public class ChatbotService {
                 log.info("Returning {} featured products as alternatives", featured.size());
                 return featured;
             }
-
+            
             // Nếu không có sản phẩm nổi bật, lấy sản phẩm mới nhất
             List<Product> recent = productRepository.findTop5ByOrderByCreatedDateDesc();
             if (!recent.isEmpty()) {
                 log.info("Returning {} recent products as alternatives", recent.size());
                 return recent;
             }
-
+            
             // Cuối cùng, lấy bất kỳ sản phẩm nào có sẵn
             List<Product> allProducts = productRepository.findAll();
             if (!allProducts.isEmpty()) {
                 log.info("Returning {} random products as alternatives", Math.min(5, allProducts.size()));
                 return allProducts.subList(0, Math.min(5, allProducts.size()));
             }
-
+            
             log.warn("No products found in database for alternatives");
             return new ArrayList<>();
-
+            
         } catch (Exception e) {
             log.error("Error getting alternative products from database", e);
             return new ArrayList<>();
@@ -1393,16 +1305,22 @@ public class ChatbotService {
             return "laptop_student";
         }
         
-        // Business laptops
+        // Business laptops - cải thiện từ khóa
         if (lowerMessage.contains("doanh nhân") || lowerMessage.contains("doanh nhan") || 
             lowerMessage.contains("business") || lowerMessage.contains("công việc") || 
-            lowerMessage.contains("cong viec")) {
+            lowerMessage.contains("cong viec") || lowerMessage.contains("kinh doanh") ||
+            lowerMessage.contains("professional") || lowerMessage.contains("pro") ||
+            lowerMessage.contains("enterprise") || lowerMessage.contains("corporate")) {
             return "laptop_business";
         }
         
-        // Office laptops
+        // Office laptops - cải thiện để nhận diện tốt hơn
         if (lowerMessage.contains("văn phòng") || lowerMessage.contains("van phong") || 
-            lowerMessage.contains("office")) {
+            lowerMessage.contains("office") || lowerMessage.contains("ofice") || // typo phổ biến
+            lowerMessage.contains("làm việc") || lowerMessage.contains("lam viec") ||
+            lowerMessage.contains("work") || lowerMessage.contains("công sở") || 
+            lowerMessage.contains("cong so") || lowerMessage.contains("nhân viên") || 
+            lowerMessage.contains("nhan vien") || lowerMessage.contains("employee")) {
             return "laptop_office";
         }
         
@@ -1452,5 +1370,222 @@ public class ChatbotService {
         }
         
         return null; // Không tìm thấy category phù hợp
+    }
+
+    private String handleProductComparison(String userMessage) {
+        try {
+            List<String> productNames = extractProductNames(userMessage);
+            
+            if (productNames.size() < 2) {
+                return "🔍 Để so sánh sản phẩm, vui lòng cung cấp tên cụ thể của 2 sản phẩm.\n\n" +
+                       "💡 **Ví dụ:** \"So sánh ASUS ROG Strix G15 và MSI Katana GF66\"\n" +
+                       "📝 Hãy thử lại với tên sản phẩm đầy đủ hơn!";
+            }
+            
+            List<Product> foundProducts = new ArrayList<>();
+            List<String> notFoundProducts = new ArrayList<>();
+            
+            for (String productName : productNames) {
+                Product product = findProductByName(productName);
+                if (product != null) {
+                    foundProducts.add(product);
+                } else {
+                    notFoundProducts.add(productName);
+                }
+            }
+            
+            if (foundProducts.size() < 2) {
+                StringBuilder response = new StringBuilder("❌ **Không tìm thấy đủ sản phẩm để so sánh:**\n\n");
+                
+                if (!notFoundProducts.isEmpty()) {
+                    response.append("🚫 **Không tìm thấy:** ").append(String.join(", ", notFoundProducts)).append("\n\n");
+                }
+                
+                if (!foundProducts.isEmpty()) {
+                    response.append("✅ **Đã tìm thấy:** ").append(foundProducts.get(0).getName()).append("\n\n");
+                }
+                
+                response.append("💡 **Gợi ý:** Hãy thử tìm kiếm với từ khóa chung như:\n")
+                        .append("• \"Tìm laptop gaming\" để xem danh sách\n")
+                        .append("• \"Laptop ASUS\" để xem sản phẩm ASUS\n")
+                        .append("• \"Laptop dưới 20 triệu\" để tìm theo giá");
+                
+                return response.toString();
+            }
+            
+            return generateProductComparison(foundProducts.get(0), foundProducts.get(1));
+            
+        } catch (Exception e) {
+            log.error("Error in product comparison", e);
+            return "❌ Có lỗi xảy ra khi so sánh sản phẩm. Vui lòng thử lại sau!";
+        }
+    }
+
+    private List<String> extractProductNames(String message) {
+        List<String> productNames = new ArrayList<>();
+        String lowerMessage = message.toLowerCase();
+        
+        // Common product patterns
+        String[] patterns = {
+            "asus [^\\s]+ [^\\s]+",
+            "acer [^\\s]+ [^\\s]+", 
+            "msi [^\\s]+ [^\\s]+",
+            "dell [^\\s]+ [^\\s]+",
+            "hp [^\\s]+ [^\\s]+",
+            "lenovo [^\\s]+ [^\\s]+",
+            "macbook [^\\s]+",
+            "thinkpad [^\\s]+",
+            "surface [^\\s]+"
+        };
+        
+        for (String pattern : patterns) {
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern, java.util.regex.Pattern.CASE_INSENSITIVE);
+            java.util.regex.Matcher m = p.matcher(message);
+            while (m.find()) {
+                String found = m.group().trim();
+                if (!productNames.contains(found)) {
+                    productNames.add(found);
+                }
+            }
+        }
+        
+        return productNames;
+    }
+
+    private Product findProductByName(String productName) {
+        try {
+            String[] keywords = productName.toLowerCase().split("\\s+");
+            
+            List<Product> allProducts = productRepository.findAll();
+            Product bestMatch = null;
+            int maxMatches = 0;
+            
+            for (Product product : allProducts) {
+                String productFullName = product.getName().toLowerCase();
+                int matches = 0;
+                
+                for (String keyword : keywords) {
+                    if (productFullName.contains(keyword)) {
+                        matches++;
+                    }
+                }
+                
+                if (matches > maxMatches && matches >= 2) { // At least 2 keywords match
+                    maxMatches = matches;
+                    bestMatch = product;
+                }
+            }
+            
+            return bestMatch;
+        } catch (Exception e) {
+            log.error("Error finding product by name: {}", productName, e);
+            return null;
+        }
+    }
+
+    private String generateProductComparison(Product product1, Product product2) {
+        StringBuilder comparison = new StringBuilder();
+        
+        comparison.append("⚖️ **So sánh sản phẩm:**\n\n")
+                 .append("🆚 **").append(product1.getName())
+                 .append("** vs **").append(product2.getName()).append("**\n\n");
+        
+        // Price comparison
+        comparison.append("💰 **Giá cả:**\n")
+                 .append("• ").append(product1.getName()).append(": ")
+                 .append(formatPrice(product1.getPrice())).append("\n")
+                 .append("• ").append(product2.getName()).append(": ")
+                 .append(formatPrice(product2.getPrice())).append("\n");
+        
+        // Price difference
+        if (product1.getPrice() != null && product2.getPrice() != null) {
+            BigDecimal priceDiff = product1.getPrice().subtract(product2.getPrice()).abs();
+            String cheaper = product1.getPrice().compareTo(product2.getPrice()) < 0 ? 
+                            product1.getName() : product2.getName();
+            comparison.append("📊 ").append(cheaper).append(" rẻ hơn ")
+                     .append(formatPrice(priceDiff)).append("\n\n");
+        }
+        
+        // Brand and category comparison
+        String brand1 = extractBrand(product1.getName());
+        String brand2 = extractBrand(product2.getName());
+        
+        if (!brand1.equals(brand2)) {
+            comparison.append("🏷️ **Thương hiệu:**\n")
+                     .append("• ").append(product1.getName()).append(": ").append(brand1).append("\n")
+                     .append("• ").append(product2.getName()).append(": ").append(brand2).append("\n\n");
+        }
+        
+        // Category comparison
+        if (product1.getAiCategory() != null && product2.getAiCategory() != null) {
+            comparison.append("📂 **Phân loại:**\n")
+                     .append("• ").append(product1.getName()).append(": ").append(getCategoryDisplayName(product1.getAiCategory())).append("\n")
+                     .append("• ").append(product2.getName()).append(": ").append(getCategoryDisplayName(product2.getAiCategory())).append("\n\n");
+        }
+        
+        // Descriptions comparison
+        if (product1.getDescription() != null && product2.getDescription() != null) {
+            comparison.append("📝 **Mô tả:**\n")
+                     .append("• **").append(product1.getName()).append(":** ")
+                     .append(truncateDescription(product1.getDescription())).append("\n")
+                     .append("• **").append(product2.getName()).append(":** ")
+                     .append(truncateDescription(product2.getDescription())).append("\n\n");
+        }
+        
+        // Purchase recommendation
+        comparison.append("🛒 **Khuyến nghị:**\n");
+        if (product1.getPrice().compareTo(product2.getPrice()) < 0) {
+            comparison.append("• Chọn **").append(product1.getName()).append("** nếu bạn muốn tiết kiệm\n");
+            comparison.append("• Chọn **").append(product2.getName()).append("** nếu ngân sách thoải mái hơn\n\n");
+        } else {
+            comparison.append("• Chọn **").append(product2.getName()).append("** nếu bạn muốn tiết kiệm\n");
+            comparison.append("• Chọn **").append(product1.getName()).append("** nếu ngân sách thoải mái hơn\n\n");
+        }
+        
+        // Action buttons
+        comparison.append("<div class='chatbot-action-buttons'>\n")
+                 .append("<button class='btn btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='")
+                 .append(product1.getId()).append("'>🛒 Thêm ").append(product1.getName()).append(" vào giỏ</button>\n")
+                 .append("<button class='btn btn-primary chatbot-action-btn' data-action='add-to-cart' data-product-id='")
+                 .append(product2.getId()).append("'>🛒 Thêm ").append(product2.getName()).append(" vào giỏ</button>\n")
+                 .append("</div>\n\n")
+                 .append("💬 Cần hỗ trợ thêm? Hãy hỏi tôi!");
+        
+        return comparison.toString();
+    }
+
+    private String extractBrand(String productName) {
+        String lowerName = productName.toLowerCase();
+        String[] brands = {"asus", "acer", "msi", "dell", "hp", "lenovo", "apple", "surface"};
+        
+        for (String brand : brands) {
+            if (lowerName.contains(brand)) {
+                return brand.toUpperCase();
+            }
+        }
+        return "Unknown";
+    }
+
+    private String getCategoryDisplayName(String aiCategory) {
+        switch (aiCategory) {
+            case "laptop_gaming": return "Laptop Gaming";
+            case "laptop_student": return "Laptop Sinh viên";
+            case "laptop_business": return "Laptop Doanh nhân";
+            case "laptop_office": return "Laptop Văn phòng";
+            case "laptop_creator": return "Laptop Content Creator";
+            case "laptop_programming": return "Laptop Lập trình";
+            case "laptop_premium": return "Laptop Cao cấp";
+            case "laptop_ultrabook": return "Ultrabook";
+            case "laptop_2in1": return "Laptop 2-in-1";
+            case "laptop_mainstream": return "Laptop Phổ thông";
+            default: return "Laptop";
+        }
+    }
+
+    private String truncateDescription(String description) {
+        if (description == null || description.length() <= 100) {
+            return description;
+        }
+        return description.substring(0, 100) + "...";
     }
 }

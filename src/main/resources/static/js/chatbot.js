@@ -146,6 +146,9 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.appendChild(messagePara);
         chatbotMessages.appendChild(messageDiv);
 
+        // Attach event listeners to action buttons in this message
+        attachActionListeners(messageDiv);
+
         // Scroll to bottom with smooth animation
         chatbotMessages.scrollTo({
             top: chatbotMessages.scrollHeight,
@@ -238,6 +241,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Function to attach event listeners to action buttons
+    function attachActionListeners(container) {
+        const actionButtons = container.querySelectorAll('.chatbot-action-btn');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const action = this.dataset.action;
+                const productId = this.dataset.productId;
+                
+                if (action === 'add-to-cart' && productId) {
+                    // Simulate click event for existing function
+                    window.event = { target: this };
+                    addToCartFromChat(productId);
+                }
+            });
+        });
+    }
+
     // Function to add product to cart from chatbot
     window.addToCartFromChat = function (productId) {
         const button = event.target;
@@ -283,8 +304,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         button.innerHTML = '🔐 Đăng nhập';
                         button.style.backgroundColor = '#ffc107';
                         
-                        // Add login message to chat with login link
-                        addMessage('🔐 ' + data.message + ' [Đăng nhập ngay](/login?redirect=' + encodeURIComponent(window.location.pathname) + ')', 'bot-message');
+                        // Add login message to chat with login button
+                        addMessage('🔐 ' + data.message + ' <button class="btn btn-warning chatbot-action-btn" onclick="window.location.href=\'/login?redirect=' + encodeURIComponent(window.location.pathname) + '\'">🔐 Đăng nhập ngay</button>', 'bot-message');
                         
                         // Make button clickable to redirect to login
                         button.onclick = () => {

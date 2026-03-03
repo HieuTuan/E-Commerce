@@ -48,11 +48,17 @@ public class ChatbotController {
 
         if ("add-to-cart".equals(action)) {
             try {
-                String username = authentication.getName();
-                User user = userService.findByUsername(username).orElse(null);
+                String loginIdentifier = authentication.getName();
+                
+                // Thử tìm user theo username trước, nếu không có thì tìm theo email
+                User user = userService.findByUsername(loginIdentifier).orElse(null);
+                if (user == null) {
+                    user = userService.findByEmail(loginIdentifier).orElse(null);
+                }
+                
                 if (user == null) {
                     response.put("success", false);
-                    response.put("message", "Không tìm thấy thông tin người dùng");
+                    response.put("message", "Không tìm thấy thông tin người dùng với identifier: " + loginIdentifier);
                     return ResponseEntity.ok(response);
                 }
                 
@@ -74,14 +80,20 @@ public class ChatbotController {
     }
 
     @GetMapping("/auth-status")
-    public ResponseEntity<Map<String, Boolean>> getAuthStatus() {
+    public ResponseEntity<Map<String, Object>> getAuthStatus() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAuthenticated = authentication != null &&
-                authentication.isAuthenticated() &&
-                !authentication.getName().equals("anonymousUser");
-
-        Map<String, Boolean> response = new HashMap<>();
+        boolean isAuthenticated = authentication != null && 
+                                 authentication.isAuthenticated() && 
+                                 !authentication.getName().equals("anonymousUser");
+        
+        Map<String, Object> response = new HashMap<>();
         response.put("authenticated", isAuthenticated);
+        
+        if (isAuthenticated) {
+            response.put("loginIdentifier", authentication.getName());
+            response.put("authorities", authentication.getAuthorities());
+        }
+        
         return ResponseEntity.ok(response);
     }
 }
