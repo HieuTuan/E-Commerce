@@ -146,6 +146,9 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.appendChild(messagePara);
         chatbotMessages.appendChild(messageDiv);
 
+        // Attach event listeners to action buttons in this message
+        attachActionListeners(messageDiv);
+
         // Scroll to bottom with smooth animation
         chatbotMessages.scrollTo({
             top: chatbotMessages.scrollHeight,
@@ -201,7 +204,11 @@ document.addEventListener('DOMContentLoaded', function () {
         formatted = formatted.replace(/🛒 \[([^\]]+)\]\(#add-to-cart-(\d+)\)/g,
             '<button onclick="addToCartFromChat($2)" class="btn btn-sm btn-success me-1 mb-1" style="font-size: 12px;">🛒 $1</button>');
 
-        // Handle inline links with | separator
+        // Handle inline links with | separator - new format
+        formatted = formatted.replace(/🔍 \[([^\]]+)\]\(([^)]+)\) \| 🛒 \[([^\]]+)\]\(#add-to-cart-(\d+)\)/g,
+            '<a href="$2" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1" style="font-size: 12px;">🔍 $1</a> <button onclick="addToCartFromChat($4)" class="btn btn-sm btn-success me-1 mb-1" style="font-size: 12px;">🛒 $3</button>');
+        
+        // Handle inline links with | separator - old format (backward compatibility)
         formatted = formatted.replace(/🔍 \[([^\]]+)\]\(([^)]+)\) \| 🛒 \[([^\]]+)\]\(\?action=add-to-cart&product=(\d+)\)/g,
             '<a href="$2" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1" style="font-size: 12px;">🔍 $1</a> <button onclick="addToCartFromChat($4)" class="btn btn-sm btn-success me-1 mb-1" style="font-size: 12px;">🛒 $3</button>');
 
@@ -234,6 +241,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Function to attach event listeners to action buttons
+    function attachActionListeners(container) {
+        const actionButtons = container.querySelectorAll('.chatbot-action-btn');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const action = this.dataset.action;
+                const productId = this.dataset.productId;
+                
+                if (action === 'add-to-cart' && productId) {
+                    // Simulate click event for existing function
+                    window.event = { target: this };
+                    addToCartFromChat(productId);
+                }
+            });
+        });
+    }
+
     // Function to add product to cart from chatbot
     window.addToCartFromChat = function (productId) {
         const button = event.target;
@@ -243,22 +268,16 @@ document.addEventListener('DOMContentLoaded', function () {
         button.innerHTML = '⏳ Đang thêm...';
         button.disabled = true;
 
-        // Directly try to add to cart - let server handle authentication
-        fetch('/cart/add', {
+        // Use the new chatbot action endpoint
+        fetch(`/api/chatbot/action?action=add-to-cart&product=${productId}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `productId=${productId}&quantity=1`
+                'Content-Type': 'application/json',
+            }
         })
-            .then(response => {
-                if (response.status === 401 || response.status === 403) {
-                    // User not authenticated, redirect to login
-                    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
-                    return;
-                }
-
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     // Success - update button and cart count
                     button.innerHTML = '✅ Đã thêm';
                     button.style.backgroundColor = '#28a745';
@@ -271,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     // Add success message to chat
-                    addMessage('✅ Sản phẩm đã được thêm vào giỏ hàng! Bạn có thể tiếp tục mua sắm hoặc [xem giỏ hàng](/cart).', 'bot-message');
+                    addMessage('✅ ' + data.message, 'bot-message');
 
                     // Reset button after 3 seconds
                     setTimeout(() => {
@@ -280,7 +299,33 @@ document.addEventListener('DOMContentLoaded', function () {
                         button.style.backgroundColor = '';
                     }, 3000);
                 } else {
-                    throw new Error('Không thể thêm sản phẩm vào giỏ hàng');
+                    // Handle authentication requirement
+                    if (data.requireLogin) {
+                        button.innerHTML = '🔐 Đăng nhập';
+                        button.style.backgroundColor = '#ffc107';
+                        
+                        // Add login message to chat with login button
+                        addMessage('🔐 ' + data.message + ' <button class="btn btn-warning chatbot-action-btn" onclick="window.location.href=\'/login?redirect=' + encodeURIComponent(window.location.pathname) + '\'">🔐 Đăng nhập ngay</button>', 'bot-message');
+                        
+                        // Make button clickable to redirect to login
+                        button.onclick = () => {
+                            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+                        };
+                    } else {
+                        // Other errors
+                        button.innerHTML = '❌ Lỗi';
+                        button.style.backgroundColor = '#dc3545';
+                        
+                        // Add error message to chat
+                        addMessage('❌ ' + data.message, 'bot-message');
+                        
+                        // Reset button after 3 seconds
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                            button.style.backgroundColor = '';
+                        }, 3000);
+                    }
                 }
             })
             .catch(error => {
