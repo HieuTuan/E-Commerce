@@ -33,19 +33,14 @@ public class AIClassificationService {
 
     private static final Map<String, String[]> CATEGORY_KEYWORDS = new HashMap<>() {
         {
-            put("Electronics", new String[] { "laptop", "phone", "computer", "tablet", "camera", "headphone", "speaker",
-                    "tv", "monitor", "keyboard", "mouse" });
-            put("Fashion", new String[] { "shirt", "dress", "pants", "shoes", "jacket", "coat", "hat", "bag", "watch",
-                    "sunglasses", "clothing" });
-            put("Home & Garden", new String[] { "furniture", "sofa", "chair", "table", "lamp", "curtain", "plant",
-                    "garden", "decor", "kitchen" });
-            put("Sports", new String[] { "ball", "gym", "fitness", "running", "yoga", "sports", "exercise", "bike",
-                    "tennis", "golf" });
-            put("Books", new String[] { "book", "novel", "magazine", "journal", "textbook", "literature", "reading" });
-            put("Toys", new String[] { "toy", "game", "puzzle", "doll", "action figure", "board game", "lego" });
-            put("Beauty", new String[] { "makeup", "cosmetic", "skincare", "perfume", "fragrance", "lotion", "cream" });
-            put("Food & Beverage",
-                    new String[] { "food", "drink", "coffee", "tea", "snack", "chocolate", "wine", "beverage" });
+            // Laptop categories
+            put("laptop_gaming", new String[] { "gaming", "game", "rtx", "gtx", "rog", "omen", "predator", "legion", "katana", "raider", "strix", "zephyrus", "aorus" });
+            put("laptop_business", new String[] { "thinkpad", "elitebook", "latitude", "business", "doanh nhân", "văn phòng" });
+            put("laptop_student", new String[] { "aspire", "ideapad", "pavilion", "sinh viên", "học tập", "giá rẻ" });
+            put("laptop_creator", new String[] { "proart", "creator", "studio", "đồ họa", "video", "design" });
+            put("laptop_ultrabook", new String[] { "zenbook", "macbook", "air", "ultrabook", "mỏng nhẹ", "gram" });
+            put("laptop_premium", new String[] { "pro", "max", "premium", "cao cấp", "surface" });
+            
         }
     };
 
