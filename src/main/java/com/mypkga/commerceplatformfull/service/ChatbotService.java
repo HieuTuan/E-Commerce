@@ -45,20 +45,7 @@ public class ChatbotService {
         // Tạm thời tắt AI để đảm bảo chỉ dùng dữ liệu thực
         return processMessageWithRules(userMessage);
 
-        // Uncomment các dòng dưới để bật lại AI
-        /*
-         * // Check if API is configured
-         * if (apiKey == null || apiKey.isEmpty()) {
-         * return processMessageWithRules(userMessage);
-         * }
-         * 
-         * try {
-         * return processMessageWithAI(userMessage);
-         * } catch (Exception e) {
-         * log.error("AI chatbot failed, using rule-based response", e);
-         * return processMessageWithRules(userMessage);
-         * }
-         */
+
     }
 
     private String processMessageWithRules(String userMessage) {
@@ -121,8 +108,7 @@ public class ChatbotService {
                 productType = "laptop gaming";
             } else if (msg.contains("laptop")) {
                 productType = "laptop";
-            } else if (msg.contains("điện thoại") || msg.contains("phone")) {
-                productType = "điện thoại";
+
             } else if (msg.contains("gaming")) {
                 productType = "sản phẩm gaming";
             } else {
