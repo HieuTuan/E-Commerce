@@ -56,4 +56,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByHasDeliveryIssueTrue();
 
     List<Order> findByHasDeliveryIssueTrueOrderByUpdatedDateDesc();
+
+    // Check if a user has purchased a specific product (via order items) and order is delivered/received
+    @Query("SELECT COUNT(o) > 0 FROM Order o JOIN o.items i WHERE o.user.id = :userId AND i.product.id = :productId AND (o.currentStatus = com.mypkga.commerceplatformfull.entity.OrderStatus.DELIVERED OR o.currentStatus = com.mypkga.commerceplatformfull.entity.OrderStatus.CONFIRMED_BY_CUSTOMER)")
+    boolean existsDeliveredOrderContainingProduct(@Param("userId") Long userId, @Param("productId") Long productId);
 }

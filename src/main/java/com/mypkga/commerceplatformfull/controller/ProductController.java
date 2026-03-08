@@ -3,6 +3,7 @@ package com.mypkga.commerceplatformfull.controller;
 import com.mypkga.commerceplatformfull.entity.Cart;
 import com.mypkga.commerceplatformfull.entity.Product;
 import com.mypkga.commerceplatformfull.entity.User;
+import com.mypkga.commerceplatformfull.repository.OrderRepository;
 import com.mypkga.commerceplatformfull.repository.ReviewRepository;
 import com.mypkga.commerceplatformfull.service.CartService;
 import com.mypkga.commerceplatformfull.service.CategoryService;
@@ -27,6 +28,7 @@ public class ProductController {
     private final CartService cartService;
     private final UserService userService;
     private final ReviewRepository reviewRepository;
+    private final OrderRepository orderRepository;
 
     @GetMapping("/products")
     public String productList(@RequestParam(required = false) String search,
@@ -66,7 +68,7 @@ public class ProductController {
     }
 
     @GetMapping("/products/{id}")
-    public String productDetail(@PathVariable Long id, Model model) {
+    public String productDetail(@PathVariable Long id, Model model, Authentication authentication) {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -76,10 +78,20 @@ public class ProductController {
         if (averageRating == null) averageRating = 0.0;
         Long reviewCount = reviewRepository.countByProductIdAndApprovedTrue(id);
 
+        // Determine if current user can review (must have purchased)
+        boolean canReview = false;
+        if (authentication != null && authentication.isAuthenticated()) {
+            User user = userService.findByEmail(authentication.getName()).orElse(null);
+            if (user != null) {
+                canReview = orderRepository.existsDeliveredOrderContainingProduct(user.getId(), id);
+            }
+        }
+
         model.addAttribute("product", product);
         model.addAttribute("reviews", reviews);
         model.addAttribute("averageRating", averageRating);
         model.addAttribute("reviewCount", reviewCount);
+        model.addAttribute("canReview", canReview);
         return "products/detail";
     }
 }

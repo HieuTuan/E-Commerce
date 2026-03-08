@@ -3,6 +3,7 @@ package com.mypkga.commerceplatformfull.controller;
 import com.mypkga.commerceplatformfull.entity.Product;
 import com.mypkga.commerceplatformfull.entity.Review;
 import com.mypkga.commerceplatformfull.entity.User;
+import com.mypkga.commerceplatformfull.repository.OrderRepository;
 import com.mypkga.commerceplatformfull.service.ProductService;
 import com.mypkga.commerceplatformfull.service.ReviewService;
 import com.mypkga.commerceplatformfull.service.UserService;
@@ -21,6 +22,7 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final ProductService productService;
     private final UserService userService;
+    private final OrderRepository orderRepository;
 
     @PostMapping("/products/{id}/reviews")
     public String submitReview(@PathVariable("id") Long productId,
@@ -41,6 +43,13 @@ public class ReviewController {
 
         User user = userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Only allow review if user has purchased this product (delivered/received orders)
+        boolean hasPurchased = orderRepository.existsDeliveredOrderContainingProduct(user.getId(), productId);
+        if (!hasPurchased) {
+            redirectAttributes.addFlashAttribute("error", "Bạn chỉ có thể đánh giá sau khi đã mua sản phẩm này.");
+            return "redirect:/products/" + productId + "#reviews";
+        }
 
         Review review = new Review();
         review.setProduct(product);
