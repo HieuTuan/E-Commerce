@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -35,4 +36,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId AND r.approved = true")
     Double getAverageRatingByProductId(@Param("productId") Long productId);
+
+    // Find a user's existing review for a specific product (most recent first)
+    Optional<Review> findFirstByUserIdAndProductIdOrderByCreatedDateDesc(Long userId, Long productId);
+
+    // Check if a review exists for a specific order + product (spam protection)
+    boolean existsByUserIdAndOrderIdAndProductId(Long userId, Long orderId, Long productId);
 }

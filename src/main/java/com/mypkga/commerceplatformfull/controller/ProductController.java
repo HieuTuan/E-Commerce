@@ -2,12 +2,12 @@ package com.mypkga.commerceplatformfull.controller;
 
 import com.mypkga.commerceplatformfull.entity.Cart;
 import com.mypkga.commerceplatformfull.entity.Product;
+import com.mypkga.commerceplatformfull.entity.Review;
 import com.mypkga.commerceplatformfull.entity.User;
-import com.mypkga.commerceplatformfull.repository.OrderRepository;
-import com.mypkga.commerceplatformfull.repository.ReviewRepository;
 import com.mypkga.commerceplatformfull.service.CartService;
 import com.mypkga.commerceplatformfull.service.CategoryService;
 import com.mypkga.commerceplatformfull.service.ProductService;
+import com.mypkga.commerceplatformfull.service.ReviewService;
 import com.mypkga.commerceplatformfull.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -27,8 +27,7 @@ public class ProductController {
     private final CategoryService categoryService;
     private final CartService cartService;
     private final UserService userService;
-    private final ReviewRepository reviewRepository;
-    private final OrderRepository orderRepository;
+    private final ReviewService reviewService;
 
     @GetMapping("/products")
     public String productList(@RequestParam(required = false) String search,
@@ -72,18 +71,22 @@ public class ProductController {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Load approved reviews and calculate average/count
-        var reviews = reviewRepository.findByProductIdAndApprovedTrueOrderByCreatedDateDesc(id);
-        Double averageRating = reviewRepository.getAverageRatingByProductId(id);
-        if (averageRating == null) averageRating = 0.0;
-        Long reviewCount = reviewRepository.countByProductIdAndApprovedTrue(id);
+        // Load reviews via ReviewService (Service layer — not repository directly)
+        List<Review> reviews = reviewService.getApprovedReviews(id);
+        double averageRating = reviewService.getAverageRating(id);
+        long reviewCount = reviewService.countApprovedReviews(id);
 
-        // Determine if current user can review (must have purchased)
+        // Determine review state for the current user
         boolean canReview = false;
+        Review userExistingReview = null;
+        boolean canEdit = false;
+
         if (authentication != null && authentication.isAuthenticated()) {
             User user = userService.findByEmail(authentication.getName()).orElse(null);
             if (user != null) {
-                canReview = orderRepository.existsDeliveredOrderContainingProduct(user.getId(), id);
+                canReview = reviewService.hasPurchasedProduct(user.getId(), id);
+                userExistingReview = reviewService.findUserReviewForProduct(user.getId(), id).orElse(null);
+                canEdit = userExistingReview != null && userExistingReview.isEditable();
             }
         }
 
@@ -92,6 +95,8 @@ public class ProductController {
         model.addAttribute("averageRating", averageRating);
         model.addAttribute("reviewCount", reviewCount);
         model.addAttribute("canReview", canReview);
+        model.addAttribute("userExistingReview", userExistingReview);
+        model.addAttribute("canEdit", canEdit);
         return "products/detail";
     }
 }

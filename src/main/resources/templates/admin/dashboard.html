@@ -159,7 +159,7 @@
                                 <td>
                                     <strong th:text="${order.orderNumber}">ORD-001</strong>
                                 </td>
-                                <td th:text="${order.customerName}">Customer</td>
+                                <td th:utext="${order.customerName}">Customer</td>
                                 <td>
                                     <strong class="text-success">$<span
                                             th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)}">0.00</span></strong>
