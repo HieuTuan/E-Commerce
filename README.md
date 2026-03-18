@@ -34,7 +34,7 @@ spring.jpa.database-platform=org.hibernate.dialect.SQLServerDialect
 
 ### 1. TÓM TẮT QUY TRÌNH (Purchase Workflow Overview)
 
-**Actor:** Buyer (Người mua) | System (Hệ thống)
+**Actor:** Buyer (Người mua)
 
 * 🛒 **Đặt hàng & Giỏ hàng (Buyer)**
     * **Main Flow:** Chọn sản phẩm → Thêm vào giỏ (`Add to cart`) → Tiến hành thanh toán (`Checkout`) → Tạo đơn hàng.
@@ -67,42 +67,158 @@ Notes:
 
 ---
 
-### 2) Refund Flow (Refund / Complaint) 💸
 
-* 📝 **Gửi Yêu cầu Hoàn tiền (Buyer)**
-    * **Main Flow:** Người dùng chọn đơn hàng → Bấm "Request refund" → Nhập lý do/số tiền → Gửi yêu cầu.
-    * **Logic:** Hệ thống (`RefundService`) kiểm tra điều kiện (thời gian khiếu nại, trạng thái đơn) trước khi ghi nhận.
-    * **Trạng thái:** Đơn khiếu nại chuyển sang `PENDING` (Chờ xử lý) hoặc `PENDING_REVIEW`.
 
-* 🛡️ **Xử lý & Phê duyệt (Admin/System)**
-    * **Manual Review:** Staff xem xét yêu cầu (`AdminController`) → Ra quyết định **APPROVE** (Đồng ý) hoặc **REJECT** (Từ chối).
-    * **Payment Processing:** Nếu được duyệt -> thì đơn hàng sẽ được tạo bên GHN với trạng thái là "Chờ khách hàng gửi hàng" và gửi Email cho khách hàng là từ chối hoặc chấp nhận.
-    * **Staff GHN**: Nhân viên giao hàng nhanh nhận hàng và xác nhận trạng thái thành đã nhận hàng(Vì lý do bảo mật bên GHN lên không thể đổi được trạng thái).
-    * **Data Update:**
-        * Cập nhật trạng thái `RefundRepository` & `OrderRepository`.
-    * **Staff hoàn tiền:** Staff sẽ hoàn tiền và cập nhập ảnh hoàn tiền update lên hệ thống, khách hàng có thể xem bằng chứng đó và status đổi thành đã hoàn tiền*
-    * **Success:** Hệ thống gửi thông báo (`NotificationService`) cho người dùng kết quả xử lý.
+### 2) Refund Flow (Refund / Complaint) 
 
-#### 📋 Bảng phân tích CRUD (Refund Flow)
+**Actor:** Customer → Staff → System (Ví điện tử)
+
+* 📝 **Khách hàng gửi yêu cầu hoàn hàng**
+    * Điều kiện: Đơn hàng phải ở trạng thái `DELIVERED` và còn trong thời hạn khiếu nại.
+    * Khách hàng chọn đơn → Bấm **"Yêu cầu hoàn hàng"** → Chọn lý do (`ReturnReason`) → Upload video bằng chứng (`evidenceVideo`) → Gửi yêu cầu.
+    * Hệ thống lưu file video vào thư mục `uploads/videos/return-evidence/{orderId}/` và tạo bản ghi `return_requests` với trạng thái `REFUND_REQUESTED`.
+    * Email thông báo gửi tự động đến staff.
+
+* 🛡️ **Staff xem xét & phê duyệt**
+    * Staff truy cập `/staff/returns` → Xem video bằng chứng → Ra quyết định:
+        * ✅ **APPROVE (Chấp nhận):** Hệ thống tạo đơn vận chuyển ngược trên GHN (`createReturnShippingOrder`), trạng thái chuyển sang `RETURN_APPROVED`. **Hệ thống tự động gửi email thông báo cho khách hàng** (nếu email thất bại vẫn lưu approve).
+        * ❌ **REJECT (Từ chối):** Trạng thái → `REFUND_REJECTED`, đơn hàng quay về `DELIVERED`, gửi email lý do từ chối.
+
+* 🚚 **Khách hàng gửi hàng về**
+    * Khách nhận email chứa mã trả hàng (`returnCode`) → Gửi hàng qua GHN.
+    * Trạng thái: `RETURN_APPROVED` → `RETURNING`.
+
+* 📬 **Staff xác nhận đã nhận hàng**
+    * Staff bấm **"Xác nhận nhận hàng"** → Trạng thái: `RETURNING` → `RETURN_RECEIVED`.
+
+* 💰 **Hoàn tiền vào ví (Wallet)**
+    * Staff vào trang xử lý hoàn tiền → Bấm **"Hoàn tiền"**.
+    * Hệ thống tự động **credit toàn bộ số tiền đơn hàng vào ví điện tử (`Wallet`) của khách hàng** (`WalletService.credit()`).
+    * Trạng thái → `REFUNDED`. Email xác nhận hoàn tiền được gửi.
+    * Khách hàng có thể kiểm tra số dư ví tại `/customer/wallet`.
+
+```
+[Customer]  →  Gửi yêu cầu + video  →  [return_requests: REFUND_REQUESTED]
+                                                   ↓
+[Staff]     →  Xem xét, duyệt       →  [RETURN_APPROVED] + GHN order tạo
+                                                   ↓
+[Customer]  →  Gửi hàng qua GHN    →  [RETURNING]
+                                                   ↓
+[Staff]     →  Xác nhận nhận hàng  →  [RETURN_RECEIVED]
+                                                   ↓
+[Staff]     →  Xác nhận hoàn tiền  →  [REFUNDED] + Wallet += totalAmount
+```
+
+#### 📋 Bảng CRUD (Return & Wallet Refund Flow)
 
 | Step | Method / Function | CRUD | Database Impact |
 | :--- | :--- | :---: | :--- |
-| 📝 **Request refund** | `RefundController.requestRefund` → `RefundService.createRequest` | **Create** | `refunds` (insert record: requested_amount, reason, user_id) |
-| 🔎 **Validate request** | `RefundService.validateRequest` | **Read** | `orders` (status), `payments` (transaction details) |
-| ⏱️ **Check eligibility** | `RefundService.checkEligibility` / `isRefundable` | **Read** | Business logic (time window, order status) |
-| 🛑 **Admin review** | `AdminController.approve` / `reject` → `handleAdminDecision` | **Update** | `refunds` (status → APPROVED / REJECTED) |
-| 💳 **Execute refund** | `PaymentService.refundTransaction` → `Gateway.refund` | **Update** | `payments` (refund status), `refunds` (gateway_tx, executed_at) |
-| 🔄 **Mark order** | `OrderService.markRefunded` | **Update** | `orders` (status → REFUNDED) |
-
-
-Important business rules implemented in service layer:
-- Only refund if order/payment status is allowed (e.g., PAID, DELIVERED within allowed window) — `RefundService.isRefundable(order)`.
-- Refund amount must match actual settled amount from `payments` (use `payments.settled_amount`).
-- Validate existence and success of original payment transaction before calling gateway.
-- Log both the refund request and gateway response in `refunds` (requested_amount, refunded_amount, gateway_tx, status, handled_by_admin, reason).
-- Wrap create-request → approve → gateway call → finalize updates in a DB transaction for auditability and consistency.
+| 📝 **Tạo yêu cầu** | `CustomerReturnController` → `ReturnService.createReturnRequest` | **Create** | `return_requests` (insert), video lưu local |
+| 🛡️ **Staff duyệt** | `StaffReturnController.approveReturnRequest` → `ReturnService.approveReturnRequest` | **Update** | `return_requests` (status → RETURN_APPROVED), `orders` |
+| 🚚 **GHN tạo đơn** | `GHNReturnService.createReturnShippingOrder` | **Update** | `return_requests` (ghn_order_code, ghn_fee) |
+| 📬 **Xác nhận nhận hàng** | `StaffReturnController.confirmReceipt` | **Update** | `return_requests` (status → RETURN_RECEIVED) |
+| 💰 **Hoàn tiền vào ví** | `StaffReturnController.completeRefund` → `WalletService.credit` | **Update** | `wallets` (balance += amount), `return_requests` (status → REFUNDED) |
+| 📧 **Gửi email** | `NotificationService.sendApprovalNotification` | **Read** | Không ảnh hưởng DB (chỉ gửi email) |
 
 ---
+
+### 4) Product Review Flow (Luồng đánh giá sản phẩm) ⭐
+
+**Actor:** Customer → System
+
+* ✅ **Điều kiện đánh giá**
+    * Chỉ customer đã **mua và nhận hàng thành công** (`DELIVERED`) mới được đánh giá.
+    * Mỗi customer chỉ được đánh giá **1 lần** cho mỗi sản phẩm trong mỗi đơn hàng.
+    * Hệ thống kiểm tra qua `ReviewRepository.existsByUserAndProduct`.
+
+* 📝 **Gửi đánh giá**
+    * Khách hàng vào trang chi tiết sản phẩm → Cuộn xuống phần **"Đánh giá"** → Chọn số sao (1-5) + viết nhận xét → Bấm gửi.
+    * Controller: `ReviewController` → `ReviewService.createReview`.
+    * Lưu bản ghi vào bảng `reviews` (user_id, product_id, rating, comment, created_at).
+
+* 🔄 **Cập nhật rating sản phẩm**
+    * Sau khi lưu review, hệ thống tự động tính lại `averageRating` của sản phẩm:
+        `averageRating = AVG(rating) FROM reviews WHERE product_id = ?`
+    * Cập nhật vào bảng `products` (average_rating, review_count).
+
+* 👁️ **Hiển thị đánh giá**
+    * Tất cả người dùng (kể cả chưa đăng nhập) có thể xem danh sách review trên trang sản phẩm.
+    * Hiển thị: Avatar, tên, số sao, nội dung, ngày đánh giá.
+
+```
+[Customer đã mua] → Vào trang sản phẩm → Chọn sao + nhận xét → Gửi
+                                                  ↓
+                    [reviews: insert]  →  [products: update averageRating]
+                                                  ↓
+                              Hiển thị cho tất cả người dùng
+```
+
+#### 📋 Bảng CRUD (Review Flow)
+
+| Step | Method / Function | CRUD | Database Impact |
+| :--- | :--- | :---: | :--- |
+| ✅ **Kiểm tra quyền** | `ReviewService.canReview(userId, productId)` | **Read** | `orders`, `reviews` (check eligibility) |
+| 📝 **Tạo review** | `ReviewController.createReview` → `ReviewService.createReview` | **Create** | `reviews` (insert: rating, comment, user_id, product_id) |
+| 🔄 **Cập nhật rating** | `ReviewService.updateProductRating` → `ProductRepository.save` | **Update** | `products` (average_rating, review_count) |
+| 👁️ **Xem reviews** | `ReviewController.getProductReviews` → `ReviewRepository.findByProductId` | **Read** | `reviews` (select by product_id) |
+
+---
+
+### 5) AI Activity Flow (Luồng hoạt động AI) 🤖
+
+Hệ thống tích hợp 2 tính năng AI riêng biệt:
+
+#### 5a. AI Phân loại sản phẩm (`AIClassificationService`)
+
+* **Trigger:** Khi Admin/Staff tạo hoặc cập nhật sản phẩm mới.
+* **Cơ chế hoạt động:**
+    1. Lấy `productName` + `description` của sản phẩm.
+    2. **Bước 1 — Keyword Matching:** Hệ thống tra bảng `CATEGORY_KEYWORDS` (từ khóa được định nghĩa sẵn) để tìm danh mục phù hợp nhất (đếm số keyword khớp, chọn danh mục có nhiều match nhất).
+    3. **Bước 2 — AI API (GROQ / LLaMA):** Nếu keyword không đủ tin cậy (hoặc bật chế độ AI), gọi API GROQ với model `llama-3.1-8b-instant` để phân loại.
+        * Gửi prompt: *"Classify this product: Name: `{name}`, Description: `{desc}`"*
+        * Model trả về tên danh mục.
+    4. **Fallback:** Nếu API lỗi → dùng lại kết quả keyword matching.
+* **Output:** Tên danh mục (ví dụ: `laptop_gaming`, `laptop_student`, `General`).
+
+```
+[Admin tạo SP]  →  AIClassificationService.classifyProduct()
+                          ↓
+              [Keyword Matching] → match tốt → trả về danh mục
+                          ↓ (không đủ tốt)
+              [GROQ API / LLaMA] → AI phân loại → trả về danh mục
+                          ↓ (API lỗi)
+              [Fallback keyword result]
+```
+
+#### 5b. AI Chatbot hỗ trợ khách hàng
+
+* **Trigger:** Khách hàng nhập câu hỏi vào hộp chat trên trang web.
+* **Cơ chế hoạt động:**
+    1. **Phân tích intent:** Hệ thống nhận diện ý định người dùng (tìm sản phẩm, hỏi giá, hỏi chính sách, v.v.) thông qua keyword matching trên câu hỏi.
+    2. **Tìm sản phẩm:** Nếu intent là tìm kiếm sản phẩm → query DB lấy danh sách sản phẩm phù hợp (theo tên, giá, danh mục).
+    3. **Gọi GROQ API:** Gửi context (danh sách sản phẩm + lịch sử hội thoại + câu hỏi) lên GROQ API (`llama-3.1-8b-instant`) để tạo câu trả lời tự nhiên.
+    4. **Trả response:** Chatbot hiển thị câu trả lời kèm danh sách sản phẩm gợi ý (nếu có).
+* **Xử lý lọc giá:** Chatbot phân tích các cụm từ tiếng Việt như *"dưới X triệu"*, *"trên X triệu"*, *"khoảng X triệu"* để lọc sản phẩm theo khoảng giá.
+
+```
+[Khách nhập câu hỏi]
+        ↓
+[Phân tích intent + extract từ khóa/giá]
+        ↓
+[Query DB: sản phẩm phù hợp]  ←→  [products, categories]
+        ↓
+[Gọi GROQ API với context đầy đủ]
+        ↓
+[Hiển thị câu trả lời + gợi ý sản phẩm]
+```
+
+| Tính năng AI | Model | Trigger | Output |
+| :--- | :--- | :--- | :--- |
+| Phân loại sản phẩm | `llama-3.1-8b-instant` (GROQ) | Admin tạo/sửa sản phẩm | Tên danh mục |
+| Chatbot hỗ trợ | `llama-3.1-8b-instant` (GROQ) | Khách hàng chat | Câu trả lời tự nhiên + gợi ý SP |
+
+---
+
 ## 🔐 Tài khoản Demo (Test Accounts)
 
 Dưới đây là danh sách các tài khoản được khởi tạo tự động để giảng viên/người dùng test các chức năng. Bạn có thể sử dụng **Username** hoặc **Email** để đăng nhập (tùy vào cấu hình hệ thống).
@@ -149,3 +265,5 @@ Recommended practices
 5. Avoid printing secrets in logs and enable auditing for secret access.
 
 Quick example: GitHub Actions usage
+
+
