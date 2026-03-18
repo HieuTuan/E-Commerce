@@ -59,8 +59,9 @@ public class LocalFileService implements FileService {
             Files.copy(file.getInputStream(), videoFilePath, StandardCopyOption.REPLACE_EXISTING);
             
             // Generate public URL for local access
-            String publicUrl = String.format("http://localhost:%s%s/files/%s", 
-                    serverPort, contextPath, fileKey);
+            // Trim trailing slash from contextPath to avoid double-slash (e.g. context-path=/  -> "//files/")
+            String trimmedContext = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath;
+            String publicUrl = String.format("/files/%s", fileKey);
             
             log.info("Video uploaded successfully to local storage: {} -> {}", originalFilename, fileKey);
             
@@ -100,8 +101,9 @@ public class LocalFileService implements FileService {
             Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
             
             // Generate public URL for local access
-            String publicUrl = String.format("http://localhost:%s%s/images/%s", 
-                    serverPort, contextPath, fileKey);
+            // Trim trailing slash from contextPath to avoid double-slash
+            String trimmedContext = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath;
+            String publicUrl = String.format("/files/%s", fileKey);
             
             log.info("Image uploaded successfully to local storage: {} -> {}", originalFilename, fileKey);
             
@@ -124,8 +126,9 @@ public class LocalFileService implements FileService {
         // For local storage, we'll generate a simple URL with a token
         // In a real implementation, you'd want to implement proper token-based security
         String token = UUID.randomUUID().toString();
-        String secureUrl = String.format("http://localhost:%s%s/files/secure/%s?token=%s&expires=%d", 
-                serverPort, contextPath, fileKey, token, System.currentTimeMillis() + (expirationMinutes * 60 * 1000));
+        String trimmedContext = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath;
+        String secureUrl = String.format("%s/files/secure/%s?token=%s&expires=%d", 
+                trimmedContext, fileKey, token, System.currentTimeMillis() + (expirationMinutes * 60 * 1000));
         
         log.debug("Generated secure URL for local file: {} (expires in {} minutes)", fileKey, expirationMinutes);
         return secureUrl;

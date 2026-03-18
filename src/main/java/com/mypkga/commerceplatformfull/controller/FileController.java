@@ -1,5 +1,6 @@
 package com.mypkga.commerceplatformfull.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -10,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,18 +28,27 @@ public class FileController {
     private String videoUploadDir;
     
     /**
-     * Serve video files to authorized users only
-     * Staff members can view evidence videos for return requests
+     * Serve files (including nested sub-folders) to authorized users only.
+     * Supports paths like /files/return-evidence/8/uuid.mp4
      */
-    @GetMapping("/{folder}/{filename:.+}")
-    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN') or hasRole('CUSTOMER')")
-    public ResponseEntity<Resource> serveFile(@PathVariable String folder, @PathVariable String filename) {
+    @GetMapping("/**")
+    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN') or hasRole('CUSTOMER') or hasRole('STAFF')")
+    public ResponseEntity<Resource> serveFile(HttpServletRequest request) {
+        // Extract the sub-path after /files/
+        String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String subPath = requestURI.substring((contextPath + "/files/").length());
+
+        // Normalize any double slashes
+        subPath = subPath.replaceAll("//+", "/");
+
+        String filename = subPath.contains("/") ? subPath.substring(subPath.lastIndexOf('/') + 1) : subPath;
+
         try {
-            Path filePath = Paths.get(videoUploadDir).resolve(folder).resolve(filename);
+            Path filePath = Paths.get(videoUploadDir).resolve(subPath).normalize();
             Resource resource = new UrlResource(filePath.toUri());
             
             if (resource.exists() && resource.isReadable()) {
-                // Determine content type
                 String contentType = determineContentType(filename);
                 
                 return ResponseEntity.ok()
@@ -47,11 +56,11 @@ public class FileController {
                         .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                         .body(resource);
             } else {
-                log.warn("File not found or not readable: {}/{}", folder, filename);
+                log.warn("File not found or not readable: {}", subPath);
                 return ResponseEntity.notFound().build();
             }
         } catch (MalformedURLException e) {
-            log.error("Error serving file: {}/{}", folder, filename, e);
+            log.error("Error serving file: {}", subPath, e);
             return ResponseEntity.badRequest().build();
         }
     }
@@ -63,19 +72,36 @@ public class FileController {
     @GetMapping("/secure/{folder}/{filename:.+}")
     @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
     public ResponseEntity<Resource> serveSecureFile(
-            @PathVariable String folder, 
+            @PathVariable String folder,
             @PathVariable String filename,
             @RequestParam String token,
             @RequestParam long expires) {
-        
+
         // Check if token is still valid (simplified check)
         if (System.currentTimeMillis() > expires) {
             log.warn("Expired token used for file access: {}/{}", folder, filename);
             return ResponseEntity.status(410).build(); // Gone
         }
-        
-        // For now, just serve the file - in production, validate the token properly
-        return serveFile(folder, filename);
+
+        // Serve the file directly
+        String subPath = folder + "/" + filename;
+        try {
+            Path filePath = Paths.get(videoUploadDir).resolve(subPath).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                String contentType = determineContentType(filename);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException e) {
+            log.error("Error serving secure file: {}/{}", folder, filename, e);
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     /**

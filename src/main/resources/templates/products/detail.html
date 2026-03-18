@@ -1025,6 +1025,13 @@
                 });
             }
 
+            // ===== Decode HTML entities in textarea =====
+            function decodeHtmlEntities(str) {
+                const txt = document.createElement('textarea');
+                txt.innerHTML = str;
+                return txt.value;
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
                 // New review form
                 setupStarRating('starRatingNew', 'ratingInputNew', 'ratingLabelNew', 5);
@@ -1037,6 +1044,15 @@
                 setupStarRating('starRatingEdit', 'ratingInputEdit', 'ratingLabelEdit', initEditRating);
                 setupCharCounter('commentEdit', 'charCountEdit', 10);
                 setupReviewValidation('editReviewForm', 'commentEdit', 'ratingInputEdit');
+
+                // Fix: decode HTML entities in edit textarea so Vietnamese text displays correctly
+                const commentEditTextarea = document.getElementById('commentEdit');
+                if (commentEditTextarea && commentEditTextarea.value) {
+                    commentEditTextarea.value = decodeHtmlEntities(commentEditTextarea.value);
+                    // Re-update char counter after decode
+                    const charCountEdit = document.getElementById('charCountEdit');
+                    if (charCountEdit) charCountEdit.textContent = commentEditTextarea.value.length;
+                }
             });
         </script>
 </body>

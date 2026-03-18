@@ -156,17 +156,28 @@ public class GHNReturnServiceImpl implements GHNReturnService {
             Order order = returnRequest.getOrder();
             User customer = order.getUser();
 
+            // Null-safe extraction of customer location data with warehouse fallback
+            Integer fromDistrictId = customer.getDistrictId() != null ? customer.getDistrictId() : warehouseDistrictId;
+            String fromWardCode = (customer.getWardCode() != null && !customer.getWardCode().isEmpty())
+                    ? customer.getWardCode() : warehouseWardCode;
+            String fromAddress = (customer.getAddress() != null && !customer.getAddress().isEmpty())
+                    ? customer.getAddress() : warehouseAddress;
+            String fromPhone = (customer.getPhone() != null && !customer.getPhone().isEmpty())
+                    ? customer.getPhone() : warehousePhone;
+            String fromName = (customer.getFullName() != null && !customer.getFullName().isEmpty())
+                    ? customer.getFullName() : "Khách hàng";
+
+            log.info("GHN create order - from: name={}, phone={}, districtId={}, wardCode={}",
+                    fromName, fromPhone, fromDistrictId, fromWardCode);
+
             // Build create order request
             GHNCreateReturnOrderRequest createRequest = GHNCreateReturnOrderRequest.builder()
                     .paymentTypeId(2) // Shop pays shipping fee
                     .note("Đơn hoàn hàng - Return Order #" + returnRequest.getId())
                     .requiredNote("KHONGCHOXEMHANG")
-                    .fromName(customer.getFullName())
-                    .fromPhone(customer.getPhone())
-                    .fromAddress(customer.getAddress())
-                    // Note: GHN only needs district/ward CODES, not names
-                    // Removed fromWardName, fromDistrictName, fromProvinceName to avoid validation
-                    // errors
+                    .fromName(fromName)
+                    .fromPhone(fromPhone)
+                    .fromAddress(fromAddress)
                     .returnPhone(warehousePhone)
                     .returnAddress(warehouseAddress)
                     .returnDistrictId(warehouseDistrictId)
@@ -208,13 +219,27 @@ public class GHNReturnServiceImpl implements GHNReturnService {
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 GHNCreateOrderResponse createResponse = response.getBody();
-                log.info("GHN return order created for request {}: order code {}",
-                        returnRequest.getId(), createResponse.getData().getOrderCode());
-                return createResponse;
+                if (createResponse.getCode() == 200 && createResponse.getData() != null) {
+                    log.info("GHN return order created for request {}: order code {}",
+                            returnRequest.getId(), createResponse.getData().getOrderCode());
+                    return createResponse;
+                } else {
+                    log.error("GHN API returned error for return request {} - code: {}, message: {}",
+                            returnRequest.getId(), createResponse.getCode(), createResponse.getMessage());
+                    throw new RuntimeException("GHN API error: " + createResponse.getMessage()
+                            + " (code=" + createResponse.getCode() + ")");
+                }
             } else {
-                throw new RuntimeException("Failed to create GHN return shipping order");
+                throw new RuntimeException("Failed to create GHN return shipping order - HTTP: "
+                        + response.getStatusCode());
             }
 
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("GHN API HTTP client error for return request {}: {} - Body: {}",
+                    returnRequest.getId(), e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("GHN API rejected request: " + e.getResponseBodyAsString(), e);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error creating GHN return shipping order for request {}: {}",
                     returnRequest.getId(), e.getMessage(), e);

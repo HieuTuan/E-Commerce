@@ -46,7 +46,27 @@ public class ReturnRequest {
     private String detailedDescription;
 
     @Column(name = "evidence_video_url", length = 500)
+    @lombok.Getter(lombok.AccessLevel.NONE)
     private String evidenceVideoUrl;
+
+    /**
+     * Returns the evidence video URL, sanitizing old absolute URLs that may
+     * have been stored with double slashes (e.g. http://localhost:8080//files/...).
+     * Always returns a clean relative path like /files/return-evidence/8/uuid.mp4
+     */
+    public String getEvidenceVideoUrl() {
+        if (evidenceVideoUrl == null) return null;
+        // If it's an absolute URL (old format), extract just the /files/... path
+        if (evidenceVideoUrl.startsWith("http")) {
+            int filesIndex = evidenceVideoUrl.indexOf("/files/");
+            if (filesIndex >= 0) {
+                // Extract from /files/ onward and remove any leading double slashes
+                return evidenceVideoUrl.substring(filesIndex).replaceAll("//+", "/");
+            }
+        }
+        // Already a relative path - just normalize double slashes
+        return evidenceVideoUrl.replaceAll("//+", "/");
+    }
 
     @Column(name = "return_code", unique = true, length = 50)
     private String returnCode;

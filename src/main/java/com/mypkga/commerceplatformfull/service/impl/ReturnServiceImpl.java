@@ -179,21 +179,24 @@ public class ReturnServiceImpl implements ReturnService {
         order.updateCurrentStatus(OrderStatus.RETURN_APPROVED);
         orderRepository.save(order);
 
-        // Save history record
+        // Save history record - safely extract GHN data with null checks
+        String ghnOrderCode = (ghnResponse != null && ghnResponse.getData() != null)
+                ? ghnResponse.getData().getOrderCode() : null;
+        Integer ghnFeeTotal = (feeResponse != null && feeResponse.getData() != null)
+                ? feeResponse.getData().getTotal() : null;
         ReturnRequestHistory history = ReturnRequestHistory.createApprovalHistory(
                 returnRequest,
                 staff,
-                ghnResponse != null ? ghnResponse.getData().getOrderCode() : null,
-                feeResponse != null ? feeResponse.getData().getTotal() : null);
+                ghnOrderCode,
+                ghnFeeTotal);
         historyRepository.save(history);
 
-        // Send approval notification email - if this fails, rollback the entire
-        // transaction
+        // Send approval notification email - log warning if fail, but do NOT rollback
+        // the approval transaction (email is non-critical)
         boolean emailSent = notificationService.sendApprovalNotification(returnRequest);
         if (!emailSent) {
-            log.error("Failed to send approval notification email for return request {}, rolling back transaction",
+            log.warn("Failed to send approval notification email for return request {}, but approval was saved",
                     requestId);
-            throw new RuntimeException("Failed to send approval notification email");
         }
 
         log.info("Return request {} approved successfully", requestId);

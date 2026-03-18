@@ -371,6 +371,23 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Handle client-abort exceptions that occur during video/file streaming.
+     * These happen when the browser closes the connection mid-stream (normal behavior
+     * for video buffering). We must NOT attempt to write a response since the
+     * connection is already closed.
+     */
+    @ExceptionHandler({
+        org.springframework.web.context.request.async.AsyncRequestNotUsableException.class,
+        org.apache.catalina.connector.ClientAbortException.class
+    })
+    public void handleClientAbortException(Exception ex, HttpServletRequest request) {
+        // This is expected behavior - browser disconnected while streaming (e.g. video buffering)
+        log.debug("Client disconnected during streaming on path: {} ({})",
+                request.getRequestURI(), ex.getClass().getSimpleName());
+        // Do NOT write any response - the connection is already closed
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
