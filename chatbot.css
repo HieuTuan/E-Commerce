@@ -17,18 +17,18 @@
 
 #chatbot-widget {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    right: 21px;
+    bottom: 21px;
     z-index: 1050;
 }
 
 #chatbot-toggle {
-    width: 60px;
-    height: 60px;
+    width: 61px;
+    height: 61px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 9px 26px rgba(0, 0, 0, 0.2);
     background: linear-gradient(135deg, #0d6efd, #6610f2);
     border: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -37,7 +37,7 @@
 
 #chatbot-toggle:hover {
     transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 12px 35px rgba(13, 110, 253, 0.4);
+    box-shadow: 0 13px 36px rgba(13, 110, 253, 0.4);
 }
 
 @keyframes pulse {
@@ -47,12 +47,12 @@
 }
 
 #chatbot-window {
-    width: 350px;
-    max-height: 500px;
+    width: 351px;
+    max-height: 501px;
     display: flex;
     flex-direction: column;
     background: #fff;
-    border-radius: 15px;
+    border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
     margin-bottom: 15px;
