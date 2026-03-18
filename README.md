@@ -149,5 +149,3 @@ Recommended practices
 5. Avoid printing secrets in logs and enable auditing for secret access.
 
 Quick example: GitHub Actions usage
-
-
