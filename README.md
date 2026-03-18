@@ -122,7 +122,7 @@ Notes:
 
 ---
 
-### 4) Product Review Flow (Luồng đánh giá sản phẩm) ⭐
+### 3) Product Review Flow (Luồng đánh giá sản phẩm) ⭐
 
 **Actor:** Customer → System
 
@@ -164,11 +164,11 @@ Notes:
 
 ---
 
-### 5) AI Activity Flow (Luồng hoạt động AI) 🤖
+### 4) AI Activity Flow (Luồng hoạt động AI) 🤖
 
 Hệ thống tích hợp 2 tính năng AI riêng biệt:
 
-#### 5a. AI Phân loại sản phẩm (`AIClassificationService`)
+#### 4a. AI Phân loại sản phẩm (`AIClassificationService`)
 
 * **Trigger:** Khi Admin/Staff tạo hoặc cập nhật sản phẩm mới.
 * **Cơ chế hoạt động:**
@@ -190,7 +190,7 @@ Hệ thống tích hợp 2 tính năng AI riêng biệt:
               [Fallback keyword result]
 ```
 
-#### 5b. AI Chatbot hỗ trợ khách hàng
+#### 4b. AI Chatbot hỗ trợ khách hàng
 
 * **Trigger:** Khách hàng nhập câu hỏi vào hộp chat trên trang web.
 * **Cơ chế hoạt động:**
